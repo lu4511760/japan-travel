@@ -135,6 +135,8 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 }
 .jy{--jr:#9acd32}
 .jk{--jr:#00b2e5}
+/* 路線列：屬於節點內容，但不放進卡片外框 */
+.jr-row{margin:8px 0 0; font-size:14.5px}
 
 /* ── 時刻表圖片 ── */
 .sched-img{width:100%; border-radius:8px; border:1px solid var(--line); margin-top:4px}
@@ -352,14 +354,8 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
       <div class="body">
         <p><a href="https://maps.app.goo.gl/uy8xUKi3BoD6QWXX7" target="_blank" rel="noopener">📍 上野站</a></p>
       </div>
-    </div>
-
-    <div class="ev">
-      <h2><span class="jr-code jy">JY</span><span class="jr-line jy">山手線</span> <span class="chip">普通</span>東京/品川方面(外環線)</h2>
-    </div>
-
-    <div class="ev">
-      <h2><span class="jr-code jk">JK</span><span class="jr-line jk">京濱東北線</span> <span class="chip">各停</span>大船</h2>
+      <p class="jr-row"><span class="jr-code jy">JY</span><span class="jr-line jy">山手線</span> <span class="chip">普通</span>東京/品川方面(外環線)</p>
+      <p class="jr-row"><span class="jr-code jk">JK</span><span class="jr-line jk">京濱東北線</span> <span class="chip">各停</span>大船</p>
     </div>
 
     <div class="day-head" id="d0121">第6天・01/21<span class="dow">週四</span></div>
