@@ -368,6 +368,24 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 
     <div class="day-head" id="d0123">第8天・01/23<span class="dow">週六</span></div>
 
+    <div class="ev"><div class="when">07:00</div><h2 class="meal">🍳 早餐: 飯店</h2></div>
+
+    <div class="ev">
+      <div class="when">10:30</div>
+      <h2>🚌 利木津巴士發車</h2>
+      <div class="body">
+        <p><a id="limousine-link" href="https://www.limousinebus.co.jp/zh-tw/timetable/detail/Narita-Ikebukuro/?dir=2" target="_blank" rel="noopener">公車時刻表</a></p>
+      </div>
+    </div>
+
+    <div class="ev">
+      <div class="when">12:10</div>
+      <h2>🛬 抵達成田機場第二航廈</h2>
+      <div class="body">
+        <p><a href="https://maps.app.goo.gl/i7vBTdSu26SvH29Q9" target="_blank" rel="noopener">📍 成田機場第二航廈</a></p>
+      </div>
+    </div>
+
     <div class="ev">
       <div class="when">15:40</div>
       <h2>🛫 成田出發 JX803 第二航廈 15:40 起飛</h2>
@@ -534,6 +552,9 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
     var ld=document.getElementById('nrt-dep-link'); if(ld) ld.href='https://www.narita-airport.jp/zh-tc/flight/dep-search/'+t+'-JX0803/';
     var ta=document.getElementById('tpe-dep-link'); if(ta) ta.href='https://www.taoyuan-airport.com/flight_depart/'+t+'_D_JX802?lang=ch';
     var tb=document.getElementById('tpe-arr-link'); if(tb) tb.href='https://www.taoyuan-airport.com/flight_depart/'+t+'_A_JX803?lang=ch';
+    // 利木津巴士時刻表帶當天日期（yyyy-mm-dd）
+    var td=t.slice(0,4)+'-'+t.slice(4,6)+'-'+t.slice(6,8);
+    var lm=document.getElementById('limousine-link'); if(lm) lm.href='https://www.limousinebus.co.jp/zh-tw/timetable/detail/Narita-Ikebukuro/?dir=2&d='+td;
     var jobs=[fetchFlight(t+'_D_JX802','fl-dep',true), fetchFlight(t+'_A_JX803','fl-ret',false), fetchSecurity(),
               fetchNarita('arr',t+'-JX0802','fl-dep-nrt',true), fetchNarita('dep',t+'-JX0803','fl-ret-nrt',false), fetchImm()];
     Promise.allSettled ? Promise.allSettled(jobs).then(done) : Promise.all(jobs).then(done, fail);
