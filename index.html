@@ -301,7 +301,7 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
   // 航班查詢 id：日期_出發(D)/抵達(A)_航班號
   var DEP_ID='20270116_D_JX802', RET_ID='20270123_A_JX803';
   // 成田代理（Cloudflare Worker）網址，部署後填入；留空則成田區塊顯示「未設定」
-  var NARITA_PROXY='';
+  var NARITA_PROXY='https://narita-proxy.4511760.workers.dev/';
   var NRT_ARR='20270116-JX0802', NRT_DEP='20270123-JX0803';
 
   function setCell(tbl, key, val, hot){
