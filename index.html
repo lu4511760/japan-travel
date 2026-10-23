@@ -88,6 +88,15 @@ ul.check label{display:flex; gap:9px; align-items:baseline; cursor:pointer}
 ul.check input{accent-color:var(--accent); transform:translateY(2px)}
 ul.check input:checked + span{color:var(--muted); text-decoration:line-through}
 footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
+
+/* ── 即時航班表格 ── */
+.fl-table{width:100%; border-collapse:collapse; font-size:14px; margin-top:4px}
+.fl-table td{padding:4px 0; border-bottom:1px dashed var(--line)}
+.fl-table tr:last-child td{border-bottom:none}
+.fl-table td:first-child{color:var(--muted); width:7em; font-size:13px}
+.fl-table td[data-f]{font-weight:600; font-variant-numeric:tabular-nums}
+.fl-table td.fl-hot{color:var(--accent)}
+#fl-updated.err{color:#c0392b}
 </style>
 </head>
 <body>
@@ -104,8 +113,47 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
     <a href="#d0121" data-d="2027-01-21">1/21</a>
     <a href="#d0122" data-d="2027-01-22">1/22</a>
     <a href="#d0123" data-d="2027-01-23">1/23</a>
+    <a href="#flights">✈️ 航班</a>
     <a href="#checklist">✓ 清單</a>
   </nav>
+
+  <!-- ── 即時航班資訊（30 秒自動更新） ── -->
+  <section class="block" id="flights" style="margin-top:0">
+    <h2>✈️ 即時航班資訊</h2>
+    <p class="note" style="font-size:12.5px; color:var(--muted); margin:6px 0 10px">
+      桃園機場資料每 30 秒自動更新・<span id="fl-updated">尚未更新</span>
+      <a href="#" id="fl-refresh" style="margin-left:8px">↻ 立即更新</a>
+    </p>
+
+    <div class="info" style="margin-bottom:12px">
+      <p><b>去程 JX802</b>　桃園 T1 → 成田 T2　<span class="note">2027/01/16（六）</span></p>
+      <table class="fl-table" id="fl-dep">
+        <tr><td>航班狀態</td><td data-f="st">—</td></tr>
+        <tr><td>報到櫃台</td><td data-f="checkin">—</td></tr>
+        <tr><td>登機門</td><td data-f="gate">—</td></tr>
+        <tr><td>表定起飛</td><td data-f="otime">—</td></tr>
+        <tr><td>預計起飛</td><td data-f="rtime">—</td></tr>
+        <tr><td>機型</td><td data-f="plane">—</td></tr>
+        <tr><td>T1 安檢等待</td><td data-f="security">—</td></tr>
+      </table>
+      <p style="margin-top:8px">
+        <a href="https://www.narita-airport.jp/zh-tc/flight/arr-search/20270116-JX0802/" target="_blank" rel="noopener">🇯🇵 成田端到達資訊（航廈・入境審查擁擠度）→</a>
+      </p>
+    </div>
+
+    <div class="info">
+      <p><b>回程 JX803</b>　成田 T2 → 桃園 T1　<span class="note">2027/01/23（六）</span></p>
+      <p style="margin:6px 0">
+        <a href="https://www.narita-airport.jp/zh-tc/flight/dep-search/20270123-JX0803/" target="_blank" rel="noopener">🇯🇵 成田端出發資訊（報到櫃台・登機門・安檢擁擠度）→</a>
+      </p>
+      <table class="fl-table" id="fl-ret">
+        <tr><td>抵台狀態</td><td data-f="st">—</td></tr>
+        <tr><td>表定抵達</td><td data-f="otime">—</td></tr>
+        <tr><td>預計抵達</td><td data-f="rtime">—</td></tr>
+        <tr><td>到達門</td><td data-f="gate">—</td></tr>
+      </table>
+    </div>
+  </section>
 
   <div class="tl">
 
@@ -226,6 +274,69 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
       }catch(e){}
     });
   });
+})();
+
+// 即時航班資訊：桃園機場 API，每 30 秒更新
+(function(){
+  var API='https://www.taoyuan-airport.com/api/api/flight/a_flight/airlines';
+  var SEC='https://pfms.taoyuan-airport.com/es/crowdedness/T1/last';
+  // 航班查詢 id：日期_出發(D)/抵達(A)_航班號
+  var DEP_ID='20270116_D_JX802', RET_ID='20270123_A_JX803';
+
+  function setCell(tbl, key, val, hot){
+    var td=document.querySelector('#'+tbl+' td[data-f="'+key+'"]');
+    if(!td) return;
+    td.textContent=(val && String(val).trim() && val!=='-') ? val : '—';
+    td.classList.toggle('fl-hot', !!hot && !!val && String(val).trim()!=='' && val!=='-');
+  }
+
+  function fetchFlight(id, tbl, isDep){
+    return fetch(API,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id:id, language:'ch'})
+    }).then(function(r){return r.json();}).then(function(j){
+      var f=j.a_flight||{};
+      // 機場 API 僅提供近日航班，太早查會回「查無此航班」
+      if(!j.a_flight && j.statusCode){ setCell(tbl,'st','尚無資料（接近當天才會公布）'); return; }
+      setCell(tbl,'st', f.CurrentStatus, true);
+      setCell(tbl,'gate', f.Gate, true);
+      setCell(tbl,'otime', f.OTime ? f.OTime.slice(0,5) : '');
+      setCell(tbl,'rtime', f.RTime ? f.RTime.slice(0,5) : '', true);
+      if(isDep){
+        setCell(tbl,'checkin', f.CheckIn ? f.CheckIn+' 號櫃台' : '', true);
+        setCell(tbl,'plane', f.PlaneNo);
+      }
+    });
+  }
+
+  function fetchSecurity(){
+    return fetch(SEC).then(function(r){return r.json();}).then(function(j){
+      var s=j.hits.hits[0]._source;
+      setCell('fl-dep','security', '約 '+s.averageSecurityWaitTime+' 分鐘', s.averageSecurityWaitTime>=15);
+    });
+  }
+
+  var updated=document.getElementById('fl-updated');
+  function refresh(){
+    Promise.allSettled
+      ? Promise.allSettled([fetchFlight(DEP_ID,'fl-dep',true), fetchFlight(RET_ID,'fl-ret',false), fetchSecurity()]).then(done)
+      : Promise.all([fetchFlight(DEP_ID,'fl-dep',true), fetchFlight(RET_ID,'fl-ret',false), fetchSecurity()]).then(done, fail);
+    function done(rs){
+      var anyFail = rs && rs.some && rs.some(function(x){return x.status==='rejected';});
+      if(anyFail){ fail(); return; }
+      var t=new Date();
+      updated.textContent='最後更新 '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0')+':'+String(t.getSeconds()).padStart(2,'0');
+      updated.classList.remove('err');
+    }
+    function fail(){ updated.textContent='更新失敗（網路或 API 無回應），30 秒後重試'; updated.classList.add('err'); }
+  }
+
+  refresh();
+  setInterval(function(){ if(!document.hidden) refresh(); }, 30000);
+  // 手機切回頁面時立即更新一次
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) refresh(); });
+  document.getElementById('fl-refresh').addEventListener('click', function(e){ e.preventDefault(); refresh(); });
 })();
 
 // 旅途當天自動標示今天的日期，並捲動到當日行程
