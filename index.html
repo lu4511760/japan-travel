@@ -111,6 +111,9 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 
 /* ── 雪場直播影像（響應式 16:9） ── */
 .live-cam{width:100%; aspect-ratio:16/9; border:0; border-radius:8px; margin-top:2px; background:#000}
+
+/* ── 已過去的行程灰階顯示 ── */
+.ev.past, .day-head.past{opacity:.4; filter:grayscale(1)}
 .fl-updated.err{color:#c0392b}
 .nrt-head{margin:12px 0 2px; font-size:13.5px; border-top:1px solid var(--line); padding-top:10px}
 </style>
@@ -217,7 +220,7 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 
     <div class="day-head" id="d0117">第2天・01/17<span class="dow">週日</span></div>
 
-    <div class="ev">
+    <div class="ev" id="ski-info">
       <h2>🎿 雪場資訊</h2>
       <div class="body">
         <p style="margin-top:4px"><b>📹 雪場即時影像（24 小時直播）</b></p>
@@ -510,6 +513,56 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
   document.querySelectorAll('.fl-refresh').forEach(function(btn){
     btn.addEventListener('click', function(e){ e.preventDefault(); refresh(); });
   });
+})();
+
+// 體驗優化：過去的行程灰階顯示、雪場資訊卡依日期移動
+(function(){
+  // 各日期標題對應的日期
+  var DAY_DATES={d0116:'2027-01-16',d0117:'2027-01-17',d0118:'2027-01-18',d0119:'2027-01-19',
+                 d0120:'2027-01-20',d0121:'2027-01-21',d0122:'2027-01-22',d0123:'2027-01-23'};
+
+  function dateStr(d){
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+
+  // 雪場資訊卡：今天 <=1/17 放第2天、=1/18 放第3天、>=1/19 放第4天
+  function moveSkiInfo(now){
+    var today=dateStr(now);
+    var target = today<='2027-01-17' ? 'd0117' : (today==='2027-01-18' ? 'd0118' : 'd0119');
+    var head=document.getElementById(target), card=document.getElementById('ski-info');
+    if(head && card && head.nextElementSibling!==card) head.insertAdjacentElement('afterend', card);
+  }
+
+  // 已開始節點之前（不含）的行程灰階；過去的日期標題與無時刻節點也灰階
+  function grayPast(now){
+    var today=dateStr(now);
+    var curDate=null, items=[];
+    document.querySelectorAll('.tl > *').forEach(function(el){
+      if(el.classList.contains('day-head')){
+        curDate=DAY_DATES[el.id]||curDate;
+        items.push({el:el, date:curDate, dt:null, isHead:true});
+      }else if(el.classList.contains('ev')){
+        var w=el.querySelector('.when');
+        var t=w && /^\d{2}:\d{2}$/.test(w.textContent.trim()) ? w.textContent.trim() : null;
+        items.push({el:el, date:curDate, dt:(curDate&&t)?new Date(curDate+'T'+t+':00'):null, isHead:false});
+      }
+    });
+    // 目前進行中的節點＝最後一個「開始時間 <= 現在」的有時刻節點
+    var started=items.filter(function(x){return x.dt && x.dt<=now;});
+    var cur=started.length?started[started.length-1]:null;
+    items.forEach(function(x){
+      var past;
+      if(x.dt) past = !!cur && x.dt < cur.dt;
+      else past = !!x.date && x.date < today; // 日期標題與無時刻節點：整天過了才灰
+      x.el.classList.toggle('past', !!past);
+    });
+  }
+
+  function tick(now){ moveSkiInfo(now); grayPast(now); }
+  window.__tripTick=tick; // 供測試模擬時間用
+  tick(new Date());
+  setInterval(function(){ tick(new Date()); }, 60000);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) tick(new Date()); });
 })();
 
 // 旅途當天自動標示今天的日期，並捲動到當日行程
