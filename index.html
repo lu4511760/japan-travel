@@ -508,14 +508,32 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
     });
   }
 
-  // 把成田 gates / 報到櫃台欄位（字串或物件陣列）攤平成文字
-  function flatNames(arr){
-    if(!arr || !arr.length) return '';
-    return arr.map(function(x){
-      if(typeof x==='string') return x;
-      // 成田的到達門欄位是 gateNo，報到櫃台則可能是 name/counter 等
-      return x.gateNo || x.gate || x.gateName || x.name || x.counter || x.counterNo || '';
-    }).filter(Boolean).join('、');
+  // 成田的門／櫃台欄位：取出名稱與 POI，有 POI 就做成官網地圖連結
+  function setCellPoi(tbl, key, arr, hot){
+    var td=document.querySelector('#'+tbl+' td[data-f="'+key+'"]');
+    if(!td) return;
+    var items=(arr||[]).map(function(x){
+      if(typeof x==='string') return {text:x, poi:''};
+      return {
+        text: x.gateNo || x.gate || x.gateName || x.name || x.counter || x.counterNo || '',
+        poi: x.gatePOI || x.poi || x.POI || ''
+      };
+    }).filter(function(x){ return x.text; });
+    td.textContent='';
+    if(!items.length){ td.textContent='—'; td.classList.remove('fl-hot'); return; }
+    items.forEach(function(it,i){
+      if(i) td.appendChild(document.createTextNode('、'));
+      if(it.poi){
+        var a=document.createElement('a');
+        a.href='https://www.narita-airport.jp/zh-tc/map/?poi='+encodeURIComponent(it.poi);
+        a.target='_blank'; a.rel='noopener';
+        a.textContent=it.text;
+        td.appendChild(a);
+      }else{
+        td.appendChild(document.createTextNode(it.text));
+      }
+    });
+    td.classList.toggle('fl-hot', !!hot);
   }
 
   function fetchNarita(type, id, tbl, isArr){
@@ -526,10 +544,11 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
         if(!f){ setCell(tbl,'st','尚無資料（接近當天才會公布）'); return; }
         setCell(tbl,'st', f.status && f.status.status, true);
         setCell(tbl,'otime', f.scheduledTime, false);
-        setCell(tbl,'gate', flatNames(f.gates), true);
+        setCellPoi(tbl,'gate', f.gates, true);
         if(!isArr){
           var ci=f.checkInCounterOrArrivalLobby||{};
-          setCell(tbl,'checkin', flatNames(ci.changeNameOfCheckInOrArrival)||flatNames(ci.nameOfCheckInOrArrival), true);
+          var cnt=(ci.changeNameOfCheckInOrArrival && ci.changeNameOfCheckInOrArrival.length) ? ci.changeNameOfCheckInOrArrival : ci.nameOfCheckInOrArrival;
+          setCellPoi(tbl,'checkin', cnt, true);
         }
         // 出發安檢擁擠度（入境審查改用專頁 API，見 fetchImm）：每個安檢站一行，關閉中也照實顯示
         if(!isArr){
