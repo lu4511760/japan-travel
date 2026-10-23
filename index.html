@@ -495,7 +495,8 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
     if(!arr || !arr.length) return '';
     return arr.map(function(x){
       if(typeof x==='string') return x;
-      return x.gate || x.gateName || x.name || x.counter || Object.values(x).filter(function(v){return typeof v==='string';}).join(' ');
+      // 成田的到達門欄位是 gateNo，報到櫃台則可能是 name/counter 等
+      return x.gateNo || x.gate || x.gateName || x.name || x.counter || x.counterNo || '';
     }).filter(Boolean).join('、');
   }
 
@@ -553,7 +554,7 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
     var la=document.getElementById('nrt-arr-link'); if(la) la.href='https://www.narita-airport.jp/zh-tc/flight/arr-search/'+t+'-JX0802/';
     var ld=document.getElementById('nrt-dep-link'); if(ld) ld.href='https://www.narita-airport.jp/zh-tc/flight/dep-search/'+t+'-JX0803/';
     var ta=document.getElementById('tpe-dep-link'); if(ta) ta.href='https://www.taoyuan-airport.com/flight_depart/'+t+'_D_JX802?lang=ch';
-    var tb=document.getElementById('tpe-arr-link'); if(tb) tb.href='https://www.taoyuan-airport.com/flight_depart/'+t+'_A_JX803?lang=ch';
+    var tb=document.getElementById('tpe-arr-link'); if(tb) tb.href='https://www.taoyuan-airport.com/flight_arrival/'+t+'_A_JX803?lang=ch';
     // 利木津巴士時刻表帶當天日期（yyyy-mm-dd）
     var td=t.slice(0,4)+'-'+t.slice(4,6)+'-'+t.slice(6,8);
     var lm=document.getElementById('limousine-link'); if(lm) lm.href='https://www.limousinebus.co.jp/zh-tw/timetable/detail/Narita-Ikebukuro/?dir=2&d='+td;
@@ -562,6 +563,11 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
     Promise.allSettled ? Promise.allSettled(jobs).then(done) : Promise.all(jobs).then(done, fail);
     function done(rs){
       var fails = rs && rs.filter ? rs.filter(function(x){return x.status==='rejected';}).length : 0;
+      // 有來源失敗時 5 秒後補抓一次，避免剛開頁遇到暫時性失敗就空等 30 秒
+      if(fails && !refresh.retrying){
+        refresh.retrying=true;
+        setTimeout(function(){ refresh.retrying=false; refresh(); }, 5000);
+      }
       if(fails===rs.length){ fail(); return; }
       var t=new Date();
       setUpdated('最後更新 '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0')+':'+String(t.getSeconds()).padStart(2,'0')+(fails?'（部分來源失敗）':''), false);
