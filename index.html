@@ -96,7 +96,7 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 .fl-table td:first-child{color:var(--muted); width:7em; font-size:13px}
 .fl-table td[data-f]{font-weight:600; font-variant-numeric:tabular-nums}
 .fl-table td.fl-hot{color:var(--accent)}
-#fl-updated.err{color:#c0392b}
+.fl-updated.err{color:#c0392b}
 .nrt-head{margin:12px 0 2px; font-size:13.5px; border-top:1px solid var(--line); padding-top:10px}
 </style>
 </head>
@@ -114,21 +114,23 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
     <a href="#d0121" data-d="2027-01-21">1/21</a>
     <a href="#d0122" data-d="2027-01-22">1/22</a>
     <a href="#d0123" data-d="2027-01-23">1/23</a>
-    <a href="#flights">✈️ 航班</a>
     <a href="#checklist">✓ 清單</a>
   </nav>
 
-  <!-- ── 即時航班資訊（30 秒自動更新） ── -->
-  <section class="block" id="flights" style="margin-top:0">
-    <h2>✈️ 即時航班資訊</h2>
-    <p class="note" style="font-size:12.5px; color:var(--muted); margin:6px 0 10px">
-      航班資料每 30 秒自動更新・<span id="fl-updated">尚未更新</span>
-      <a href="#" id="fl-refresh" style="margin-left:8px">↻ 立即更新</a>
-    </p>
+  <div class="tl">
 
-    <div class="info" style="margin-bottom:12px">
-      <p><b>去程 JX802</b>　桃園 T1 <b>10:10</b> → 成田 T2 <b>14:20</b>　<span class="note">2027/01/16（六）</span></p>
-      <p class="nrt-head"><b>🇹🇼 桃園端（出發）</b></p>
+    <div class="ev" id="d0116">
+      <div class="when">01/16<span class="dow">週六</span></div>
+      <h2>✈️ 抵達成田 → 🚌 直奔斑尾</h2>
+      <div class="body">
+        <p>✈️ <b>JX802</b>　桃園 T1 <b>10:10</b> 起飛 → 成田 T2 <b>14:20</b> 抵達<span class="note">（建議 07:10 前抵達桃園機場）</span></p>
+        <p>成田機場入境後，搭 <b>DBC 遊覽車</b>直達斑尾雪場。<span class="note">車程約 4–5 小時，抵達約晚間</span></p>
+        <p>🏨 Check-in：<b>Tangram 斑尾東急度假村</b>
+          <a class="map" href="https://maps.google.com/?q=%E3%82%BF%E3%83%B3%E3%82%B0%E3%83%A9%E3%83%A0%E6%96%91%E5%B0%BE%E6%9D%B1%E6%80%A5%E3%83%AA%E3%82%BE%E3%83%BC%E3%83%88" target="_blank" rel="noopener">📍 地圖</a></p>
+        <p class="note">今晚先領雪具、確認隔日纜車票與集合資訊。</p>
+        <p class="note" style="margin-top:10px">⏱ 即時航班資料每 30 秒自動更新・<span class="fl-updated">尚未更新</span>
+          <a href="#" class="fl-refresh" style="margin-left:8px">↻ 立即更新</a></p>
+        <p class="nrt-head"><b>🇹🇼 桃園端（出發）</b></p>
       <table class="fl-table" id="fl-dep">
         <tr><td>航班狀態</td><td data-f="st">—</td></tr>
         <tr><td>報到櫃台</td><td data-f="checkin">—</td></tr>
@@ -149,42 +151,6 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
         <a href="https://www.narita-airport.jp/zh-tc/flight/arr-search/20270116-JX0802/" target="_blank" rel="noopener">成田官網原頁 →</a>
         <a href="https://www.narita-airport.jp/zh-tc/airportguide/inter-arr/immigration/" target="_blank" rel="noopener">入境審查狀況 →</a>
       </p>
-    </div>
-
-    <div class="info">
-      <p><b>回程 JX803</b>　成田 T2 <b>15:40</b> → 桃園 T1 <b>18:45</b>　<span class="note">2027/01/23（六）</span></p>
-      <p class="nrt-head"><b>🇯🇵 成田端（出發）</b></p>
-      <table class="fl-table" id="fl-ret-nrt">
-        <tr><td>成田狀態</td><td data-f="st">—</td></tr>
-        <tr><td>報到櫃台</td><td data-f="checkin">—</td></tr>
-        <tr><td>登機門</td><td data-f="gate">—</td></tr>
-        <tr><td>表定起飛</td><td data-f="otime">—</td></tr>
-        <tr><td>安檢等待</td><td data-f="sec">—</td></tr>
-      </table>
-      <p style="margin:6px 0">
-        <a href="https://www.narita-airport.jp/zh-tc/flight/dep-search/20270123-JX0803/" target="_blank" rel="noopener">成田官網原頁 →</a>
-      </p>
-      <p class="nrt-head"><b>🇹🇼 桃園端（抵達）</b></p>
-      <table class="fl-table" id="fl-ret">
-        <tr><td>抵台狀態</td><td data-f="st">—</td></tr>
-        <tr><td>表定抵達</td><td data-f="otime">—</td></tr>
-        <tr><td>預計抵達</td><td data-f="rtime">—</td></tr>
-        <tr><td>到達門</td><td data-f="gate">—</td></tr>
-      </table>
-    </div>
-  </section>
-
-  <div class="tl">
-
-    <div class="ev" id="d0116">
-      <div class="when">01/16<span class="dow">週六</span></div>
-      <h2>✈️ 抵達成田 → 🚌 直奔斑尾</h2>
-      <div class="body">
-        <p>✈️ <b>JX802</b>　桃園 <b>10:10</b> 起飛 → 成田 <b>14:20</b> 抵達<span class="note">（建議 07:10 前抵達桃園機場）</span></p>
-        <p>成田機場入境後，搭 <b>DBC 遊覽車</b>直達斑尾雪場。<span class="note">車程約 4–5 小時，抵達約晚間</span></p>
-        <p>🏨 Check-in：<b>Tangram 斑尾東急度假村</b>
-          <a class="map" href="https://maps.google.com/?q=%E3%82%BF%E3%83%B3%E3%82%B0%E3%83%A9%E3%83%A0%E6%96%91%E5%B0%BE%E6%9D%B1%E6%80%A5%E3%83%AA%E3%82%BE%E3%83%BC%E3%83%88" target="_blank" rel="noopener">📍 地圖</a></p>
-        <p class="note">今晚先領雪具、確認隔日纜車票與集合資訊。</p>
       </div>
     </div>
 
@@ -239,9 +205,29 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
       <div class="when">01/23<span class="dow">週六</span></div>
       <h2>🛫 回程</h2>
       <div class="body">
-        <p>✈️ <b>JX803</b>　成田 <b>15:40</b> 起飛 → 桃園 <b>18:45</b> 抵達</p>
+        <p>✈️ <b>JX803</b>　成田 T2 <b>15:40</b> 起飛 → 桃園 T1 <b>18:45</b> 抵達</p>
         <p>東京 → <b>成田機場</b>：N'EX 成田特快（約 60 分）或 京成 Skyliner（日暮里出發約 40 分）。</p>
         <p class="note">建議 12:40 前抵達成田機場（起飛前 3 小時）；東京市區約 11:30 前出發。</p>
+        <p class="note" style="margin-top:10px">⏱ 即時航班資料每 30 秒自動更新・<span class="fl-updated">尚未更新</span>
+          <a href="#" class="fl-refresh" style="margin-left:8px">↻ 立即更新</a></p>
+        <p class="nrt-head"><b>🇯🇵 成田端（出發）</b></p>
+        <table class="fl-table" id="fl-ret-nrt">
+          <tr><td>成田狀態</td><td data-f="st">—</td></tr>
+          <tr><td>報到櫃台</td><td data-f="checkin">—</td></tr>
+          <tr><td>登機門</td><td data-f="gate">—</td></tr>
+          <tr><td>表定起飛</td><td data-f="otime">—</td></tr>
+          <tr><td>安檢等待</td><td data-f="sec">—</td></tr>
+        </table>
+        <p style="margin:6px 0">
+          <a href="https://www.narita-airport.jp/zh-tc/flight/dep-search/20270123-JX0803/" target="_blank" rel="noopener">成田官網原頁 →</a>
+        </p>
+        <p class="nrt-head"><b>🇹🇼 桃園端（抵達）</b></p>
+        <table class="fl-table" id="fl-ret">
+          <tr><td>抵台狀態</td><td data-f="st">—</td></tr>
+          <tr><td>表定抵達</td><td data-f="otime">—</td></tr>
+          <tr><td>預計抵達</td><td data-f="rtime">—</td></tr>
+          <tr><td>到達門</td><td data-f="gate">—</td></tr>
+        </table>
       </div>
     </div>
 
@@ -386,7 +372,10 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
     });
   }
 
-  var updated=document.getElementById('fl-updated');
+  var updatedEls=document.querySelectorAll('.fl-updated');
+  function setUpdated(text, isErr){
+    updatedEls.forEach(function(el){ el.textContent=text; el.classList.toggle('err', !!isErr); });
+  }
   function refresh(){
     var jobs=[fetchFlight(DEP_ID,'fl-dep',true), fetchFlight(RET_ID,'fl-ret',false), fetchSecurity(),
               fetchNarita('arr',NRT_ARR,'fl-dep-nrt',true), fetchNarita('dep',NRT_DEP,'fl-ret-nrt',false), fetchImm()];
@@ -395,17 +384,18 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
       var fails = rs && rs.filter ? rs.filter(function(x){return x.status==='rejected';}).length : 0;
       if(fails===rs.length){ fail(); return; }
       var t=new Date();
-      updated.textContent='最後更新 '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0')+':'+String(t.getSeconds()).padStart(2,'0')+(fails?'（部分來源失敗）':'');
-      updated.classList.remove('err');
+      setUpdated('最後更新 '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0')+':'+String(t.getSeconds()).padStart(2,'0')+(fails?'（部分來源失敗）':''), false);
     }
-    function fail(){ updated.textContent='更新失敗（網路或 API 無回應），30 秒後重試'; updated.classList.add('err'); }
+    function fail(){ setUpdated('更新失敗（網路或 API 無回應），30 秒後重試', true); }
   }
 
   refresh();
   setInterval(function(){ if(!document.hidden) refresh(); }, 30000);
   // 手機切回頁面時立即更新一次
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) refresh(); });
-  document.getElementById('fl-refresh').addEventListener('click', function(e){ e.preventDefault(); refresh(); });
+  document.querySelectorAll('.fl-refresh').forEach(function(btn){
+    btn.addEventListener('click', function(e){ e.preventDefault(); refresh(); });
+  });
 })();
 
 // 旅途當天自動標示今天的日期，並捲動到當日行程
