@@ -209,8 +209,7 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
           <tr><td>入境審查<br><span style="font-weight:400">（外國旅客通道）</span></td><td data-f="imm">—</td></tr>
         </table>
         <p style="margin-top:8px">
-          <a href="https://www.narita-airport.jp/zh-tc/flight/arr-search/20270116-JX0802/" target="_blank" rel="noopener">成田官網原頁 →</a>
-          <a href="https://www.narita-airport.jp/zh-tc/airportguide/inter-arr/immigration/" target="_blank" rel="noopener">入境審查狀況 →</a>
+          <a id="nrt-arr-link" href="https://www.narita-airport.jp/zh-tc/flight/" target="_blank" rel="noopener">成田機場官網</a>，<a href="https://www.narita-airport.jp/zh-tc/airportguide/inter-arr/immigration/" target="_blank" rel="noopener">入境審查狀況</a>
         </p>
       </div>
     </div>
@@ -384,7 +383,7 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
           <tr><td>安檢等待</td><td data-f="sec">—</td></tr>
         </table>
         <p style="margin:6px 0">
-          <a href="https://www.narita-airport.jp/zh-tc/flight/dep-search/20270123-JX0803/" target="_blank" rel="noopener">成田官網原頁 →</a>
+          <a id="nrt-dep-link" href="https://www.narita-airport.jp/zh-tc/flight/" target="_blank" rel="noopener">成田機場官網</a>
         </p>
       </div>
     </div>
@@ -433,12 +432,13 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
   var API='https://www.taoyuan-airport.com/api/api/flight/a_flight/airlines';
   var SEC='https://pfms.taoyuan-airport.com/es/crowdedness/T1/last';
   // 航班查詢 id：日期_出發(D)/抵達(A)_航班號
-  // 【測試模式】正式值：20270116_D_JX802 / 20270123_A_JX803
-  var DEP_ID='20261024_D_JX802', RET_ID='20261031_A_JX803';
+  // 航班查詢一律使用「當天日期」（yyyyMMdd）
+  function ymd(){
+    var d=new Date();
+    return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+  }
   // 成田代理（Cloudflare Worker）網址，部署後填入；留空則成田區塊顯示「未設定」
   var NARITA_PROXY='https://narita-proxy.4511760.workers.dev/';
-  // 【測試模式】正式值：20270116-JX0802 / 20270123-JX0803
-  var NRT_ARR='20261024-JX0802', NRT_DEP='20261031-JX0803';
 
   function setCell(tbl, key, val, hot){
     var td=document.querySelector('#'+tbl+' td[data-f="'+key+'"]');
@@ -525,8 +525,12 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
     updatedEls.forEach(function(el){ el.textContent=text; el.classList.toggle('err', !!isErr); });
   }
   function refresh(){
-    var jobs=[fetchFlight(DEP_ID,'fl-dep',true), fetchFlight(RET_ID,'fl-ret',false), fetchSecurity(),
-              fetchNarita('arr',NRT_ARR,'fl-dep-nrt',true), fetchNarita('dep',NRT_DEP,'fl-ret-nrt',false), fetchImm()];
+    var t=ymd();
+    // 成田官網連結同步換成當天日期
+    var la=document.getElementById('nrt-arr-link'); if(la) la.href='https://www.narita-airport.jp/zh-tc/flight/arr-search/'+t+'-JX0802/';
+    var ld=document.getElementById('nrt-dep-link'); if(ld) ld.href='https://www.narita-airport.jp/zh-tc/flight/dep-search/'+t+'-JX0803/';
+    var jobs=[fetchFlight(t+'_D_JX802','fl-dep',true), fetchFlight(t+'_A_JX803','fl-ret',false), fetchSecurity(),
+              fetchNarita('arr',t+'-JX0802','fl-dep-nrt',true), fetchNarita('dep',t+'-JX0803','fl-ret-nrt',false), fetchImm()];
     Promise.allSettled ? Promise.allSettled(jobs).then(done) : Promise.all(jobs).then(done, fail);
     function done(rs){
       var fails = rs && rs.filter ? rs.filter(function(x){return x.status==='rejected';}).length : 0;
