@@ -124,14 +124,15 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
   <p class="sub">2027/01/16（六）– 01/23（六）・8 天 7 夜</p>
 
   <nav id="daynav">
-    <a href="#d0116" data-d="2027-01-16">1/16</a>
-    <a href="#d0117" data-d="2027-01-17">1/17</a>
-    <a href="#d0118" data-d="2027-01-18">1/18</a>
-    <a href="#d0119" data-d="2027-01-19">1/19</a>
-    <a href="#d0120" data-d="2027-01-20">1/20</a>
-    <a href="#d0121" data-d="2027-01-21">1/21</a>
-    <a href="#d0122" data-d="2027-01-22">1/22</a>
-    <a href="#d0123" data-d="2027-01-23">1/23</a>
+    <!-- 【測試模式】data-d 正式值：2027-01-16 ～ 2027-01-23 -->
+    <a href="#d0116" data-d="2026-10-24">1/16</a>
+    <a href="#d0117" data-d="2026-10-25">1/17</a>
+    <a href="#d0118" data-d="2026-10-26">1/18</a>
+    <a href="#d0119" data-d="2026-10-27">1/19</a>
+    <a href="#d0120" data-d="2026-10-28">1/20</a>
+    <a href="#d0121" data-d="2026-10-29">1/21</a>
+    <a href="#d0122" data-d="2026-10-30">1/22</a>
+    <a href="#d0123" data-d="2026-10-31">1/23</a>
     <a href="#checklist">✓ 清單</a>
   </nav>
 
@@ -404,10 +405,12 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
   var API='https://www.taoyuan-airport.com/api/api/flight/a_flight/airlines';
   var SEC='https://pfms.taoyuan-airport.com/es/crowdedness/T1/last';
   // 航班查詢 id：日期_出發(D)/抵達(A)_航班號
-  var DEP_ID='20270116_D_JX802', RET_ID='20270123_A_JX803';
+  // 【測試模式】正式值：20270116_D_JX802 / 20270123_A_JX803
+  var DEP_ID='20261024_D_JX802', RET_ID='20261031_A_JX803';
   // 成田代理（Cloudflare Worker）網址，部署後填入；留空則成田區塊顯示「未設定」
   var NARITA_PROXY='https://narita-proxy.4511760.workers.dev/';
-  var NRT_ARR='20270116-JX0802', NRT_DEP='20270123-JX0803';
+  // 【測試模式】正式值：20270116-JX0802 / 20270123-JX0803
+  var NRT_ARR='20261024-JX0802', NRT_DEP='20261031-JX0803';
 
   function setCell(tbl, key, val, hot){
     var td=document.querySelector('#'+tbl+' td[data-f="'+key+'"]');
@@ -518,8 +521,9 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 // 體驗優化：過去的行程灰階顯示、雪場資訊卡依日期移動
 (function(){
   // 各日期標題對應的日期
-  var DAY_DATES={d0116:'2027-01-16',d0117:'2027-01-17',d0118:'2027-01-18',d0119:'2027-01-19',
-                 d0120:'2027-01-20',d0121:'2027-01-21',d0122:'2027-01-22',d0123:'2027-01-23'};
+  // 【測試模式】正式值：2027-01-16 ～ 2027-01-23
+  var DAY_DATES={d0116:'2026-10-24',d0117:'2026-10-25',d0118:'2026-10-26',d0119:'2026-10-27',
+                 d0120:'2026-10-28',d0121:'2026-10-29',d0122:'2026-10-30',d0123:'2026-10-31'};
 
   function dateStr(d){
     return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -528,7 +532,8 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
   // 雪場資訊卡：今天 <=1/17 放第2天、=1/18 放第3天、>=1/19 放第4天
   function moveSkiInfo(now){
     var today=dateStr(now);
-    var target = today<='2027-01-17' ? 'd0117' : (today==='2027-01-18' ? 'd0118' : 'd0119');
+    // 【測試模式】正式值：2027-01-17 / 2027-01-18
+    var target = today<=DAY_DATES.d0117 ? 'd0117' : (today===DAY_DATES.d0118 ? 'd0118' : 'd0119');
     var head=document.getElementById(target), card=document.getElementById('ski-info');
     if(head && card && head.nextElementSibling!==card) head.insertAdjacentElement('afterend', card);
   }
