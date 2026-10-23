@@ -9,14 +9,14 @@
 <style>
 :root{
   --bg:#fcfbf7; --fg:#231f1a; --muted:#8a8379; --line:#e8e3d8;
-  --rail:#d8d2c4; --accent:#b3541e; --accent-soft:#f9ece2;
+  --rail:#d8d2c4; --accent:#b3541e; --accent-soft:#f9ece2; --link:#1667d9;
   --dot-bg:#fcfbf7; --card:#ffffff;
   --shadow:0 1px 2px rgba(35,31,26,.06), 0 3px 10px rgba(35,31,26,.05);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#1a1814; --fg:#ece7de; --muted:#9c948a; --line:#332f28;
-    --rail:#44403a; --accent:#e58a4e; --accent-soft:#33241a;
+    --rail:#44403a; --accent:#e58a4e; --accent-soft:#33241a; --link:#7fb0ff;
     --dot-bg:#1a1814; --card:#232019;
     --shadow:0 1px 3px rgba(0,0,0,.45);
   }
@@ -85,7 +85,7 @@ nav a.today{color:#fff; background:var(--accent); border-color:var(--accent); fo
   display:inline-block; font-size:12px; background:var(--accent-soft); color:var(--accent);
   border-radius:5px; padding:1px 8px; margin:2px 6px 2px 0; font-weight:600;
 }
-a{color:var(--accent); text-decoration:none}
+a{color:var(--link); text-decoration:none}
 .map{font-size:13px; white-space:nowrap}
 
 /* ── 資訊區塊與行前清單 ── */
@@ -179,7 +179,7 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
       <div class="when">16:00</div>
       <h2>🚌 DBC 集合上遊覽車</h2>
       <div class="body">
-        <p>集合地點：<a href="https://www.narita-airport.jp/zh-tc/map/?bearing=59.5&zoom=18.535454490297724&pitch=0&lat=35.77381890000001&lng=140.38744050000003&building=b32584d9-027d-4863-aa2e-3482e8fc2fb3&floor=1F&clickedPoi=16856980" target="_blank" rel="noopener">📍 國際航班到達大廳 B（成田機場地圖）</a></p>
+        <p>集合地點：<a href="https://www.narita-airport.jp/zh-tc/map/?bearing=59.5&zoom=18.535454490297724&pitch=0&lat=35.77381890000001&lng=140.38744050000003&building=b32584d9-027d-4863-aa2e-3482e8fc2fb3&floor=1F&clickedPoi=16856980" target="_blank" rel="noopener">📍 國際航班到達大廳 B</a></p>
       </div>
     </div>
 
