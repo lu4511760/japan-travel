@@ -462,7 +462,9 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
       var f=j.a_flight||{};
       // 機場 API 僅提供近日航班，太早查會回「查無此航班」
       if(!j.a_flight && j.statusCode){ setCell(tbl,'st','尚無資料（接近當天才會公布）'); return; }
-      setCell(tbl,'st', f.CurrentStatus, true);
+      // 狀態可能在 CurrentStatus 或 Memo（例如「取消」在 Memo），兩者都有就合併顯示
+      var st=[(f.CurrentStatus||'').trim(), (f.Memo||'').trim()].filter(Boolean).join('・');
+      setCell(tbl,'st', st, true);
       setCell(tbl,'gate', f.Gate, true);
       setCell(tbl,'otime', f.OTime ? f.OTime.slice(0,5) : '');
       setCell(tbl,'rtime', f.RTime ? f.RTime.slice(0,5) : '', true);
