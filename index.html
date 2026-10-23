@@ -112,7 +112,7 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 
 /* ── 即時航班表格 ── */
 .fl-table{width:100%; border-collapse:collapse; font-size:14px; margin-top:4px}
-.fl-table td{padding:4px 0; border-bottom:1px dashed var(--line)}
+.fl-table td{padding:4px 0; border-bottom:1px dashed var(--line); vertical-align:top}
 .fl-table tr:last-child td{border-bottom:none}
 .fl-table td:first-child{color:var(--muted); width:7em; font-size:13px}
 .fl-table td[data-f]{font-weight:600; font-variant-numeric:tabular-nums}
@@ -417,7 +417,8 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
           <tr><td>抵台狀態</td><td data-f="st">—</td></tr>
           <tr><td>表定抵達</td><td data-f="otime">—</td></tr>
           <tr><td>預計抵達</td><td data-f="rtime">—</td></tr>
-          <tr><td>到達門</td><td data-f="gate">—</td></tr>
+          <tr><td>登機門</td><td data-f="gate">—</td></tr>
+          <tr><td>行李轉盤</td><td data-f="belt">—</td></tr>
         </table>
         <p style="margin-top:8px">
           <a id="tpe-arr-link" href="https://www.taoyuan-airport.com/flight_arrive" target="_blank" rel="noopener">桃園機場官網</a>
@@ -468,6 +469,20 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
     td.classList.toggle('fl-hot', !!hot && !!val && String(val).trim()!=='' && val!=='-');
   }
 
+  // 多行顯示（每個查驗處/安檢站一行），用 DOM 組避免字串injection
+  function setCellLines(tbl, key, lines, hot){
+    var td=document.querySelector('#'+tbl+' td[data-f="'+key+'"]');
+    if(!td) return;
+    lines=(lines||[]).filter(Boolean);
+    td.textContent='';
+    if(!lines.length){ td.textContent='—'; td.classList.remove('fl-hot'); return; }
+    lines.forEach(function(line,i){
+      if(i) td.appendChild(document.createElement('br'));
+      td.appendChild(document.createTextNode(line));
+    });
+    td.classList.toggle('fl-hot', !!hot);
+  }
+
   function fetchFlight(id, tbl, isDep){
     return fetch(API,{
       method:'POST',
@@ -486,6 +501,9 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
       if(isDep){
         setCell(tbl,'checkin', f.CheckIn ? f.CheckIn+' 號櫃台' : '', true);
         setCell(tbl,'plane', f.PlaneNo);
+      }else{
+        // 抵達航班的行李轉盤，桃園 API 放在 StopCode 欄位
+        setCell(tbl,'belt', f.StopCode, true);
       }
     });
   }
@@ -513,12 +531,13 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
           var ci=f.checkInCounterOrArrivalLobby||{};
           setCell(tbl,'checkin', flatNames(ci.changeNameOfCheckInOrArrival)||flatNames(ci.nameOfCheckInOrArrival), true);
         }
-        // 出發安檢擁擠度（入境審查改用專頁 API，見 fetchImm）
+        // 出發安檢擁擠度（入境審查改用專頁 API，見 fetchImm）：每個安檢站一行，關閉中也照實顯示
         if(!isArr){
-          var sec=(j.flightSecurity||[]).map(function(s){
-            return (s.congestion && s.congestion.text && s.congestion.text!=='運用時間外') ? s.locationName+'：'+s.congestion.text : null;
-          }).filter(Boolean).join('　');
-          setCell(tbl,'sec', sec, /40|60/.test(sec));
+          var secLines=(j.flightSecurity||[]).map(function(s){
+            var c=s.congestion && s.congestion.text;
+            return c ? s.locationName+'：'+c : null;
+          });
+          setCellLines(tbl,'sec', secLines, /40|60/.test(secLines.join('')));
         }
       });
   }
@@ -529,11 +548,11 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
     return fetch(NARITA_PROXY+'?type=imm')
       .then(function(r){return r.json();}).then(function(j){
         var rows=(j.immigration||[]).filter(function(s){return s.terminal==='T2';});
-        var txt=rows.map(function(s){
+        var lines=rows.map(function(s){
           var name=(s.name||'').replace(' 入境審查處','');
           return name+'：'+(s.abroad||'—');
-        }).join('　');
-        setCell('fl-dep-nrt','imm', txt, /40|60/.test(txt));
+        });
+        setCellLines('fl-dep-nrt','imm', lines, /40|60/.test(lines.join('')));
       });
   }
 
