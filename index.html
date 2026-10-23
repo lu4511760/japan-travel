@@ -533,6 +533,26 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
     if(head && card && head.nextElementSibling!==card) head.insertAdjacentElement('afterend', card);
   }
 
+  // 找出目前進行中的節點（最後一個「開始時間 <= 現在」的有時刻節點）
+  function currentNode(now){
+    var curDate=null, cur=null;
+    document.querySelectorAll('.tl > *').forEach(function(el){
+      if(el.classList.contains('day-head')){ curDate=DAY_DATES[el.id]||curDate; }
+      else if(el.classList.contains('ev')){
+        var w=el.querySelector('.when');
+        var t=w && /^\d{2}:\d{2}$/.test(w.textContent.trim()) ? w.textContent.trim() : null;
+        if(curDate && t){ var dt=new Date(curDate+'T'+t+':00'); if(dt<=now) cur=el; }
+      }
+    });
+    return cur;
+  }
+
+  // 每小時把目前行程捲到畫面中間
+  function centerCurrent(now){
+    var cur=currentNode(now);
+    if(cur) cur.scrollIntoView({behavior:'smooth', block:'center'});
+  }
+
   // 已開始節點之前（不含）的行程灰階；過去的日期標題與無時刻節點也灰階
   function grayPast(now){
     var today=dateStr(now);
@@ -560,9 +580,13 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 
   function tick(now){ moveSkiInfo(now); grayPast(now); }
   window.__tripTick=tick; // 供測試模擬時間用
+  window.__tripCenter=centerCurrent;
   tick(new Date());
   setInterval(function(){ tick(new Date()); }, 60000);
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) tick(new Date()); });
+  // 開頁（稍等自動捲動完成後）與之後每小時，把目前行程置中
+  setTimeout(function(){ centerCurrent(new Date()); }, 800);
+  setInterval(function(){ if(!document.hidden) centerCurrent(new Date()); }, 3600000);
 })();
 
 // 旅途當天自動標示今天的日期，並捲動到當日行程
