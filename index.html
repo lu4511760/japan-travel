@@ -9,14 +9,14 @@
 <style>
 :root{
   --bg:#fcfbf7; --fg:#231f1a; --muted:#8a8379; --line:#e8e3d8;
-  --rail:#d8d2c4; --accent:#b3541e; --accent-soft:#f9ece2; --link:#1667d9;
+  --rail:#d8d2c4; --accent:#b3541e; --accent-soft:#f9ece2; --link:#1667d9; --meal:#0e7a52;
   --dot-bg:#fcfbf7; --card:#ffffff;
   --shadow:0 1px 2px rgba(35,31,26,.06), 0 3px 10px rgba(35,31,26,.05);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#1a1814; --fg:#ece7de; --muted:#9c948a; --line:#332f28;
-    --rail:#44403a; --accent:#e58a4e; --accent-soft:#33241a; --link:#7fb0ff;
+    --rail:#44403a; --accent:#e58a4e; --accent-soft:#33241a; --link:#7fb0ff; --meal:#5bd4a0;
     --dot-bg:#1a1814; --card:#232019;
     --shadow:0 1px 3px rgba(0,0,0,.45);
   }
@@ -75,6 +75,7 @@ nav a.today{color:#fff; background:var(--accent); border-color:var(--accent); fo
 .when{font-size:13px; color:var(--accent); font-weight:700; letter-spacing:.05em; font-variant-numeric:tabular-nums}
 .when .dow{color:var(--muted); font-weight:400; margin-left:5px}
 .ev h2{font-size:16.5px; margin:1px 0 7px}
+.ev h2.meal{color:var(--meal)}
 .body{
   background:var(--card); border:1px solid var(--line); border-radius:10px;
   padding:10px 14px; box-shadow:var(--shadow); font-size:14.5px;
@@ -166,7 +167,7 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
       </div>
     </div>
 
-    <div class="ev"><div class="when">12:00</div><h2>🍱 飛機餐</h2></div>
+    <div class="ev"><div class="when">12:00</div><h2 class="meal">🍱 中餐: 飛機餐</h2></div>
 
     <div class="ev">
       <div class="when">14:20</div>
@@ -197,7 +198,7 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 
     <div class="ev">
       <div class="when">18:30</div>
-      <h2>🍜 上里服務區 休息吃晚餐</h2>
+      <h2 class="meal">🍜 晚餐: 上里服務區</h2>
       <div class="body">
         <p><a href="https://maps.app.goo.gl/JaVs6JFxHiqESM9C6" target="_blank" rel="noopener">📍 上里服務區（Google Maps）</a></p>
       </div>
@@ -239,40 +240,40 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
     </div>
 
     <div class="ev"><div class="when">06:00</div><h2>♨️ 泡溫泉</h2></div>
-    <div class="ev"><div class="when">07:00</div><h2>🍳 吃飯店早餐</h2></div>
+    <div class="ev"><div class="when">07:00</div><h2 class="meal">🍳 早餐: 飯店</h2></div>
     <div class="ev"><div class="when">08:30</div><h2>🧥 換裝（內裡＋個人購買）</h2></div>
     <div class="ev"><div class="when">09:00</div><h2>🎿 確認租借裝備 & 著裝</h2></div>
     <div class="ev"><div class="when">10:00</div><h2>⛷️ 滑雪課</h2></div>
-    <div class="ev"><div class="when">12:00</div><h2>🍛 吃雪場中餐</h2></div>
+    <div class="ev"><div class="when">12:00</div><h2 class="meal">🍛 中餐: 雪場餐廳</h2></div>
     <div class="ev"><div class="when">13:00</div><h2>⛷️ 滑雪課</h2></div>
     <div class="ev"><div class="when">16:00</div><h2>🏨 回飯店換裝</h2></div>
-    <div class="ev"><div class="when">18:00</div><h2>🍽️ 吃晚餐</h2></div>
+    <div class="ev"><div class="when">18:00</div><h2 class="meal">🍽️ 晚餐: 飯店</h2></div>
     <div class="ev"><div class="when">19:00</div><h2>🎮 自由時間</h2></div>
     <div class="ev"><div class="when">22:00</div><h2>♨️ 泡溫泉</h2></div>
 
     <div class="day-head" id="d0118">第3天・01/18<span class="dow">週一</span></div>
 
     <div class="ev"><div class="when">06:00</div><h2>♨️ 泡溫泉</h2></div>
-    <div class="ev"><div class="when">07:00</div><h2>🍳 吃飯店早餐</h2></div>
+    <div class="ev"><div class="when">07:00</div><h2 class="meal">🍳 早餐: 飯店</h2></div>
     <div class="ev"><div class="when">08:30</div><h2>🧥 著裝</h2></div>
     <div class="ev"><div class="when">10:00</div><h2>⛷️ 滑雪課</h2></div>
-    <div class="ev"><div class="when">12:00</div><h2>🍛 吃雪場中餐</h2></div>
+    <div class="ev"><div class="when">12:00</div><h2 class="meal">🍛 中餐: 雪場餐廳</h2></div>
     <div class="ev"><div class="when">13:00</div><h2>⛷️ 滑雪課</h2></div>
     <div class="ev"><div class="when">16:00</div><h2>🏨 回飯店換裝</h2></div>
-    <div class="ev"><div class="when">18:00</div><h2>🍽️ 吃晚餐</h2></div>
+    <div class="ev"><div class="when">18:00</div><h2 class="meal">🍽️ 晚餐: 飯店</h2></div>
     <div class="ev"><div class="when">19:00</div><h2>🎮 自由時間</h2></div>
     <div class="ev"><div class="when">22:00</div><h2>♨️ 泡溫泉</h2></div>
 
     <div class="day-head" id="d0119">第4天・01/19<span class="dow">週二</span></div>
 
     <div class="ev"><div class="when">06:00</div><h2>♨️ 泡溫泉</h2></div>
-    <div class="ev"><div class="when">07:00</div><h2>🍳 吃飯店早餐</h2></div>
+    <div class="ev"><div class="when">07:00</div><h2 class="meal">🍳 早餐: 飯店</h2></div>
     <div class="ev"><div class="when">08:30</div><h2>🧥 著裝</h2></div>
     <div class="ev"><div class="when">10:00</div><h2>⛷️ 上雪開滑</h2></div>
-    <div class="ev"><div class="when">12:00</div><h2>🍛 吃雪場中餐</h2></div>
+    <div class="ev"><div class="when">12:00</div><h2 class="meal">🍛 中餐: 雪場餐廳</h2></div>
     <div class="ev"><div class="when">13:00</div><h2>⛷️ 上雪開滑</h2></div>
     <div class="ev"><div class="when">16:00</div><h2>🏨 回飯店換裝</h2></div>
-    <div class="ev"><div class="when">18:00</div><h2>🍽️ 吃晚餐</h2></div>
+    <div class="ev"><div class="when">18:00</div><h2 class="meal">🍽️ 晚餐: 飯店</h2></div>
     <div class="ev"><div class="when">19:00</div><h2>🧳 整理大件行李</h2></div>
     <div class="ev"><div class="when">20:00</div><h2>🚚 大件行李交由 DBC 送至東京</h2></div>
     <div class="ev"><div class="when">22:00</div><h2>♨️ 泡溫泉</h2></div>
@@ -280,7 +281,7 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
     <div class="day-head" id="d0120">第5天・01/20<span class="dow">週三</span></div>
 
     <div class="ev"><div class="when">06:00</div><h2>♨️ 泡溫泉</h2></div>
-    <div class="ev"><div class="when">07:00</div><h2>🍳 吃飯店早餐</h2></div>
+    <div class="ev"><div class="when">07:00</div><h2 class="meal">🍳 早餐: 飯店</h2></div>
     <div class="ev"><div class="when">10:00</div><h2>🎫 DBC 集合發證書、公車票、高鐵票</h2></div>
 
     <div class="ev">
