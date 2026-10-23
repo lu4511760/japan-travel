@@ -143,10 +143,11 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
         <tr><td>成田狀態</td><td data-f="st">—</td></tr>
         <tr><td>表定抵達</td><td data-f="otime">—</td></tr>
         <tr><td>到達門</td><td data-f="gate">—</td></tr>
-        <tr><td>入境審查</td><td data-f="imm">—</td></tr>
+        <tr><td>入境審查<br><span style="font-weight:400">（外國旅客通道）</span></td><td data-f="imm">—</td></tr>
       </table>
       <p style="margin-top:8px">
         <a href="https://www.narita-airport.jp/zh-tc/flight/arr-search/20270116-JX0802/" target="_blank" rel="noopener">成田官網原頁 →</a>
+        <a href="https://www.narita-airport.jp/zh-tc/airportguide/inter-arr/immigration/" target="_blank" rel="noopener">入境審查狀況 →</a>
       </p>
     </div>
 
@@ -354,12 +355,27 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
           var ci=f.checkInCounterOrArrivalLobby||{};
           setCell(tbl,'checkin', flatNames(ci.changeNameOfCheckInOrArrival)||flatNames(ci.nameOfCheckInOrArrival), true);
         }
-        // 安檢/入境擁擠度：到達看 congestionAbroad（外國旅客入境審查），出發看 congestion（安檢）
-        var sec=(j.flightSecurity||[]).map(function(s){
-          var c=isArr ? s.congestionAbroad : s.congestion;
-          return (c && c.text && c.text!=='運用時間外') ? s.locationName+'：'+c.text : null;
-        }).filter(Boolean).join('　');
-        setCell(tbl, isArr?'imm':'sec', sec, /40|60/.test(sec));
+        // 出發安檢擁擠度（入境審查改用專頁 API，見 fetchImm）
+        if(!isArr){
+          var sec=(j.flightSecurity||[]).map(function(s){
+            return (s.congestion && s.congestion.text && s.congestion.text!=='運用時間外') ? s.locationName+'：'+s.congestion.text : null;
+          }).filter(Boolean).join('　');
+          setCell(tbl,'sec', sec, /40|60/.test(sec));
+        }
+      });
+  }
+
+  // 成田入境審查等待時間（外國旅客通道），只顯示抵達航廈 T2 的查驗處
+  function fetchImm(){
+    if(!NARITA_PROXY) return Promise.resolve();
+    return fetch(NARITA_PROXY+'?type=imm')
+      .then(function(r){return r.json();}).then(function(j){
+        var rows=(j.immigration||[]).filter(function(s){return s.terminal==='T2';});
+        var txt=rows.map(function(s){
+          var name=(s.name||'').replace(' 入境審查處','');
+          return name+'：'+(s.abroad||'—');
+        }).join('　');
+        setCell('fl-dep-nrt','imm', txt, /40|60/.test(txt));
       });
   }
 
@@ -373,7 +389,7 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
   var updated=document.getElementById('fl-updated');
   function refresh(){
     var jobs=[fetchFlight(DEP_ID,'fl-dep',true), fetchFlight(RET_ID,'fl-ret',false), fetchSecurity(),
-              fetchNarita('arr',NRT_ARR,'fl-dep-nrt',true), fetchNarita('dep',NRT_DEP,'fl-ret-nrt',false)];
+              fetchNarita('arr',NRT_ARR,'fl-dep-nrt',true), fetchNarita('dep',NRT_DEP,'fl-ret-nrt',false), fetchImm()];
     Promise.allSettled ? Promise.allSettled(jobs).then(done) : Promise.all(jobs).then(done, fail);
     function done(rs){
       var fails = rs && rs.filter ? rs.filter(function(x){return x.status==='rejected';}).length : 0;
