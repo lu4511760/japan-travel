@@ -112,6 +112,9 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 /* ── 雪場直播影像（響應式 16:9） ── */
 .live-cam{width:100%; aspect-ratio:16/9; border:0; border-radius:8px; margin-top:2px; background:#000}
 
+/* ── 時刻表圖片 ── */
+.sched-img{width:100%; border-radius:8px; border:1px solid var(--line); margin-top:4px}
+
 /* ── 已過去的行程灰階顯示 ── */
 .ev.past, .day-head.past{opacity:.4; filter:grayscale(1)}
 .fl-updated.err{color:#c0392b}
@@ -274,12 +277,35 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 
     <div class="day-head" id="d0120">第5天・01/20<span class="dow">週三</span></div>
 
+    <div class="ev"><div class="when">06:00</div><h2>♨️ 泡溫泉</h2></div>
+    <div class="ev"><div class="when">07:00</div><h2>🍳 吃飯店早餐</h2></div>
+    <div class="ev"><div class="when">10:00</div><h2>🎫 DBC 集合發證書、公車票、高鐵票</h2></div>
+
     <div class="ev">
-      <h2>🚄 斑尾 → 東京</h2>
+      <div class="when">11:00</div>
+      <h2>🚌 タングラム斑尾 公車站發車</h2>
       <div class="body">
-        <p>退房 → 接駁至<b>飯山站</b><span class="note">（約 30 分，班次請先向飯店確認）</span></p>
-        <p>北陸新幹線 飯山 → <b>東京站</b><span class="note">（約 1 小時 50 分，自由席約 ¥8,000 上下）</span></p>
-        <p>🏨 Check-in 東京飯店（<b>待訂</b>），週邊晚餐。</p>
+        <p><a href="https://maps.app.goo.gl/P6pXutCehNDpQLp97" target="_blank" rel="noopener">📍 タングラム斑尾 公車站</a></p>
+        <p class="note">公車時刻表（點圖開新分頁）：</p>
+        <a href="iiyama-express2025.png" target="_blank" rel="noopener"><img class="sched-img" src="iiyama-express2025.png" alt="飯山快線公車時刻表" loading="lazy"></a>
+      </div>
+    </div>
+
+    <div class="ev">
+      <div class="when">11:45</div>
+      <h2>🚉 抵達飯山車站</h2>
+      <div class="body">
+        <p><a href="https://maps.app.goo.gl/8KEEKFmTrHPt7aKh8" target="_blank" rel="noopener">📍 飯山車站</a></p>
+      </div>
+    </div>
+
+    <div class="ev"><div class="when">12:13</div><h2>🚄 新幹線發車</h2></div>
+
+    <div class="ev">
+      <div class="when">13:46</div>
+      <h2>🏙️ 抵達上野站</h2>
+      <div class="body">
+        <p><a href="https://maps.app.goo.gl/uy8xUKi3BoD6QWXX7" target="_blank" rel="noopener">📍 上野站</a></p>
       </div>
     </div>
 

@@ -1,3 +1,6 @@
 # 私密檔案，不推上 GitHub
 Private.postman_collection.json
 *.postman_collection.json
+
+# 原始 PDF 不進版控（已轉成 PNG 使用）
+iiyama-express2025.pdf
