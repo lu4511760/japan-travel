@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1a1814" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#fcfbf7" media="(prefers-color-scheme: light)">
+<title>斑尾滑雪 × 東京</title>
+<style>
+:root{
+  --bg:#fcfbf7; --fg:#231f1a; --muted:#8a8379; --line:#e8e3d8;
+  --rail:#d8d2c4; --accent:#b3541e; --accent-soft:#f9ece2;
+  --dot-bg:#fcfbf7; --card:#ffffff;
+  --shadow:0 1px 2px rgba(35,31,26,.06), 0 3px 10px rgba(35,31,26,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1a1814; --fg:#ece7de; --muted:#9c948a; --line:#332f28;
+    --rail:#44403a; --accent:#e58a4e; --accent-soft:#33241a;
+    --dot-bg:#1a1814; --card:#232019;
+    --shadow:0 1px 3px rgba(0,0,0,.45);
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.6 -apple-system,"Noto Sans TC","Microsoft JhengHei",serif;
+}
+.wrap{max-width:640px; margin:0 auto; padding:26px 16px 64px}
+h1{font-size:23px; margin:0 0 2px; letter-spacing:.02em}
+.sub{color:var(--muted); font-size:14px; margin:0 0 14px}
+
+/* ── 日期快速跳轉列（置頂） ── */
+nav{
+  position:sticky; top:0; z-index:10;
+  background:var(--bg); border-bottom:1px solid var(--line);
+  margin:0 -16px 24px; padding:8px 12px;
+  overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+nav::-webkit-scrollbar{display:none}
+nav a{
+  display:inline-block; font-size:13px; text-decoration:none;
+  color:var(--muted); background:var(--card); border:1px solid var(--line);
+  border-radius:99px; padding:3px 12px; margin:0 3px;
+  font-variant-numeric:tabular-nums;
+}
+nav a.today{color:#fff; background:var(--accent); border-color:var(--accent); font-weight:700}
+
+/* ── 時間軸 ── */
+.tl{position:relative; padding-left:30px}
+.tl::before{
+  content:""; position:absolute; left:9px; top:6px; bottom:6px;
+  width:2px; background:var(--rail); border-radius:2px;
+}
+.ev{position:relative; margin-bottom:24px; scroll-margin-top:58px}
+.ev::before{
+  content:""; position:absolute; left:-27px; top:5px;
+  width:12px; height:12px; border-radius:50%;
+  background:var(--dot-bg); border:3px solid var(--accent);
+}
+.when{font-size:13px; color:var(--accent); font-weight:700; letter-spacing:.05em; font-variant-numeric:tabular-nums}
+.when .dow{color:var(--muted); font-weight:400; margin-left:5px}
+.ev h2{font-size:16.5px; margin:1px 0 7px}
+.body{
+  background:var(--card); border:1px solid var(--line); border-radius:10px;
+  padding:10px 14px; box-shadow:var(--shadow); font-size:14.5px;
+}
+.body p{margin:5px 0}
+.body .note{color:var(--muted); font-size:13px}
+.chip{
+  display:inline-block; font-size:12px; background:var(--accent-soft); color:var(--accent);
+  border-radius:5px; padding:1px 8px; margin:2px 6px 2px 0; font-weight:600;
+}
+a{color:var(--accent); text-decoration:none}
+.map{font-size:13px; white-space:nowrap}
+
+/* ── 資訊區塊與行前清單 ── */
+section.block{margin-top:34px}
+section.block h2{font-size:17px; border-bottom:2px solid var(--accent); display:inline-block; padding-bottom:2px; margin:0 0 12px}
+.info{background:var(--card); border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow); padding:4px 14px; font-size:14.5px}
+.info p{margin:9px 0}
+.info b{color:var(--accent)}
+ul.check{list-style:none; margin:0; padding:0}
+ul.check li{padding:2px 0}
+ul.check label{display:flex; gap:9px; align-items:baseline; cursor:pointer}
+ul.check input{accent-color:var(--accent); transform:translateY(2px)}
+ul.check input:checked + span{color:var(--muted); text-decoration:line-through}
+footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>斑尾滑雪 × 東京</h1>
+  <p class="sub">2027/01/16（六）– 01/23（六）・8 天 7 夜</p>
+
+  <nav id="daynav">
+    <a href="#d0116" data-d="2027-01-16">1/16</a>
+    <a href="#d0117" data-d="2027-01-17">1/17</a>
+    <a href="#d0117" data-d="2027-01-18">1/18</a>
+    <a href="#d0117" data-d="2027-01-19">1/19</a>
+    <a href="#d0120" data-d="2027-01-20">1/20</a>
+    <a href="#d0121" data-d="2027-01-21">1/21</a>
+    <a href="#d0122" data-d="2027-01-22">1/22</a>
+    <a href="#d0123" data-d="2027-01-23">1/23</a>
+    <a href="#checklist">✓ 清單</a>
+  </nav>
+
+  <div class="tl">
+
+    <div class="ev" id="d0116">
+      <div class="when">01/16<span class="dow">週六</span></div>
+      <h2>✈️ 抵達成田 → 🚌 直奔斑尾</h2>
+      <div class="body">
+        <p>成田機場入境後，搭 <b>DBC 遊覽車</b>直達斑尾雪場。<span class="note">車程約 4–5 小時</span></p>
+        <p>🏨 Check-in：<b>Tangram 斑尾東急度假村</b>
+          <a class="map" href="https://maps.google.com/?q=%E3%82%BF%E3%83%B3%E3%82%B0%E3%83%A9%E3%83%A0%E6%96%91%E5%B0%BE%E6%9D%B1%E6%80%A5%E3%83%AA%E3%82%BE%E3%83%BC%E3%83%88" target="_blank" rel="noopener">📍 地圖</a></p>
+        <p class="note">今晚先領雪具、確認隔日纜車票與集合資訊。</p>
+      </div>
+    </div>
+
+    <div class="ev" id="d0117">
+      <div class="when">01/17 – 01/19<span class="dow">日–二</span></div>
+      <h2>🎿 滑雪三連發</h2>
+      <div class="body">
+        <span class="chip">斑尾高原</span><span class="chip">Tangram</span><span class="chip">樹林道粉雪</span>
+        <p>斑尾高原與 Tangram 兩雪場<b>共通券可互通</b>，纜車約 08:30–16:30。</p>
+        <p>🌲 斑尾以 <b>Tree Run 樹林道</b>聞名，共 11 條樹林官方路線，下雪隔天粉雪最讚。</p>
+        <p>♨️ 每晚回飯店泡溫泉＋晚餐。</p>
+        <p class="note">雪場即時雪況：<a href="https://www.madarao.jp/" target="_blank" rel="noopener">madarao.jp</a>・<a href="https://www.tangram.jp/" target="_blank" rel="noopener">tangram.jp</a></p>
+      </div>
+    </div>
+
+    <div class="ev" id="d0120">
+      <div class="when">01/20<span class="dow">週三</span></div>
+      <h2>🚄 斑尾 → 東京</h2>
+      <div class="body">
+        <p>退房 → 接駁至<b>飯山站</b><span class="note">（約 30 分，班次請先向飯店確認）</span></p>
+        <p>北陸新幹線 飯山 → <b>東京站</b><span class="note">（約 1 小時 50 分，自由席約 ¥8,000 上下）</span></p>
+        <p>🏨 Check-in 東京飯店（<b>待訂</b>），週邊晚餐。</p>
+      </div>
+    </div>
+
+    <div class="ev" id="d0121">
+      <div class="when">01/21<span class="dow">週四</span></div>
+      <h2>🗼 東京自由行 Day 1</h2>
+      <div class="body">
+        <p>上午 ⛩️ 淺草寺・仲見世通
+          <a class="map" href="https://maps.google.com/?q=%E6%B7%BA%E8%8D%89%E5%AF%BA" target="_blank" rel="noopener">📍</a></p>
+        <p>下午 🛍️ 澀谷・原宿逛街
+          <a class="map" href="https://maps.google.com/?q=%E6%B6%A9%E8%B0%B7%E7%AB%99" target="_blank" rel="noopener">📍</a></p>
+        <p>晚上 🍜 新宿晚餐
+          <a class="map" href="https://maps.google.com/?q=%E6%96%B0%E5%AE%BF%E7%AB%99" target="_blank" rel="noopener">📍</a></p>
+        <p class="note">（行程待定，可再調整）</p>
+      </div>
+    </div>
+
+    <div class="ev" id="d0122">
+      <div class="when">01/22<span class="dow">週五</span></div>
+      <h2>🍣 東京自由行 Day 2</h2>
+      <div class="body">
+        <p>上午 築地場外市場早午餐
+          <a class="map" href="https://maps.google.com/?q=%E7%AF%89%E5%9C%B0%E5%A0%B4%E5%A4%96%E5%B8%82%E5%A0%B4" target="_blank" rel="noopener">📍</a></p>
+        <p>下午 銀座・東京車站採買伴手禮</p>
+        <p class="note">晚上整理行李、確認機場交通。（行程待定，可再調整）</p>
+      </div>
+    </div>
+
+    <div class="ev" id="d0123">
+      <div class="when">01/23<span class="dow">週六</span></div>
+      <h2>🛫 回程</h2>
+      <div class="body">
+        <p>東京 → <b>成田機場</b>：N'EX 成田特快（約 60 分）或 京成 Skyliner（日暮里出發約 40 分）。</p>
+        <p>✈️ 搭機返台（航班<b>待填</b>）。</p>
+        <p class="note">國際線建議起飛前 3 小時抵達機場。</p>
+      </div>
+    </div>
+
+  </div>
+
+  <section class="block">
+    <h2>🚆 交通備忘</h2>
+    <div class="info">
+      <p><b>去程</b>：DBC 遊覽車 成田 → 斑尾（跟團集合，留意 DBC 通知的集合時間地點）。</p>
+      <p><b>斑尾 ↔ 飯山站</b>：飯店接駁或斑尾高原巴士，冬季有加開，班次先向 Tangram 櫃台確認。</p>
+      <p><b>新幹線</b>：飯山站為北陸新幹線停靠站（はくたか號才停，かがやき號不停），可用「<a href="https://www.jorudan.co.jp/" target="_blank" rel="noopener">Jorudan</a>」或 Google Maps 查時刻。</p>
+      <p><b>東京市區</b>：Suica／PASMO 手機版（iPhone 錢包可直接加入）最方便。</p>
+    </div>
+  </section>
+
+  <section class="block" id="checklist">
+    <h2>✅ 行前清單</h2>
+    <div class="info">
+      <ul class="check" id="cklist">
+        <li><label><input type="checkbox"><span>護照（效期 6 個月以上）</span></label></li>
+        <li><label><input type="checkbox"><span>Visit Japan Web 入境登錄</span></label></li>
+        <li><label><input type="checkbox"><span>訂東京飯店（1/20–1/23，3 晚）</span></label></li>
+        <li><label><input type="checkbox"><span>雪衣雪褲、脖圍、雪鏡、手套</span></label></li>
+        <li><label><input type="checkbox"><span>保暖發熱衣、毛帽、暖暖包</span></label></li>
+        <li><label><input type="checkbox"><span>滑雪旅遊保險（含雪地運動）</span></label></li>
+        <li><label><input type="checkbox"><span>網路 SIM / eSIM / WiFi 機</span></label></li>
+        <li><label><input type="checkbox"><span>日幣現金（雪場週邊少刷卡）</span></label></li>
+        <li><label><input type="checkbox"><span>Suica 加入手機錢包</span></label></li>
+        <li><label><input type="checkbox"><span>防曬乳、護唇膏（雪地紫外線強）</span></label></li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>斑尾滑雪 × 東京・2027/01/16–23</footer>
+</div>
+
+<script>
+// 行前清單勾選狀態存在瀏覽器本機（換裝置不會同步）
+(function(){
+  var KEY='japan2027-checklist';
+  var boxes=document.querySelectorAll('#cklist input');
+  try{
+    var saved=JSON.parse(localStorage.getItem(KEY)||'[]');
+    boxes.forEach(function(b,i){ b.checked=!!saved[i]; });
+  }catch(e){}
+  boxes.forEach(function(b){
+    b.addEventListener('change',function(){
+      try{
+        localStorage.setItem(KEY, JSON.stringify(Array.prototype.map.call(boxes,function(x){return x.checked;})));
+      }catch(e){}
+    });
+  });
+})();
+
+// 旅途當天自動標示今天的日期，並捲動到當日行程
+(function(){
+  var now=new Date();
+  var today=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  var link=document.querySelector('nav a[data-d="'+today+'"]');
+  if(link){
+    link.classList.add('today');
+    var target=document.querySelector(link.getAttribute('href'));
+    if(target) setTimeout(function(){ target.scrollIntoView({behavior:'smooth',block:'start'}); },300);
+  }
+})();
+</script>
+</body>
+</html>
