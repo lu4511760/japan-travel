@@ -60,6 +60,18 @@ nav a.today{color:#fff; background:var(--accent); border-color:var(--accent); fo
   width:12px; height:12px; border-radius:50%;
   background:var(--dot-bg); border:3px solid var(--accent);
 }
+/* 每日標題：一天只顯示一次「第幾天・日期 週幾」 */
+.day-head{
+  position:relative; margin:30px 0 14px; scroll-margin-top:58px;
+  font-size:14.5px; color:var(--accent); font-weight:700;
+  letter-spacing:.05em; font-variant-numeric:tabular-nums;
+}
+.day-head:first-child{margin-top:0}
+.day-head .dow{color:var(--muted); font-weight:400; margin-left:6px; font-size:13px}
+.day-head::before{
+  content:""; position:absolute; left:-27px; top:5px;
+  width:12px; height:12px; border-radius:3px; background:var(--accent);
+}
 .when{font-size:13px; color:var(--accent); font-weight:700; letter-spacing:.05em; font-variant-numeric:tabular-nums}
 .when .dow{color:var(--muted); font-weight:400; margin-left:5px}
 .ev h2{font-size:16.5px; margin:1px 0 7px}
@@ -119,13 +131,15 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 
   <div class="tl">
 
-    <div class="ev" id="d0116">
-      <div class="when">第1天・01/16<span class="dow">週六</span><span class="dow">07:00</span></div>
+    <div class="day-head" id="d0116">第1天・01/16<span class="dow">週六</span></div>
+
+    <div class="ev">
+      <div class="when">07:00</div>
       <h2>🧳 桃園機場第一航廈報到櫃台集合</h2>
     </div>
 
     <div class="ev">
-      <div class="when">第1天・01/16<span class="dow">週六</span><span class="dow">10:10</span></div>
+      <div class="when">10:10</div>
       <h2>🛫 桃園出發 JX802 第一航廈 10:10 起飛</h2>
       <div class="body">
         <p class="note" style="margin-top:8px">⏱ 即時資料每 30 秒自動更新・<span class="fl-updated">尚未更新</span>
@@ -143,7 +157,7 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
     </div>
 
     <div class="ev">
-      <div class="when">第1天・01/16<span class="dow">週六</span><span class="dow">14:20</span></div>
+      <div class="when">14:20</div>
       <h2>🛬 抵達成田</h2>
       <div class="body">
         <p class="note" style="margin-top:8px">⏱ 即時資料每 30 秒自動更新・<span class="fl-updated">尚未更新</span>
@@ -162,15 +176,16 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
     </div>
 
     <div class="ev">
-      <div class="when">第1天・01/16<span class="dow">週六</span><span class="dow">16:00</span></div>
+      <div class="when">16:00</div>
       <h2>🚌 DBC 集合上遊覽車</h2>
       <div class="body">
         <p>集合地點：<a href="https://www.narita-airport.jp/zh-tc/map/?bearing=59.5&zoom=18.535454490297724&pitch=0&lat=35.77381890000001&lng=140.38744050000003&building=b32584d9-027d-4863-aa2e-3482e8fc2fb3&floor=1F&clickedPoi=16856980" target="_blank" rel="noopener">📍 國際航班到達大廳 B（成田機場地圖）</a></p>
       </div>
     </div>
 
-    <div class="ev" id="d0117">
-      <div class="when">第2–4天・01/17 – 01/19<span class="dow">日–二</span></div>
+    <div class="day-head" id="d0117">第2–4天・01/17 – 01/19<span class="dow">日–二</span></div>
+
+    <div class="ev">
       <h2>🎿 滑雪三連發</h2>
       <div class="body">
         <span class="chip">斑尾高原</span><span class="chip">Tangram</span><span class="chip">樹林道粉雪</span>
@@ -181,8 +196,9 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
       </div>
     </div>
 
-    <div class="ev" id="d0120">
-      <div class="when">第5天・01/20<span class="dow">週三</span></div>
+    <div class="day-head" id="d0120">第5天・01/20<span class="dow">週三</span></div>
+
+    <div class="ev">
       <h2>🚄 斑尾 → 東京</h2>
       <div class="body">
         <p>退房 → 接駁至<b>飯山站</b><span class="note">（約 30 分，班次請先向飯店確認）</span></p>
@@ -191,8 +207,9 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
       </div>
     </div>
 
-    <div class="ev" id="d0121">
-      <div class="when">第6天・01/21<span class="dow">週四</span></div>
+    <div class="day-head" id="d0121">第6天・01/21<span class="dow">週四</span></div>
+
+    <div class="ev">
       <h2>🗼 東京自由行 Day 1</h2>
       <div class="body">
         <p>上午 ⛩️ 淺草寺・仲見世通
@@ -205,8 +222,9 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
       </div>
     </div>
 
-    <div class="ev" id="d0122">
-      <div class="when">第7天・01/22<span class="dow">週五</span></div>
+    <div class="day-head" id="d0122">第7天・01/22<span class="dow">週五</span></div>
+
+    <div class="ev">
       <h2>🍣 東京自由行 Day 2</h2>
       <div class="body">
         <p>上午 築地場外市場早午餐
@@ -216,8 +234,10 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
       </div>
     </div>
 
-    <div class="ev" id="d0123">
-      <div class="when">第8天・01/23<span class="dow">週六</span><span class="dow">15:40</span></div>
+    <div class="day-head" id="d0123">第8天・01/23<span class="dow">週六</span></div>
+
+    <div class="ev">
+      <div class="when">15:40</div>
       <h2>🛫 成田出發 JX803</h2>
       <div class="body">
         <p>東京 → <b>成田機場</b>：N'EX 成田特快（約 60 分）或 京成 Skyliner（日暮里出發約 40 分）。</p>
@@ -239,7 +259,7 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
     </div>
 
     <div class="ev">
-      <div class="when">第8天・01/23<span class="dow">週六</span><span class="dow">18:45</span></div>
+      <div class="when">18:45</div>
       <h2>🛬 抵達桃園</h2>
       <div class="body">
         <p>✈️ 桃園 T1 <b>18:45</b> 抵達，返家 🏠</p>
