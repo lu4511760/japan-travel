@@ -63,13 +63,13 @@ nav a.today{color:#fff; background:var(--accent); border-color:var(--accent); fo
 /* 每日標題：一天只顯示一次「第幾天・日期 週幾」 */
 .day-head{
   position:relative; margin:30px 0 14px; scroll-margin-top:58px;
-  font-size:14.5px; color:var(--accent); font-weight:700;
-  letter-spacing:.05em; font-variant-numeric:tabular-nums;
+  font-size:43.5px; line-height:1.15; color:var(--accent); font-weight:700;
+  letter-spacing:.02em; font-variant-numeric:tabular-nums;
 }
 .day-head:first-child{margin-top:0}
-.day-head .dow{color:var(--muted); font-weight:400; margin-left:6px; font-size:13px}
+.day-head .dow{color:var(--muted); font-weight:400; margin-left:10px; font-size:22px}
 .day-head::before{
-  content:""; position:absolute; left:-27px; top:5px;
+  content:""; position:absolute; left:-27px; top:18px;
   width:12px; height:12px; border-radius:3px; background:var(--accent);
 }
 .when{font-size:13px; color:var(--accent); font-weight:700; letter-spacing:.05em; font-variant-numeric:tabular-nums}
