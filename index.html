@@ -590,7 +590,9 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
         if(!isArr){
           var secLines=(j.flightSecurity||[]).map(function(s){
             var c=s.congestion && s.congestion.text;
-            return c ? s.locationName+'：'+c : null;
+            // 安檢站名稱去掉「國際航班」，只留航廈與位置
+            var nm=(s.locationName||'').replace('國際航班','').replace(/\s+/g,' ').trim();
+            return c ? nm+'：'+c : null;
           });
           setCellLines(tbl,'sec', secLines, /40|60/.test(secLines.join('')));
         }
