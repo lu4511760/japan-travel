@@ -521,7 +521,7 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
       else if(el.classList.contains('ev')){
         var w=el.querySelector('.when');
         var t=w && /^\d{2}:\d{2}$/.test(w.textContent.trim()) ? w.textContent.trim() : null;
-        if(curDate && t){ var dt=new Date(curDate+'T'+t+':00'); if(dt<=now) cur=el; }
+        if(curDate && t){ var dt=new Date(curDate+'T'+t+':00'); if(dt<=now) cur={el:el, date:curDate}; }
       }
     });
     return cur;
@@ -529,8 +529,16 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
 
   // 每小時把目前行程捲到畫面中間
   function centerCurrent(now){
-    var cur=currentNode(now);
-    if(cur) cur.scrollIntoView({behavior:'smooth', block:'center'});
+    var today=dateStr(now), cur=currentNode(now), target=null;
+    if(cur && cur.date===today){
+      target=cur.el;
+    }else{
+      // 今天還沒有行程開始（例如剛過午夜）：對齊今天的日期標題
+      Object.keys(DAY_DATES).forEach(function(id){
+        if(DAY_DATES[id]===today){ var h=document.getElementById(id); if(h) target=h; }
+      });
+    }
+    if(target) target.scrollIntoView({behavior:'smooth', block:'center'});
   }
 
   // 已開始節點之前（不含）的行程灰階；過去的日期標題與無時刻節點也灰階
@@ -552,8 +560,9 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
     var cur=started.length?started[started.length-1]:null;
     items.forEach(function(x){
       var past;
-      if(x.dt) past = !!cur && x.dt < cur.dt;
-      else past = !!x.date && x.date < today; // 日期標題與無時刻節點：整天過了才灰
+      // 前幾天的行程一律算過去（跨過午夜就整天灰掉），當天則以進行中的節點為界
+      if(x.dt) past = (x.date < today) || (!!cur && x.dt < cur.dt);
+      else past = !!x.date && x.date < today;
       x.el.classList.toggle('past', !!past);
     });
   }
