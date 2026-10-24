@@ -37,15 +37,17 @@ def main():
 
     # 先驗證是合法 JSON，避免加密了壞資料
     with open(SRC, encoding="utf-8") as fh:
-        items = json.load(fh)
+        doc = json.load(fh)
+    # 相容兩種格式：純陣列，或 {items:[...], editToken:"..."}
+    items = doc if isinstance(doc, list) else doc.get("items")
     if not isinstance(items, list):
-        sys.exit("private-itinerary.json 必須是陣列")
+        sys.exit("private-itinerary.json 需為陣列，或含 items 陣列的物件")
 
     pw = os.environ.get("TRIP_PW") or getpass.getpass("密碼：")
     if not pw:
         sys.exit("密碼不能空白")
 
-    plaintext = json.dumps(items, ensure_ascii=False).encode("utf-8")
+    plaintext = json.dumps(doc, ensure_ascii=False).encode("utf-8")
     salt = os.urandom(16)
     iv = os.urandom(12)
     key = hashlib.pbkdf2_hmac("sha256", pw.encode("utf-8"), salt, ITERATIONS, 32)

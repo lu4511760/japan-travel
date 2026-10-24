@@ -156,6 +156,54 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 .day-head.past, .day-head.past .dow{color:var(--rail)}
 .day-head.past::before{background:var(--rail)}
 .fl-updated.err{color:#c0392b}
+/* ── 編輯介面（解鎖後才出現） ── */
+.ed-fab{
+  position:fixed; right:16px; bottom:16px; z-index:50;
+  width:52px; height:52px; border-radius:50%; border:0; cursor:pointer;
+  font-size:22px; color:#fff; background:var(--priv);
+  box-shadow:0 3px 12px rgba(0,0,0,.35);
+}
+.ed-fab.on{background:var(--meal)}
+.ed-bar{
+  position:fixed; left:0; right:0; bottom:0; z-index:49;
+  padding:10px 76px 10px 16px; font-size:12.5px; line-height:1.5;
+  color:#fff; background:rgba(20,20,20,.94);
+}
+.ed-tools{margin-top:6px; display:flex; gap:8px}
+.ed-tools button, .ed-add button{
+  font-size:13px; padding:4px 10px; cursor:pointer;
+  color:var(--fg); background:var(--card);
+  border:1px solid var(--line); border-radius:8px;
+}
+.ed-add{display:flex; gap:8px; margin:4px 0 12px}
+body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
+.ed-mask{
+  position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center;
+  padding:16px; background:rgba(0,0,0,.6);
+}
+.ed-box{
+  width:100%; max-width:520px; max-height:88vh; overflow:auto;
+  padding:16px; border-radius:14px; background:var(--card); border:1px solid var(--line);
+}
+.ed-box h3{margin:0 0 12px; font-size:16px}
+.ed-box label{display:block; margin-bottom:10px; font-size:13px; color:var(--muted)}
+.ed-box input, .ed-box textarea, .ed-box select{
+  width:100%; margin-top:4px; padding:8px; font:inherit; font-size:14px;
+  color:var(--fg); background:var(--bg); border:1px solid var(--line); border-radius:8px;
+}
+.ed-box textarea{resize:vertical}
+.ed-note{margin:0 0 10px; font-size:12.5px; color:var(--priv)}
+.ed-btns{display:flex; gap:10px; justify-content:flex-end}
+.ed-btns button{
+  padding:9px 18px; font-size:14px; cursor:pointer; border-radius:8px;
+  color:var(--fg); background:var(--bg); border:1px solid var(--line);
+}
+.ed-btns button.pri{color:#fff; background:var(--link); border-color:var(--link)}
+.ed-toast{
+  position:fixed; left:50%; bottom:86px; transform:translateX(-50%); z-index:70;
+  padding:9px 18px; font-size:14px; color:#fff; background:rgba(20,20,20,.95);
+  border-radius:20px; box-shadow:0 2px 10px rgba(0,0,0,.4);
+}
 .nrt-head{margin:12px 0 2px; font-size:13.5px; border-top:1px solid var(--line); padding-top:10px}
 </style>
 </head>
@@ -515,79 +563,326 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
   setInterval(function(){ if(!document.hidden) centerCurrent(new Date()); }, 3600000);
 })();
 
-// 私人行程：AES-GCM 加密存在 private.enc，輸入密碼才解得開
-// 解鎖：網址加 #k=你的密碼（解開後會存在這台裝置，並把密碼從網址移除）
-// 鎖回：網址加 #lock
+// 私人行程 + 雲端修改
+// · 私人行程以 AES-GCM 加密存在 private.enc，輸入密碼才解得開
+// · 解鎖後才會拿到寫入權杖（權杖就鎖在加密檔裡），因此只有解鎖的裝置能改行程
+// · 解鎖：網址加 #k=你的密碼（解開後存在這台裝置，並把密碼從網址移除）；鎖回：網址加 #lock
 (function(){
-  var KEY='japan2027-pw', done=false;
+  var PW_KEY='japan2027-pw';
+  var PENDING='japan2027-pending';          // 離線時暫存待上傳的修改
+  var API='https://narita-proxy.4511760.workers.dev/data';
+  var S={pw:null, token:null, priv:[], pub:{edits:{},added:[],removed:[]}, unlocked:false};
+  window.__trip=S;
 
-  function b64(s){ return Uint8Array.from(atob(s), function(c){ return c.charCodeAt(0); }); }
-
-  async function decryptItems(pw){
-    var r=await fetch('private.enc', {cache:'no-store'});
-    if(!r.ok) throw new Error('no blob');
-    var b=await r.json();
+  function b2u(s){ return Uint8Array.from(atob(s), function(c){ return c.charCodeAt(0); }); }
+  function u2b(buf){
+    var a=new Uint8Array(buf), s='';
+    for(var i=0;i<a.length;i++) s+=String.fromCharCode(a[i]);
+    return btoa(s);
+  }
+  async function keyFrom(pw, salt, it, use){
     var km=await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
-    var key=await crypto.subtle.deriveKey(
-      {name:'PBKDF2', salt:b64(b.salt), iterations:b.it, hash:'SHA-256'},
-      km, {name:'AES-GCM', length:256}, false, ['decrypt']);
-    var pt=await crypto.subtle.decrypt({name:'AES-GCM', iv:b64(b.iv)}, key, b64(b.ct));
+    return crypto.subtle.deriveKey({name:'PBKDF2', salt:salt, iterations:it, hash:'SHA-256'},
+      km, {name:'AES-GCM', length:256}, false, [use]);
+  }
+  async function decryptBlob(b, pw){
+    var key=await keyFrom(pw, b2u(b.salt), b.it, 'decrypt');
+    var pt=await crypto.subtle.decrypt({name:'AES-GCM', iv:b2u(b.iv)}, key, b2u(b.ct));
     return JSON.parse(new TextDecoder().decode(pt));
   }
-
-  // 依時間插進當天正確位置
-  function inject(items){
-    (items||[]).forEach(function(it){
-      var head=document.getElementById(it.day);
-      if(!head || !it.time) return;
-      var ev=document.createElement('div');
-      ev.className='ev private';
-      var h='<div class="when">'+it.time+'</div>';
-      if(it.title) h+='<h2'+(it.cls?' class="'+it.cls+'"':'')+'>'+it.title+'</h2>';
-      if(it.body) h+='<div class="body">'+it.body+'</div>';
-      if(it.below) h+='<p class="jr-row">'+it.below+'</p>';   // 框外補充行
-      ev.innerHTML=h;
-      var node=head.nextElementSibling, before=null;
-      while(node && !node.classList.contains('day-head')){
-        var w=node.querySelector && node.querySelector('.when');
-        var t=w && /^\d{2}:\d{2}$/.test(w.textContent.trim()) ? w.textContent.trim() : null;
-        if(t && t>it.time){ before=node; break; }
-        node=node.nextElementSibling;
-      }
-      head.parentNode.insertBefore(ev, before || node);
-    });
+  async function encryptBlob(obj, pw){
+    var salt=crypto.getRandomValues(new Uint8Array(16));
+    var iv=crypto.getRandomValues(new Uint8Array(12));
+    var it=200000;
+    var key=await keyFrom(pw, salt, it, 'encrypt');
+    var ct=await crypto.subtle.encrypt({name:'AES-GCM', iv:iv}, key,
+      new TextEncoder().encode(JSON.stringify(obj)));
+    return {v:1, it:it, salt:u2b(salt), iv:u2b(iv), ct:u2b(ct)};
   }
 
-  // 可重複呼叫：載入時跑一次，之後網址 hash 改變（已開著的頁面直接貼網址）也會觸發
-  function run(){
+  // 依時間把節點插進當天正確位置
+  function insertItem(it, isPrivate){
+    var head=document.getElementById(it.day);
+    if(!head) return null;
+    var ev=document.createElement('div');
+    ev.className='ev'+(isPrivate?' private':'');
+    window.__tripFill(ev, it);
+    var node=head.nextElementSibling, before=null;
+    while(node && !node.classList.contains('day-head')){
+      var w=node.querySelector && node.querySelector('.when');
+      var t=w && /^\d{2}:\d{2}$/.test(w.textContent.trim()) ? w.textContent.trim() : null;
+      if(it.time && t && t>it.time){ before=node; break; }
+      node=node.nextElementSibling;
+    }
+    head.parentNode.insertBefore(ev, before || node);
+    return ev;
+  }
+  window.__tripInject=function(items){ (items||[]).forEach(function(it){ insertItem(it, true); }); };
+
+  // 重畫：基礎資料 → 套用雲端修改 → 補上私人行程
+  function repaint(){
+    window.__tripRender();
+    var pub=S.pub||{};
+    (pub.removed||[]).forEach(function(id){
+      var el=document.querySelector('.ev[data-id="'+id+'"]');
+      if(el) el.remove();
+    });
+    Object.keys(pub.edits||{}).forEach(function(id){
+      var el=document.querySelector('.ev[data-id="'+id+'"]');
+      if(!el) return;
+      var base=null;
+      (window.__tripData.items||[]).forEach(function(i){ if(i.id===id) base=i; });
+      var merged={}, src=Object.assign({}, base||{}, pub.edits[id]);
+      Object.keys(src).forEach(function(k){ if(src[k]!=null && src[k]!=='') merged[k]=src[k]; });
+      merged.id=id;
+      window.__tripFill(el, merged);
+    });
+    (pub.added||[]).forEach(function(it){ insertItem(it, false); });
+    S.priv.forEach(function(it){ insertItem(it, true); });
+    if(window.__tripTick) window.__tripTick(new Date());
+  }
+  window.__tripRepaint=repaint;
+
+  // 讀取雲端上的修改（任何人都讀得到；私人部分仍是密文）
+  async function loadCloud(){
+    var r=await fetch(API, {cache:'no-store'});
+    if(!r.ok) throw new Error('data '+r.status);
+    return r.json();
+  }
+
+  async function unlock(pw){
+    var r=await fetch('private.enc', {cache:'no-store'});
+    if(!r.ok) throw new Error('no blob');
+    var doc=await decryptBlob(await r.json(), pw);
+    return Array.isArray(doc) ? {items:doc, editToken:null} : doc;
+  }
+
+  var booted=false;
+  async function boot(){
     if(location.hash==='#lock'){
-      try{ localStorage.removeItem(KEY); }catch(e){}
+      try{ localStorage.removeItem(PW_KEY); }catch(e){}
       history.replaceState(null,'',location.pathname+location.search);
-      if(done) location.reload();   // 已顯示的私人節點一併清掉
+      if(booted) location.reload();
       return;
     }
-    if(done) return;
-    var m=location.hash.match(/^#k=(.+)$/);
-    var pw=null;
+    // 先套用雲端上的公開修改（朋友也看得到）
+    var cloud=null;
+    try{ cloud=await loadCloud(); }catch(e){}
+    if(cloud && cloud.pub) S.pub=cloud.pub;
+
+    if(booted){ repaint(); return; }
+
+    var m=location.hash.match(/^#k=(.+)$/), pw=null;
     if(m){
       pw=decodeURIComponent(m[1]);
       history.replaceState(null,'',location.pathname+location.search);
     }else{
-      try{ pw=localStorage.getItem(KEY); }catch(e){}
+      try{ pw=localStorage.getItem(PW_KEY); }catch(e){}
     }
-    if(!pw) return;
-    decryptItems(pw).then(function(items){
-      if(done) return;
-      done=true;
-      try{ localStorage.setItem(KEY, pw); }catch(e){}
-      inject(items);
-      if(window.__tripTick) window.__tripTick(new Date());
-      if(window.__tripCenter) setTimeout(function(){ window.__tripCenter(new Date()); }, 300);
-    }).catch(function(){ /* 密碼錯或檔案不存在：安靜略過，不留痕跡 */ });
+
+    if(pw){
+      try{
+        var doc=await unlock(pw);
+        S.pw=pw; S.token=doc.editToken||null; S.priv=doc.items||[]; S.unlocked=true;
+        try{ localStorage.setItem(PW_KEY, pw); }catch(e){}
+        // 雲端若有更新過的私人行程，以雲端為準
+        if(cloud && cloud.priv){
+          try{ var pd=await decryptBlob(cloud.priv, pw); if(Array.isArray(pd)) S.priv=pd; }catch(e){}
+        }
+      }catch(e){ /* 密碼錯或檔案不存在：安靜略過，不留痕跡 */ }
+    }
+
+    booted=true;
+    repaint();
+    if(window.__tripCenter) setTimeout(function(){ window.__tripCenter(new Date()); }, 300);
+    if(S.unlocked && window.__tripEditUI) window.__tripEditUI();
+    // 補送離線期間存下的修改
+    if(S.unlocked && S.token) flushPending();
   }
-  window.__tripInject=inject;   // 供排版測試用（真正的內容仍需密碼才解得開）
-  run();
-  window.addEventListener('hashchange', run);
+
+  // 儲存：先更新畫面與本機，再送雲端；沒網路就留著下次補送
+  async function save(){
+    repaint();
+    var payload={pub:S.pub, priv:null};
+    if(S.pw) payload.priv=await encryptBlob(S.priv, S.pw);
+    try{ localStorage.setItem(PENDING, JSON.stringify(payload)); }catch(e){}
+    if(!S.token) return {ok:false, reason:'未解鎖'};
+    try{
+      var r=await fetch(API, {method:'POST',
+        headers:{'Content-Type':'application/json','X-Edit-Token':S.token},
+        body:JSON.stringify(payload)});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      try{ localStorage.removeItem(PENDING); }catch(e){}
+      return {ok:true};
+    }catch(e){
+      return {ok:false, reason:'沒網路，已存在手機，連線後會自動上傳'};
+    }
+  }
+  window.__tripSave=save;
+
+  async function flushPending(){
+    var raw=null;
+    try{ raw=localStorage.getItem(PENDING); }catch(e){}
+    if(!raw) return;
+    try{
+      var r=await fetch(API, {method:'POST',
+        headers:{'Content-Type':'application/json','X-Edit-Token':S.token}, body:raw});
+      if(r.ok) localStorage.removeItem(PENDING);
+    }catch(e){}
+  }
+  window.addEventListener('online', function(){ if(S.token) flushPending(); });
+
+  boot();
+  window.addEventListener('hashchange', boot);
+})();
+
+// 編輯介面：只有解鎖後才會出現（由上面的 __tripEditUI 觸發）
+(function(){
+  var S=window.__trip, editing=false, fab=null, bar=null;
+
+  function el(tag, cls, html){
+    var e=document.createElement(tag);
+    if(cls) e.className=cls;
+    if(html!=null) e.innerHTML=html;
+    return e;
+  }
+  // 找出某個節點目前的資料（基礎資料 + 雲端修改 / 新增 / 私人）
+  function dataOf(id){
+    var found=null;
+    (S.pub.added||[]).forEach(function(i){ if(i.id===id) found=i; });
+    if(found) return {it:found, where:'added'};
+    S.priv.forEach(function(i){ if(i.id===id) found=i; });
+    if(found) return {it:found, where:'priv'};
+    (window.__tripData.items||[]).forEach(function(i){ if(i.id===id) found=i; });
+    if(found) return {it:Object.assign({}, found, (S.pub.edits||{})[id]||{}), where:'base'};
+    return null;
+  }
+
+  // ── 編輯表單 ──
+  function openForm(id, dayId, isPrivate){
+    var d=id?dataOf(id):null;
+    var it=d?d.it:{id:'x'+Date.now().toString(36), day:dayId, time:'', title:'', body:'', below:''};
+    var isNew=!id;
+    var priv=isPrivate!=null?isPrivate:(d&&d.where==='priv');
+
+    var box=el('div','ed-mask');
+    box.innerHTML=
+      '<div class="ed-box">'+
+      '<h3>'+(isNew?(priv?'新增私人節點':'新增節點'):'編輯節點')+'</h3>'+
+      '<label>時間 <input id="ed-time" placeholder="HH:MM" value="'+(it.time||'')+'"></label>'+
+      '<label>標題 <input id="ed-title" value="'+(it.title||'').replace(/"/g,'&quot;')+'"></label>'+
+      '<label>樣式 <select id="ed-cls">'+
+        ['','meal','alert'].map(function(v){
+          var n={'':'一般','meal':'用餐（綠）','alert':'重要（紅）'}[v];
+          return '<option value="'+v+'"'+((it.cls||'')===v?' selected':'')+'>'+n+'</option>';
+        }).join('')+'</select></label>'+
+      '<label>卡片內容（可用 HTML）<textarea id="ed-body" rows="4">'+(it.body||'')+'</textarea></label>'+
+      '<label>框外補充行<textarea id="ed-below" rows="2">'+(it.below||'')+'</textarea></label>'+
+      (priv?'<p class="ed-note">🔒 這是私人節點，只有解鎖的裝置看得到</p>':'')+
+      '<div class="ed-btns">'+
+        '<button id="ed-cancel">取消</button>'+
+        '<button id="ed-ok" class="pri">儲存</button>'+
+      '</div></div>';
+    document.body.appendChild(box);
+
+    box.querySelector('#ed-cancel').onclick=function(){ box.remove(); };
+    box.querySelector('#ed-ok').onclick=async function(){
+      var v=function(s){ return box.querySelector(s).value.trim(); };
+      var next={id:it.id, day:it.day, time:v('#ed-time'), title:v('#ed-title'),
+                body:v('#ed-body'), below:v('#ed-below')};
+      var cls=v('#ed-cls'); if(cls) next.cls=cls;
+      if(it.nodeId) next.nodeId=it.nodeId;
+      if(next.time && !/^\d{2}:\d{2}$/.test(next.time)){ alert('時間請填 HH:MM，例如 09:30'); return; }
+
+      if(priv){
+        var i=-1;
+        S.priv.forEach(function(x,k){ if(x.id===next.id) i=k; });
+        if(i>=0) S.priv[i]=next; else S.priv.push(next);
+      }else if(d && d.where==='added'){
+        S.pub.added=(S.pub.added||[]).map(function(x){ return x.id===next.id?next:x; });
+      }else if(isNew){
+        S.pub.added=(S.pub.added||[]).concat([next]);
+      }else{
+        S.pub.edits=S.pub.edits||{};
+        S.pub.edits[next.id]=next;
+      }
+      box.remove();
+      await flush();
+    };
+  }
+
+  async function flush(){
+    var r=await window.__tripSave();
+    decorate();
+    toast(r.ok?'已儲存':(r.reason||'儲存失敗'));
+  }
+
+  function toast(msg){
+    var t=el('div','ed-toast',msg);
+    document.body.appendChild(t);
+    setTimeout(function(){ t.remove(); }, 2600);
+  }
+
+  async function removeNode(id){
+    if(!confirm('確定刪除這個節點？')) return;
+    var d=dataOf(id);
+    if(d && d.where==='priv'){
+      S.priv=S.priv.filter(function(x){ return x.id!==id; });
+    }else if(d && d.where==='added'){
+      S.pub.added=(S.pub.added||[]).filter(function(x){ return x.id!==id; });
+    }else{
+      S.pub.removed=(S.pub.removed||[]).concat([id]);
+      if(S.pub.edits) delete S.pub.edits[id];
+    }
+    await flush();
+  }
+
+  // 編輯模式下，在每個節點與每天標題補上操作按鈕
+  function decorate(){
+    document.querySelectorAll('.ed-tools, .ed-add').forEach(function(e){ e.remove(); });
+    document.body.classList.toggle('editing', editing);
+    if(!editing) return;
+    document.querySelectorAll('.tl > .ev').forEach(function(ev){
+      var id=ev.dataset.id;
+      if(!id) return;
+      var tools=el('div','ed-tools',
+        '<button data-act="edit" title="編輯">✏️</button><button data-act="del" title="刪除">🗑</button>');
+      tools.onclick=function(e){
+        var b=e.target.closest('button'); if(!b) return;
+        if(b.dataset.act==='edit') openForm(id);
+        else removeNode(id);
+      };
+      ev.appendChild(tools);
+    });
+    document.querySelectorAll('.tl > .day-head').forEach(function(h){
+      var add=el('div','ed-add',
+        '<button data-p="0">＋ 新增節點</button><button data-p="1">＋ 新增私人節點</button>');
+      add.onclick=function(e){
+        var b=e.target.closest('button'); if(!b) return;
+        openForm(null, h.id, b.dataset.p==='1');
+      };
+      h.insertAdjacentElement('afterend', add);
+    });
+  }
+
+  function toggle(){
+    editing=!editing;
+    fab.textContent=editing?'✓':'✏️';
+    fab.classList.toggle('on', editing);
+    bar.style.display=editing?'block':'none';
+    decorate();
+  }
+
+  window.__tripEditUI=function(){
+    if(fab) return;
+    fab=el('button','ed-fab','✏️');
+    fab.title='編輯行程';
+    fab.onclick=toggle;
+    document.body.appendChild(fab);
+    bar=el('div','ed-bar','編輯模式：可改時間與文字、新增或刪除節點。修改會同步到雲端，朋友也看得到（🔒 私人節點除外）。');
+    bar.style.display='none';
+    document.body.appendChild(bar);
+  };
 })();
 
 // 旅途當天自動標示今天的日期，並捲動到當日行程
