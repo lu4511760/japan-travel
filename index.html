@@ -150,6 +150,8 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 #ski-info::before{display:none}
 /* 私人行程節點：軸點換色並在時刻後加鎖頭，一眼分得出朋友看不到的部分 */
 .ev.private::before{border-color:var(--priv)}
+/* 過去的私人節點同樣要灰：權重需高於 .ev.private::before，否則紫色會蓋掉灰色 */
+.ev.private.past::before{border-color:var(--rail)}
 .ev.private .when::after{content:" 🔒"; font-size:12px; opacity:.6}
 .day-head.past, .day-head.past .dow{color:var(--rail)}
 .day-head.past::before{background:var(--rail)}
