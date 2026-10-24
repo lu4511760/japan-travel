@@ -9,14 +9,14 @@
 <style>
 :root{
   --bg:#fcfbf7; --fg:#231f1a; --muted:#8a8379; --line:#e8e3d8;
-  --rail:#d8d2c4; --accent:#b3541e; --accent-soft:#f9ece2; --link:#1667d9; --meal:#0e7a52; --day:#c2185b; --alert:#d32f2f;
+  --rail:#d8d2c4; --accent:#b3541e; --accent-soft:#f9ece2; --link:#1667d9; --meal:#0e7a52; --day:#c2185b; --alert:#d32f2f; --priv:#7b4fb5;
   --dot-bg:#fcfbf7; --card:#ffffff;
   --shadow:0 1px 2px rgba(35,31,26,.06), 0 3px 10px rgba(35,31,26,.05);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#1a1814; --fg:#ece7de; --muted:#9c948a; --line:#332f28;
-    --rail:#44403a; --accent:#e58a4e; --accent-soft:#33241a; --link:#7fb0ff; --meal:#5bd4a0; --day:#ff8fb3; --alert:#ff6b6b;
+    --rail:#44403a; --accent:#e58a4e; --accent-soft:#33241a; --link:#7fb0ff; --meal:#5bd4a0; --day:#ff8fb3; --alert:#ff6b6b; --priv:#b388ff;
     --dot-bg:#1a1814; --card:#232019;
     --shadow:0 1px 3px rgba(0,0,0,.45);
   }
@@ -148,6 +148,9 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 .ev.past::before{border-color:var(--rail)}
 /* 雪場資訊不是時間事件，不顯示軸點 */
 #ski-info::before{display:none}
+/* 私人行程節點：軸點換色並在時刻後加鎖頭，一眼分得出朋友看不到的部分 */
+.ev.private::before{border-color:var(--priv)}
+.ev.private .when::after{content:" 🔒"; font-size:12px; opacity:.6}
 .day-head.past, .day-head.past .dow{color:var(--rail)}
 .day-head.past::before{background:var(--rail)}
 .fl-updated.err{color:#c0392b}
@@ -736,6 +739,71 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
   // 開頁（稍等自動捲動完成後）與之後每小時，把目前行程置中
   setTimeout(function(){ centerCurrent(new Date()); }, 800);
   setInterval(function(){ if(!document.hidden) centerCurrent(new Date()); }, 3600000);
+})();
+
+// 私人行程：AES-GCM 加密存在 private.enc，輸入密碼才解得開
+// 解鎖：網址加 #k=你的密碼（解開後會存在這台裝置，並把密碼從網址移除）
+// 鎖回：網址加 #lock
+(function(){
+  var KEY='japan2027-pw';
+
+  function b64(s){ return Uint8Array.from(atob(s), function(c){ return c.charCodeAt(0); }); }
+
+  async function decryptItems(pw){
+    var r=await fetch('private.enc', {cache:'no-store'});
+    if(!r.ok) throw new Error('no blob');
+    var b=await r.json();
+    var km=await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+    var key=await crypto.subtle.deriveKey(
+      {name:'PBKDF2', salt:b64(b.salt), iterations:b.it, hash:'SHA-256'},
+      km, {name:'AES-GCM', length:256}, false, ['decrypt']);
+    var pt=await crypto.subtle.decrypt({name:'AES-GCM', iv:b64(b.iv)}, key, b64(b.ct));
+    return JSON.parse(new TextDecoder().decode(pt));
+  }
+
+  // 依時間插進當天正確位置
+  function inject(items){
+    (items||[]).forEach(function(it){
+      var head=document.getElementById(it.day);
+      if(!head || !it.time) return;
+      var ev=document.createElement('div');
+      ev.className='ev private';
+      var h='<div class="when">'+it.time+'</div>'+
+            '<h2'+(it.cls?' class="'+it.cls+'"':'')+'>'+(it.title||'')+'</h2>';
+      if(it.body) h+='<div class="body">'+it.body+'</div>';
+      ev.innerHTML=h;
+      var node=head.nextElementSibling, before=null;
+      while(node && !node.classList.contains('day-head')){
+        var w=node.querySelector && node.querySelector('.when');
+        var t=w && /^\d{2}:\d{2}$/.test(w.textContent.trim()) ? w.textContent.trim() : null;
+        if(t && t>it.time){ before=node; break; }
+        node=node.nextElementSibling;
+      }
+      head.parentNode.insertBefore(ev, before || node);
+    });
+  }
+
+  var m=location.hash.match(/^#k=(.+)$/);
+  if(location.hash==='#lock'){
+    try{ localStorage.removeItem(KEY); }catch(e){}
+    history.replaceState(null,'',location.pathname+location.search);
+    return;
+  }
+  var pw=null;
+  if(m){
+    pw=decodeURIComponent(m[1]);
+    history.replaceState(null,'',location.pathname+location.search);
+  }else{
+    try{ pw=localStorage.getItem(KEY); }catch(e){}
+  }
+  if(!pw) return;
+
+  decryptItems(pw).then(function(items){
+    try{ localStorage.setItem(KEY, pw); }catch(e){}
+    inject(items);
+    if(window.__tripTick) window.__tripTick(new Date());
+    if(window.__tripCenter) setTimeout(function(){ window.__tripCenter(new Date()); }, 300);
+  }).catch(function(){ /* 密碼錯或檔案不存在：安靜略過，不留痕跡 */ });
 })();
 
 // 旅途當天自動標示今天的日期，並捲動到當日行程
