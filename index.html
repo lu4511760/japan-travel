@@ -56,7 +56,7 @@ nav a.today{color:#fff; background:var(--accent); border-color:var(--accent); fo
 }
 .ev{position:relative; margin-bottom:24px; scroll-margin-top:58px}
 .ev::before{
-  content:""; position:absolute; left:-27px; top:5px;
+  content:""; position:absolute; left:-29px; top:5px;
   width:12px; height:12px; border-radius:50%;
   background:var(--dot-bg); border:3px solid var(--accent);
 }
@@ -69,7 +69,7 @@ nav a.today{color:#fff; background:var(--accent); border-color:var(--accent); fo
 .day-head:first-child{margin-top:0}
 .day-head .dow{color:var(--muted); font-weight:400; margin-left:10px; font-size:22px}
 .day-head::before{
-  content:""; position:absolute; left:-27px; top:18px;
+  content:""; position:absolute; left:-26px; top:18px;
   width:12px; height:12px; border-radius:3px; background:var(--day);
 }
 .when{font-size:18px; color:var(--accent); font-weight:700; letter-spacing:.05em; font-variant-numeric:tabular-nums}
@@ -142,7 +142,10 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 .sched-img{width:100%; border-radius:8px; border:1px solid var(--line); margin-top:4px}
 
 /* ── 已過去的行程灰階顯示 ── */
-.ev.past, .day-head.past{opacity:.4; filter:grayscale(1)}
+.ev.past > *{opacity:.4; filter:grayscale(1)}
+.ev.past::before{border-color:var(--rail)}
+.day-head.past, .day-head.past .dow{color:var(--rail)}
+.day-head.past::before{background:var(--rail)}
 .fl-updated.err{color:#c0392b}
 .nrt-head{margin:12px 0 2px; font-size:13.5px; border-top:1px solid var(--line); padding-top:10px}
 </style>
