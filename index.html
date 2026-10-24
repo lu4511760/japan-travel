@@ -146,6 +146,8 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 /* ── 已過去的行程灰階顯示 ── */
 .ev.past > *{opacity:.4; filter:grayscale(1)}
 .ev.past::before{border-color:var(--rail)}
+/* 雪場資訊不是時間事件，不顯示軸點 */
+#ski-info::before{display:none}
 .day-head.past, .day-head.past .dow{color:var(--rail)}
 .day-head.past::before{background:var(--rail)}
 .fl-updated.err{color:#c0392b}
