@@ -745,7 +745,7 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 // 解鎖：網址加 #k=你的密碼（解開後會存在這台裝置，並把密碼從網址移除）
 // 鎖回：網址加 #lock
 (function(){
-  var KEY='japan2027-pw';
+  var KEY='japan2027-pw', done=false;
 
   function b64(s){ return Uint8Array.from(atob(s), function(c){ return c.charCodeAt(0); }); }
 
@@ -783,27 +783,35 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
     });
   }
 
-  var m=location.hash.match(/^#k=(.+)$/);
-  if(location.hash==='#lock'){
-    try{ localStorage.removeItem(KEY); }catch(e){}
-    history.replaceState(null,'',location.pathname+location.search);
-    return;
+  // 可重複呼叫：載入時跑一次，之後網址 hash 改變（已開著的頁面直接貼網址）也會觸發
+  function run(){
+    if(location.hash==='#lock'){
+      try{ localStorage.removeItem(KEY); }catch(e){}
+      history.replaceState(null,'',location.pathname+location.search);
+      if(done) location.reload();   // 已顯示的私人節點一併清掉
+      return;
+    }
+    if(done) return;
+    var m=location.hash.match(/^#k=(.+)$/);
+    var pw=null;
+    if(m){
+      pw=decodeURIComponent(m[1]);
+      history.replaceState(null,'',location.pathname+location.search);
+    }else{
+      try{ pw=localStorage.getItem(KEY); }catch(e){}
+    }
+    if(!pw) return;
+    decryptItems(pw).then(function(items){
+      if(done) return;
+      done=true;
+      try{ localStorage.setItem(KEY, pw); }catch(e){}
+      inject(items);
+      if(window.__tripTick) window.__tripTick(new Date());
+      if(window.__tripCenter) setTimeout(function(){ window.__tripCenter(new Date()); }, 300);
+    }).catch(function(){ /* 密碼錯或檔案不存在：安靜略過，不留痕跡 */ });
   }
-  var pw=null;
-  if(m){
-    pw=decodeURIComponent(m[1]);
-    history.replaceState(null,'',location.pathname+location.search);
-  }else{
-    try{ pw=localStorage.getItem(KEY); }catch(e){}
-  }
-  if(!pw) return;
-
-  decryptItems(pw).then(function(items){
-    try{ localStorage.setItem(KEY, pw); }catch(e){}
-    inject(items);
-    if(window.__tripTick) window.__tripTick(new Date());
-    if(window.__tripCenter) setTimeout(function(){ window.__tripCenter(new Date()); }, 300);
-  }).catch(function(){ /* 密碼錯或檔案不存在：安靜略過，不留痕跡 */ });
+  run();
+  window.addEventListener('hashchange', run);
 })();
 
 // 旅途當天自動標示今天的日期，並捲動到當日行程
