@@ -768,9 +768,10 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
       if(!head || !it.time) return;
       var ev=document.createElement('div');
       ev.className='ev private';
-      var h='<div class="when">'+it.time+'</div>'+
-            '<h2'+(it.cls?' class="'+it.cls+'"':'')+'>'+(it.title||'')+'</h2>';
+      var h='<div class="when">'+it.time+'</div>';
+      if(it.title) h+='<h2'+(it.cls?' class="'+it.cls+'"':'')+'>'+it.title+'</h2>';
       if(it.body) h+='<div class="body">'+it.body+'</div>';
+      if(it.below) h+='<p class="jr-row">'+it.below+'</p>';   // 框外補充行
       ev.innerHTML=h;
       var node=head.nextElementSibling, before=null;
       while(node && !node.classList.contains('day-head')){
@@ -810,6 +811,7 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
       if(window.__tripCenter) setTimeout(function(){ window.__tripCenter(new Date()); }, 300);
     }).catch(function(){ /* 密碼錯或檔案不存在：安靜略過，不留痕跡 */ });
   }
+  window.__tripInject=inject;   // 供排版測試用（真正的內容仍需密碼才解得開）
   run();
   window.addEventListener('hashchange', run);
 })();
