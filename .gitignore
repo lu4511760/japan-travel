@@ -15,3 +15,6 @@ private-itinerary.json
 
 # 密碼檔，絕不進版控
 password.txt
+
+# 行程編輯權杖，絕不進版控
+edit-token.txt
