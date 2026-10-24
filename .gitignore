@@ -12,3 +12,6 @@ iiyama-express2025.pdf
 
 # 私人行程明文（只有加密後的 private.enc 進版控）
 private-itinerary.json
+
+# 密碼檔，絕不進版控
+password.txt
