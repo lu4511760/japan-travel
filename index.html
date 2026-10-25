@@ -41,11 +41,12 @@ nav{
 }
 nav::-webkit-scrollbar{display:none}
 nav a{
-  display:inline-block; font-size:13px; text-decoration:none;
+  display:inline-block; font-size:14px; text-decoration:none; text-align:center;
   color:var(--muted); background:var(--card); border:1px solid var(--line);
-  border-radius:99px; padding:3px 12px; margin:0 3px;
-  font-variant-numeric:tabular-nums;
+  border-radius:12px; padding:4px 11px 5px; margin:0 3px;
+  font-variant-numeric:tabular-nums; line-height:1.28;
 }
+nav a .dn{display:block; font-size:11px; letter-spacing:.4px; opacity:.8}
 nav a.today{color:#fff; background:var(--accent); border-color:var(--accent); font-weight:700}
 
 /* ── 時間軸 ── */
@@ -256,14 +257,14 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
 
   <nav id="daynav">
     <!-- 【測試模式】data-d 正式值：2027-01-16 ～ 2027-01-23 -->
-    <a href="#d0116" data-d="2026-10-24">1/16</a>
-    <a href="#d0117" data-d="2026-10-25">1/17</a>
-    <a href="#d0118" data-d="2026-10-26">1/18</a>
-    <a href="#d0119" data-d="2026-10-27">1/19</a>
-    <a href="#d0120" data-d="2026-10-28">1/20</a>
-    <a href="#d0121" data-d="2026-10-29">1/21</a>
-    <a href="#d0122" data-d="2026-10-30">1/22</a>
-    <a href="#d0123" data-d="2026-10-31">1/23</a>
+    <a href="#d0116" data-d="2026-10-24"><span class="dn">Day 1</span>01/16</a>
+    <a href="#d0117" data-d="2026-10-25"><span class="dn">Day 2</span>01/17</a>
+    <a href="#d0118" data-d="2026-10-26"><span class="dn">Day 3</span>01/18</a>
+    <a href="#d0119" data-d="2026-10-27"><span class="dn">Day 4</span>01/19</a>
+    <a href="#d0120" data-d="2026-10-28"><span class="dn">Day 5</span>01/20</a>
+    <a href="#d0121" data-d="2026-10-29"><span class="dn">Day 6</span>01/21</a>
+    <a href="#d0122" data-d="2026-10-30"><span class="dn">Day 7</span>01/22</a>
+    <a href="#d0123" data-d="2026-10-31"><span class="dn">Day 8</span>01/23</a>
   </nav>
 
   <!-- ── 行前清單（可收合） ── -->
