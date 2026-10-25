@@ -155,6 +155,16 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 /* 提醒事項（例如要先訂票） */
 .remind{color:var(--alert); font-weight:700}
 
+/* ── 一鍵複製 ── */
+.copy-btn{
+  display:inline-block; margin-left:6px; padding:2px 8px;
+  font-size:12.5px; font-family:inherit; line-height:1.6;
+  color:var(--link); background:transparent;
+  border:1px solid var(--line); border-radius:6px; cursor:pointer;
+}
+.copy-btn:active{opacity:.6}
+.copy-btn.done{color:var(--meal); border-color:var(--meal)}
+
 /* ── 時刻表圖片 ── */
 .sched-img{width:100%; border-radius:8px; border:1px solid var(--line); margin-top:4px}
 
@@ -507,6 +517,29 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
   document.addEventListener('click', function(e){
     var t=e.target.closest && e.target.closest('.fl-refresh');
     if(t){ e.preventDefault(); refresh(); }
+  });
+})();
+
+// 一鍵複製：任何帶 data-copy 的元素被點擊就複製其內容
+(function(){
+  function fallback(text){            // 非 https 或舊瀏覽器用的退路
+    var ta=document.createElement('textarea');
+    ta.value=text; ta.setAttribute('readonly','');
+    ta.style.position='fixed'; ta.style.left='-9999px';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); }catch(err){}
+    document.body.removeChild(ta);
+  }
+  document.addEventListener('click', function(e){
+    var b=e.target.closest && e.target.closest('[data-copy]');
+    if(!b) return;
+    e.preventDefault();
+    var text=b.getAttribute('data-copy'), label=b.textContent;
+    if(navigator.clipboard && window.isSecureContext){
+      navigator.clipboard.writeText(text)['catch'](function(){ fallback(text); });
+    } else { fallback(text); }
+    b.classList.add('done'); b.textContent='✓ 已複製';   // ✓ 已複製
+    setTimeout(function(){ b.classList.remove('done'); b.textContent=label; }, 1500);
   });
 })();
 
