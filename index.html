@@ -116,6 +116,12 @@ details.block .info{border-top:0; border-radius:0 0 10px 10px; box-shadow:var(--
 .info p{margin:9px 0}
 .info b{color:var(--accent)}
 ul.check{list-style:none; margin:0; padding:0}
+ul.check li.ck-group{
+  margin:12px 0 2px; font-weight:700; font-size:13px; color:var(--accent);
+  letter-spacing:.5px;
+}
+ul.check li.ck-group:first-child{margin-top:4px}
+.ck-count{font-size:13px; font-weight:400; color:var(--muted)}
 ul.check li{padding:2px 0}
 ul.check label{display:flex; gap:9px; align-items:baseline; cursor:pointer}
 ul.check input{accent-color:var(--accent); transform:translateY(2px)}
@@ -263,19 +269,71 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
 
   <!-- ── 行前清單（可收合） ── -->
   <details class="block" id="checklist">
-    <summary>✅ 行前清單</summary>
+    <summary>✅ 行前清單 <span class="ck-count" id="ck-count"></span></summary>
     <div class="info">
       <ul class="check" id="cklist">
-        <li><label><input type="checkbox"><span>護照（效期 6 個月以上）</span></label></li>
-        <li><label><input type="checkbox"><span>Visit Japan Web 入境登錄</span></label></li>
-        <li><label><input type="checkbox"><span>訂東京飯店（1/20–1/23，3 晚）</span></label></li>
-        <li><label><input type="checkbox"><span>雪衣雪褲、脖圍、雪鏡、手套</span></label></li>
-        <li><label><input type="checkbox"><span>保暖發熱衣、毛帽、暖暖包</span></label></li>
-        <li><label><input type="checkbox"><span>滑雪旅遊保險（含雪地運動）</span></label></li>
-        <li><label><input type="checkbox"><span>網路 SIM / eSIM / WiFi 機</span></label></li>
-        <li><label><input type="checkbox"><span>日幣現金（雪場週邊少刷卡）</span></label></li>
-        <li><label><input type="checkbox"><span>Suica 加入手機錢包</span></label></li>
-        <li><label><input type="checkbox"><span>防曬乳、護唇膏（雪地紫外線強）</span></label></li>
+        <li class="ck-group">申辦</li>
+        <li><label><input type="checkbox" data-ck="eSIM / SIM卡"><span>eSIM / SIM卡</span></label></li>
+        <li><label><input type="checkbox" data-ck="旅平險(不便險)"><span>旅平險(不便險)</span></label></li>
+        <li><label><input type="checkbox" data-ck="Visit Japan Web"><span><a href="https://www.vjw.digital.go.jp/" target="_blank" rel="noopener">Visit Japan Web</a></span></label></li>
+        <li class="ck-group">證件</li>
+        <li><label><input type="checkbox" data-ck="護照"><span>護照</span></label></li>
+        <li><label><input type="checkbox" data-ck="身分證"><span>身分證</span></label></li>
+        <li class="ck-group">錢包</li>
+        <li><label><input type="checkbox" data-ck="台幣現金"><span>台幣現金</span></label></li>
+        <li><label><input type="checkbox" data-ck="日幣現金"><span>日幣現金</span></label></li>
+        <li><label><input type="checkbox" data-ck="信用卡(JCB)"><span>信用卡(JCB)</span></label></li>
+        <li><label><input type="checkbox" data-ck="西瓜卡(Suica)"><span>西瓜卡(Suica)</span></label></li>
+        <li class="ck-group">3C</li>
+        <li><label><input type="checkbox" data-ck="手機"><span>手機</span></label></li>
+        <li><label><input type="checkbox" data-ck="耳機"><span>耳機</span></label></li>
+        <li><label><input type="checkbox" data-ck="充電線"><span>充電線</span></label></li>
+        <li><label><input type="checkbox" data-ck="充電器"><span>充電器</span></label></li>
+        <li><label><input type="checkbox" data-ck="行動電源"><span>行動電源</span></label></li>
+        <li class="ck-group">衣物(7天)</li>
+        <li><label><input type="checkbox" data-ck="內衣褲"><span>內衣褲</span></label></li>
+        <li><label><input type="checkbox" data-ck="外衣褲"><span>外衣褲</span></label></li>
+        <li><label><input type="checkbox" data-ck="襪子"><span>襪子</span></label></li>
+        <li><label><input type="checkbox" data-ck="外套"><span>外套</span></label></li>
+        <li><label><input type="checkbox" data-ck="帽子(毛帽)"><span>帽子(毛帽)</span></label></li>
+        <li><label><input type="checkbox" data-ck="拖鞋"><span>拖鞋</span></label></li>
+        <li class="ck-group">盥洗</li>
+        <li><label><input type="checkbox" data-ck="牙刷"><span>牙刷</span></label></li>
+        <li><label><input type="checkbox" data-ck="牙膏"><span>牙膏</span></label></li>
+        <li><label><input type="checkbox" data-ck="洗面乳"><span>洗面乳</span></label></li>
+        <li class="ck-group">日用品</li>
+        <li><label><input type="checkbox" data-ck="口罩"><span>口罩</span></label></li>
+        <li><label><input type="checkbox" data-ck="濕紙巾"><span>濕紙巾</span></label></li>
+        <li><label><input type="checkbox" data-ck="衛生紙"><span>衛生紙</span></label></li>
+        <li><label><input type="checkbox" data-ck="護手霜"><span>護手霜</span></label></li>
+        <li><label><input type="checkbox" data-ck="隱形眼鏡"><span>隱形眼鏡</span></label></li>
+        <li><label><input type="checkbox" data-ck="非防風打火機"><span>非防風打火機</span></label></li>
+        <li class="ck-group">藥物</li>
+        <li><label><input type="checkbox" data-ck="止痛藥"><span>止痛藥</span></label></li>
+        <li><label><input type="checkbox" data-ck="腸胃藥"><span>腸胃藥</span></label></li>
+        <li><label><input type="checkbox" data-ck="感冒藥"><span>感冒藥</span></label></li>
+        <li><label><input type="checkbox" data-ck="酸痛貼布"><span>酸痛貼布</span></label></li>
+        <li class="ck-group">其他</li>
+        <li><label><input type="checkbox" data-ck="衣物真空袋"><span>衣物真空袋</span></label></li>
+        <li><label><input type="checkbox" data-ck="購物袋"><span>購物袋</span></label></li>
+        <li><label><input type="checkbox" data-ck="行李秤"><span>行李秤</span></label></li>
+        <li><label><input type="checkbox" data-ck="行李束帶"><span>行李束帶</span></label></li>
+        <li class="ck-group">雪具(外)</li>
+        <li><label><input type="checkbox" data-ck="雪衣"><span>雪衣</span></label></li>
+        <li><label><input type="checkbox" data-ck="雪褲"><span>雪褲</span></label></li>
+        <li><label><input type="checkbox" data-ck="雪鏡"><span>雪鏡</span></label></li>
+        <li><label><input type="checkbox" data-ck="手套"><span>手套</span></label></li>
+        <li class="ck-group">內裡</li>
+        <li><label><input type="checkbox" data-ck="頭套"><span>頭套</span></label></li>
+        <li><label><input type="checkbox" data-ck="貼身排汗衣褲"><span>貼身排汗衣褲</span></label></li>
+        <li><label><input type="checkbox" data-ck="內層手套"><span>內層手套</span></label></li>
+        <li><label><input type="checkbox" data-ck="雪襪"><span>雪襪</span></label></li>
+        <li class="ck-group">防護</li>
+        <li><label><input type="checkbox" data-ck="安全帽"><span>安全帽</span></label></li>
+        <li><label><input type="checkbox" data-ck="護甲"><span>護甲</span></label></li>
+        <li><label><input type="checkbox" data-ck="護腕"><span>護腕</span></label></li>
+        <li><label><input type="checkbox" data-ck="護臀"><span>護臀</span></label></li>
+        <li><label><input type="checkbox" data-ck="護膝"><span>護膝</span></label></li>
       </ul>
     </div>
   </details>
@@ -337,18 +395,31 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
 
 // 行前清單勾選狀態存在瀏覽器本機（換裝置不會同步）
 (function(){
-  var KEY='japan2027-checklist';
+  var KEY='japan2027-checklist-v2';      // v1 用索引存，清單改版後會錯位，故換鍵
   var boxes=document.querySelectorAll('#cklist input');
-  try{
-    var saved=JSON.parse(localStorage.getItem(KEY)||'[]');
-    boxes.forEach(function(b,i){ b.checked=!!saved[i]; });
-  }catch(e){}
+  var out=document.getElementById('ck-count');
+  function store(){
+    try{ return JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){ return {}; }
+  }
+  function count(){
+    var n=0;
+    boxes.forEach(function(b){ if(b.checked) n++; });
+    if(out) out.textContent='（'+n+' / '+boxes.length+'）';
+  }
+  var s=store();
+  boxes.forEach(function(b){ b.checked=!!s[b.getAttribute('data-ck')]; });
+  count();
   boxes.forEach(function(b){
-    b.addEventListener('change',function(){
-      try{
-        localStorage.setItem(KEY, JSON.stringify(Array.prototype.map.call(boxes,function(x){return x.checked;})));
-      }catch(e){}
+    b.addEventListener('change', function(){
+      var s=store();
+      s[b.getAttribute('data-ck')]=b.checked;
+      try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){}
+      count();
     });
+  });
+  // 清單項目裡的連結要能正常點開，不要順便勾到 checkbox
+  document.querySelectorAll('#cklist a').forEach(function(a){
+    a.addEventListener('click', function(e){ e.stopPropagation(); });
   });
 })();
 
