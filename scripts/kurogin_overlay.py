@@ -71,7 +71,7 @@ def main():
             d.text((X0 + (w - (r - l)) / 2 - l, cy - t), text, font=f, fill=COLORS[ck])
     out = "preview.png" if preview else OUT
     if not preview:
-        im = im.resize((int(im.width * 0.75), int(im.height * 0.75)), Image.LANCZOS)
+        im = im.resize((int(im.width * 0.62), int(im.height * 0.62)), Image.LANCZOS)
     im.save(out, optimize=True)
     print("saved", out, im.size, "格數", len(CELLS))
 
