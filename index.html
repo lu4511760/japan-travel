@@ -868,7 +868,9 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
       var merged={}, src=Object.assign({}, base||{}, pub.edits[id]);
       Object.keys(src).forEach(function(k){ if(src[k]!=null && src[k]!=='') merged[k]=src[k]; });
       merged.id=id;
-      window.__tripFill(el, merged);
+      // 時間可能被改過，有時刻的節點整個拿掉重插，才會排到正確的時間位置
+      if(merged.time){ el.remove(); insertItem(merged, el.classList.contains('private')); }
+      else window.__tripFill(el, merged);
     });
     (pub.added||[]).forEach(function(it){ insertItem(it, false); });
     S.priv.forEach(function(it){ insertItem(it, true); });
