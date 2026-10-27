@@ -148,8 +148,15 @@ ul.check li.ck-group{
 }
 ul.check li.ck-group:first-child{margin-top:4px}
 .ck-count{font-size:13px; font-weight:400; color:var(--muted)}
+.ck-hint{font-size:12px; font-weight:400; color:var(--muted); opacity:.75; margin-left:4px}
+/* 長按取消檢核：打上刪除線，核取方塊顯示「－」（indeterminate） */
+ul.check li.na span{color:var(--muted); text-decoration:line-through; opacity:.7}
+ul.check li.na input{opacity:.7}
 ul.check li{padding:2px 0}
-ul.check label{display:flex; gap:9px; align-items:baseline; cursor:pointer}
+ul.check label{
+  display:flex; gap:9px; align-items:baseline; cursor:pointer;
+  user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;   /* 長按是功能，擋掉選字與系統選單 */
+}
 ul.check input{accent-color:var(--accent); transform:translateY(2px)}
 ul.check input:checked + span{color:var(--muted); text-decoration:line-through}
 footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
@@ -331,7 +338,7 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
 
   <!-- ── 行前清單（可收合） ── -->
   <details class="block" id="checklist">
-    <summary>✅ 行前清單 <span class="ck-count" id="ck-count"></span></summary>
+    <summary>✅ 行前清單 <span class="ck-count" id="ck-count"></span><span class="ck-hint">（長按取消檢核）</span></summary>
     <div class="info">
       <ul class="check" id="cklist">
         <li class="ck-group">申辦</li>
@@ -480,13 +487,42 @@ window.__nodeLink=(function(){
   function store(){
     try{ return JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){ return {}; }
   }
-  function count(){
-    var n=0;
-    boxes.forEach(function(b){ if(b.checked) n++; });
-    if(out) out.textContent='（'+n+' / '+boxes.length+'）';
+  // 取消檢核（這趟不用準備）的項目：單獨存一份，總數也會扣掉
+  var NA_KEY='japan2027-checklist-na';
+  function naStore(){
+    try{ return JSON.parse(localStorage.getItem(NA_KEY)||'{}'); }catch(e){ return {}; }
   }
+  var na=naStore();
+  function naOn(b){ return !!na[b.getAttribute('data-ck')]; }
+  function paint(b){
+    var on=naOn(b);
+    b.indeterminate=on;                 // 核取方塊內顯示「－」
+    if(on) b.checked=false;
+    var li=b.closest('li');
+    if(li) li.classList.toggle('na', on);
+  }
+  function count(){
+    var n=0, total=0;
+    boxes.forEach(function(b){
+      if(naOn(b)) return;               // 取消檢核的不算進分母
+      total++;
+      if(b.checked) n++;
+    });
+    if(out) out.textContent='（'+n+' / '+total+'）';
+  }
+  function setNa(b, on){
+    var k=b.getAttribute('data-ck');
+    if(on){
+      na[k]=true;
+      var ck=store(); delete ck[k];     // 取消檢核時順便把原本的勾拿掉
+      try{ localStorage.setItem(KEY, JSON.stringify(ck)); }catch(e){}
+    }else delete na[k];
+    try{ localStorage.setItem(NA_KEY, JSON.stringify(na)); }catch(e){}
+    paint(b); count();
+  }
+
   var s=store();
-  boxes.forEach(function(b){ b.checked=!!s[b.getAttribute('data-ck')]; });
+  boxes.forEach(function(b){ b.checked=!!s[b.getAttribute('data-ck')]; paint(b); });
   count();
   boxes.forEach(function(b){
     b.addEventListener('change', function(){
@@ -500,6 +536,50 @@ window.__nodeLink=(function(){
   document.querySelectorAll('#cklist a').forEach(function(a){
     a.addEventListener('click', function(e){ e.stopPropagation(); });
   });
+
+  // ── 長按＝這趟不用準備 ──
+  // 長按切換成「－」（刪除線、不計入總數），已經是「－」時再點一下就恢復成未勾選
+  var timer=null, sx=0, sy=0, longed=false;
+  function boxOf(e){
+    var li=e.target.closest && e.target.closest('#cklist li');
+    if(!li || li.classList.contains('ck-group')) return null;
+    if(e.target.closest('a')) return null;        // 清單裡的連結照常點開
+    return li.querySelector('input[data-ck]');
+  }
+  function clear(){ if(timer){ clearTimeout(timer); timer=null; } }
+  document.addEventListener('pointerdown', function(e){
+    clear();
+    var b=boxOf(e);
+    if(!b) return;
+    sx=e.clientX; sy=e.clientY; longed=false;
+    timer=setTimeout(function(){
+      timer=null; longed=true;
+      setNa(b, !naOn(b));
+      if(navigator.vibrate){ try{ navigator.vibrate(30); }catch(e2){} }
+    }, 600);
+  });
+  document.addEventListener('pointermove', function(e){
+    if(timer && (Math.abs(e.clientX-sx)>10 || Math.abs(e.clientY-sy)>10)) clear();
+  });
+  ['pointerup','pointercancel'].forEach(function(t){
+    document.addEventListener(t, function(){
+      clear();
+      // 放開手指後瀏覽器通常還會補一次 click（要吃掉它），但不保證，所以短時間後自動解除
+      if(longed) setTimeout(function(){ longed=false; }, 400);
+    }, true);
+  });
+  window.addEventListener('scroll', clear, true);
+  document.addEventListener('click', function(e){
+    var b=boxOf(e);
+    if(!b) return;
+    if(longed){                       // 長按剛做完的那一下點擊不要真的去勾選
+      e.preventDefault(); e.stopPropagation(); longed=false; return;
+    }
+    if(naOn(b)){                      // 「－」狀態下點一下＝恢復成未勾選
+      e.preventDefault(); e.stopPropagation();
+      setNa(b, false);
+    }
+  }, true);
 })();
 
 // 即時航班資訊：桃園機場 API，每 30 秒更新
