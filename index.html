@@ -51,6 +51,7 @@ nav a{
 }
 nav a .dn{display:block; font-size:11px; letter-spacing:.4px; opacity:.8}
 nav a.today{color:#fff; background:var(--accent); border-color:var(--accent); font-weight:700}
+nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
 
 /* ── 時間軸 ── */
 .tl{position:relative; padding-left:30px}
@@ -115,6 +116,7 @@ details.block summary{
   border-radius:10px; box-shadow:var(--shadow); user-select:none;
 }
 details.block[open] summary{border-radius:10px 10px 0 0}
+details.block.past{opacity:.45; filter:grayscale(1)}
 details.block .info{border-top:0; border-radius:0 0 10px 10px; box-shadow:var(--shadow)}
 .info{background:var(--card); border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow); padding:4px 14px; font-size:14.5px}
 .info p{margin:9px 0}
@@ -718,6 +720,13 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
   // 已開始節點之前（不含）的行程灰階；過去的日期標題與無時刻節點也灰階
   function grayPast(now){
     var today=dateStr(now);
+    // 上方日期選項：已過的日子也灰掉
+    document.querySelectorAll('#daynav a[data-d]').forEach(function(a){
+      a.classList.toggle('past', a.getAttribute('data-d') < today);
+    });
+    // 行前清單：出發當天 12:00 之後就用不到了，整塊灰掉
+    var ck=document.getElementById('checklist');
+    if(ck) ck.classList.toggle('past', now >= new Date(DAY_DATES.d0116+'T12:00:00'));
     var curDate=null, items=[];
     document.querySelectorAll('.tl > *').forEach(function(el){
       if(el.classList.contains('day-head')){
