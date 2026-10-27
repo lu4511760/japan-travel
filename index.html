@@ -292,15 +292,14 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
   <p class="sub">2027/01/16 ~ 01/23・8 天 7 夜</p>
 
   <nav id="daynav">
-    <!-- 【測試模式】data-d 正式值：2027-01-16 ～ 2027-01-23 -->
-    <a href="#d0116" data-d="2026-10-19"><span class="dn">Day 1</span>01/16</a>
-    <a href="#d0117" data-d="2026-10-20"><span class="dn">Day 2</span>01/17</a>
-    <a href="#d0118" data-d="2026-10-21"><span class="dn">Day 3</span>01/18</a>
-    <a href="#d0119" data-d="2026-10-22"><span class="dn">Day 4</span>01/19</a>
-    <a href="#d0120" data-d="2026-10-23"><span class="dn">Day 5</span>01/20</a>
-    <a href="#d0121" data-d="2026-10-24"><span class="dn">Day 6</span>01/21</a>
-    <a href="#d0122" data-d="2026-10-25"><span class="dn">Day 7</span>01/22</a>
-    <a href="#d0123" data-d="2026-10-26"><span class="dn">Day 8</span>01/23</a>
+    <a href="#d0116" data-d="2027-01-16"><span class="dn">Day 1</span>01/16</a>
+    <a href="#d0117" data-d="2027-01-17"><span class="dn">Day 2</span>01/17</a>
+    <a href="#d0118" data-d="2027-01-18"><span class="dn">Day 3</span>01/18</a>
+    <a href="#d0119" data-d="2027-01-19"><span class="dn">Day 4</span>01/19</a>
+    <a href="#d0120" data-d="2027-01-20"><span class="dn">Day 5</span>01/20</a>
+    <a href="#d0121" data-d="2027-01-21"><span class="dn">Day 6</span>01/21</a>
+    <a href="#d0122" data-d="2027-01-22"><span class="dn">Day 7</span>01/22</a>
+    <a href="#d0123" data-d="2027-01-23"><span class="dn">Day 8</span>01/23</a>
   </nav>
 
   <!-- ── 行前清單（可收合） ── -->
@@ -716,9 +715,8 @@ window.__nodeLink=(function(){
 // 體驗優化：過去的行程灰階顯示、雪場資訊卡依日期移動
 (function(){
   // 各日期標題對應的日期
-  // 【測試模式】正式值：2027-01-16 ～ 2027-01-23
-  var DAY_DATES={d0116:'2026-10-19',d0117:'2026-10-20',d0118:'2026-10-21',d0119:'2026-10-22',
-                 d0120:'2026-10-23',d0121:'2026-10-24',d0122:'2026-10-25',d0123:'2026-10-26'};
+  var DAY_DATES={d0116:'2027-01-16',d0117:'2027-01-17',d0118:'2027-01-18',d0119:'2027-01-19',
+                 d0120:'2027-01-20',d0121:'2027-01-21',d0122:'2027-01-22',d0123:'2027-01-23'};
 
   function dateStr(d){
     return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -727,7 +725,6 @@ window.__nodeLink=(function(){
   // 雪場資訊卡：今天 <=1/17 放第2天、=1/18 放第3天、>=1/19 放第4天
   function moveSkiInfo(now){
     var today=dateStr(now);
-    // 【測試模式】正式值：2027-01-17 / 2027-01-18
     var target = today<=DAY_DATES.d0117 ? 'd0117' : (today===DAY_DATES.d0118 ? 'd0118' : 'd0119');
     var head=document.getElementById(target), card=document.getElementById('ski-info');
     if(head && card && head.nextElementSibling!==card) head.insertAdjacentElement('afterend', card);
