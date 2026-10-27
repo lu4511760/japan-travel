@@ -1132,7 +1132,7 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
           if(this.checked) S.pub.booked[id]=true; else delete S.pub.booked[id];
           await flush();
         };
-        (ev.querySelector('h2')||ev).appendChild(lab);
+        ev.appendChild(lab);        // 一律放在節點最下面，有沒有標題都是同一個位置
       }
     });
     document.querySelectorAll('.tl > .day-head').forEach(function(h){
