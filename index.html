@@ -67,12 +67,14 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
 .ev{position:relative; margin-bottom:24px; scroll-margin-top:58px}
 .ev{-webkit-touch-callout:none}                    /* 長按節點是用來複製連結的，擋掉手機的系統選單 */
 .flash{animation:evflash .5s ease-in-out 5; border-radius:12px}
-/* 行前清單的卡片本身有底色，閃背景看不出來，改成閃外框 */
+/* 行前清單的卡片本身有底色，閃背景看不出來，改成連卡片底色一起換；
+   展開時標題與內容都在閃，捲到哪一段都看得到 */
 #checklist.flash{animation:none}
-#checklist.flash > summary{animation:ckflash .5s ease-in-out 5}
+#checklist.flash > summary,
+#checklist.flash > .info{animation:ckflash .5s ease-in-out 5}
 @keyframes ckflash{
-  0%,100%{box-shadow:var(--shadow)}
-  50%{box-shadow:0 0 0 4px rgba(230,126,34,.55)}
+  0%,100%{background:var(--card)}
+  50%{background:rgba(230,126,34,.30)}
 }
 @keyframes evflash{
   0%,100%{background:transparent; box-shadow:none}
