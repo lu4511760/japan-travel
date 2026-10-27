@@ -750,33 +750,33 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
     });
   }
 
-  // 餐廳訂位連結：網址裡的日期自動代入該節點所屬的行程日期
+  // 餐廳訂位連結：日期自動代入最近的週三（當天就是週三則取下週三）
   // （ld 是日本當地時間、ssst 是 UTC，JST = UTC + 9 小時）
-  function fixReserveLinks(){
-    var curDate=null;
-    document.querySelectorAll('.tl > *').forEach(function(el){
-      if(el.classList.contains('day-head')){ curDate=DAY_DATES[el.id]||curDate; return; }
-      if(!curDate) return;
-      el.querySelectorAll('a[href*="/maps/reserve/dine"]').forEach(function(a){
-        var href=a.getAttribute('href');
-        var m=href.match(/[?&]ld=\d{8}T(\d{2})(\d{2})(\d{2})/);
-        if(!m) return;
-        var p=curDate.split('-');
-        var utc=new Date(Date.UTC(+p[0], +p[1]-1, +p[2], +m[1]-9, +m[2], +m[3]));
-        var z=function(n){ return String(n).padStart(2,'0'); };
-        var ssst=utc.getUTCFullYear()+'-'+z(utc.getUTCMonth()+1)+'-'+z(utc.getUTCDate())+'T'
-                +z(utc.getUTCHours())+'%3A'+z(utc.getUTCMinutes())+'%3A'+z(utc.getUTCSeconds())+'.000Z';
-        a.setAttribute('href', href
-          .replace(/([?&]ld=)\d{8}/, '$1'+curDate.replace(/-/g,''))
-          .replace(/([?&]ssst=)[^&]*/, '$1'+ssst));
-      });
+  function nextWed(now){
+    var d=new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    d.setDate(d.getDate() + ((3 - d.getDay() + 7) % 7 || 7));   // 週三＝3
+    return dateStr(d);
+  }
+  function fixReserveLinks(now){
+    var day=nextWed(now), p=day.split('-'), z=function(n){ return String(n).padStart(2,'0'); };
+    document.querySelectorAll('a[href*="/maps/reserve/dine"]').forEach(function(a){
+      var href=a.getAttribute('href');
+      var m=href.match(/[?&]ld=\d{8}T(\d{2})(\d{2})(\d{2})/);
+      if(!m) return;
+      var utc=new Date(Date.UTC(+p[0], +p[1]-1, +p[2], +m[1]-9, +m[2], +m[3]));
+      var ssst=utc.getUTCFullYear()+'-'+z(utc.getUTCMonth()+1)+'-'+z(utc.getUTCDate())+'T'
+              +z(utc.getUTCHours())+'%3A'+z(utc.getUTCMinutes())+'%3A'+z(utc.getUTCSeconds())+'.000Z';
+      a.setAttribute('href', href
+        .replace(/([?&]ld=)\d{8}/, '$1'+day.replace(/-/g,''))
+        .replace(/([?&]ssst=)[^&]*/, '$1'+ssst));
     });
   }
-  fixReserveLinks();
   var tlEl=document.querySelector('.tl');
-  if(tlEl && window.MutationObserver) new MutationObserver(fixReserveLinks).observe(tlEl, {childList:true});
+  if(tlEl && window.MutationObserver){
+    new MutationObserver(function(){ fixReserveLinks(new Date()); }).observe(tlEl, {childList:true});
+  }
 
-  function tick(now){ moveSkiInfo(now); grayPast(now); }
+  function tick(now){ moveSkiInfo(now); grayPast(now); fixReserveLinks(now); }
   window.__tripTick=tick; // 供測試模擬時間用
   window.__tripCenter=centerCurrent;
   tick(new Date());
