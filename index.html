@@ -1052,9 +1052,27 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
     };
   }
 
+  // 進出編輯模式、儲存後都會重建或插入元素，這裡記住畫面上第一個可見節點，做完再捲回原位
+  async function keepView(fn){
+    var els=document.querySelectorAll('.tl > .ev'), key=null, top=0;
+    for(var i=0;i<els.length;i++){
+      var r=els[i].getBoundingClientRect();
+      if(r.bottom<=0 || !els[i].dataset.id) continue;
+      if(key===null){ key=els[i].dataset.id; top=r.top; }
+      if(r.top>=0){ key=els[i].dataset.id; top=r.top; break; }
+    }
+    await fn();
+    if(!key) return;
+    var back=document.querySelector('.tl > [data-id="'+key+'"]');
+    if(back) window.scrollBy({top:Math.round(back.getBoundingClientRect().top-top), behavior:'instant'});
+  }
+
   async function flush(){
-    var r=await window.__tripSave();
-    decorate();
+    var r;
+    await keepView(async function(){
+      r=await window.__tripSave();
+      decorate();
+    });
     toast(r.ok?'已儲存':(r.reason||'儲存失敗'));
   }
 
@@ -1138,7 +1156,7 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
     fab.textContent=editing?'✓':'✏️';
     fab.classList.toggle('on', editing);
     bar.style.display=editing?'block':'none';
-    decorate();
+    keepView(decorate);
   }
 
   window.__tripEditUI=function(){
