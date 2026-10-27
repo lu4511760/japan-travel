@@ -147,14 +147,13 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 
 /* 「回到現在」：旅途期間才出現，點一下把目前行程捲回畫面中央 */
 .now-fab{
-  position:fixed; right:16px; bottom:16px; z-index:50; display:none;
+  position:fixed; right:16px; bottom:16px; z-index:50;
   width:52px; height:52px; border-radius:50%; border:0; cursor:pointer;
   font-size:22px; color:#fff; background:var(--accent);
   box-shadow:0 3px 12px rgba(0,0,0,.35);
 }
-body.on-trip .now-fab{display:block}
 body.editing .now-fab{display:none}          /* 編輯模式下讓位給編輯列 */
-body.on-trip .ed-fab{bottom:78px}            /* 解鎖後鉛筆往上疊，回到現在在下面 */
+.ed-fab{bottom:78px}                         /* 解鎖後鉛筆往上疊，回到現在在下面 */
 
 /* 行程結束後的畫面（最後一天之後） */
 #ended{display:none; text-align:center; padding:56px 16px 72px}
@@ -163,6 +162,7 @@ body.ended #daynav,
 body.ended #checklist,
 body.ended .tl,
 body.ended footer,
+body.ended .now-fab,
 body.ended .ed-fab{display:none !important}
 #ended .ended-ico{font-size:52px; line-height:1}
 #ended .ended-t{margin:18px 0 28px; font-size:22px; font-weight:700; letter-spacing:.5px}
@@ -253,7 +253,7 @@ span.rsv{color:var(--meal)}
 .fl-updated.err{color:#c0392b}
 /* ── 編輯介面（解鎖後才出現） ── */
 .ed-fab{
-  position:fixed; right:16px; bottom:16px; z-index:50;
+  position:fixed; right:16px; z-index:50;
   width:52px; height:52px; border-radius:50%; border:0; cursor:pointer;
   font-size:22px; color:#fff; background:var(--priv);
   box-shadow:0 3px 12px rgba(0,0,0,.35);
@@ -829,6 +829,8 @@ window.__nodeLink=(function(){
         if(DAY_DATES[id]===today){ var h=document.getElementById(id); if(h) target=h; }
       });
     }
+    // 還沒出發（或已經結束）時沒有「現在」，就帶到第一天
+    if(!target) target=document.getElementById('d0116');
     if(target) target.scrollIntoView({behavior:'smooth', block:'center'});
   }
 
@@ -905,9 +907,6 @@ window.__nodeLink=(function(){
     if(ended) return;
     // 回顧模式：時間一律當成出發當天凌晨，所以沒有任何一段會被灰掉、雪場資訊也回到第 2 天
     if(REVIEW) now=new Date(DAY_DATES.d0116+'T00:00:00');
-    // 旅途期間才需要「回到現在」（回顧模式的 now 是出發當天，所以要另外排除）
-    document.body.classList.toggle('on-trip',
-      !REVIEW && today>=DAY_DATES.d0116 && today<=DAY_DATES.d0123);
     moveSkiInfo(now); grayPast(now); fixReserveLinks(new Date());
   }
   var nowBtn=document.getElementById('now-fab');
