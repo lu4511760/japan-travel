@@ -1242,6 +1242,8 @@ window.__nodeLink=(function(){
   // ── 用節點連結打開 ──
   var id=window.__nodeLink;
   if(!id) return;
+  // 節點 id 已經記在 __nodeLink，網址上的 #n= 就清掉，之後重新整理才不會又閃又被拉過去
+  try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
   function go(){
     var ev=document.querySelector('.ev[data-id="'+id+'"]');
     if(!ev) return;
