@@ -1124,18 +1124,13 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
   var link=document.querySelector('nav a[data-d="'+today+'"]');
   if(link){
     link.classList.add('today');
-    // 手機上日期列放不下（捲到底也推不到最左），改成把今天排到第一個：
-    // 今天之後的日子依序接著，已過的（灰掉的）整批移到最後面
+    // 手機上日期列放不下時，把今天捲到最前面（捲到底推不到最左也無妨）
     var nav=link.parentNode;
     var toFront=function(){
-      if(nav.scrollWidth<=nav.clientWidth+4) return;   // 桌機放得下就維持原本順序
-      var as=[].slice.call(nav.querySelectorAll('a[data-d]'));
-      var i=as.indexOf(link);
-      if(i>0) as.slice(0,i).forEach(function(a){ nav.appendChild(a); });
-      nav.scrollLeft=0;
+      nav.scrollLeft += link.getBoundingClientRect().left - nav.getBoundingClientRect().left - 12;
     };
     toFront();
-    setTimeout(toFront, 400);   // 字型載入後寬度可能變動，再判斷一次
+    setTimeout(toFront, 400);   // 字型載入後位置可能位移，再校一次
     var target=document.querySelector(link.getAttribute('href'));
     if(target) setTimeout(function(){ target.scrollIntoView({behavior:'smooth',block:'start'}); },300);
   }
