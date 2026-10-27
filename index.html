@@ -61,7 +61,7 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
 }
 .ev{position:relative; margin-bottom:24px; scroll-margin-top:58px}
 .ev{-webkit-touch-callout:none}                    /* 長按節點是用來複製連結的，擋掉手機的系統選單 */
-.ev.flash{animation:evflash .5s ease-in-out 3; border-radius:12px}
+.ev.flash{animation:evflash .5s ease-in-out 5; border-radius:12px}
 @keyframes evflash{
   0%,100%{background:transparent; box-shadow:none}
   50%{background:rgba(230,126,34,.16); box-shadow:0 0 0 6px rgba(230,126,34,.16)}
@@ -936,7 +936,8 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
 
     booted=true;
     repaint();
-    if(window.__tripCenter) setTimeout(function(){ window.__tripCenter(new Date()); }, 300);
+    if(window.__tripCenter && !/^#n=/.test(location.hash||''))
+      setTimeout(function(){ window.__tripCenter(new Date()); }, 300);
     if(S.unlocked && window.__tripEditUI) window.__tripEditUI();
     // 補送離線期間存下的修改
     if(S.unlocked && S.token) flushPending();
@@ -1199,7 +1200,7 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
     ev.classList.remove('flash');
     void ev.offsetWidth;                       // 強制重繪，連按兩次才會重新播動畫
     ev.classList.add('flash');
-    setTimeout(function(){ ev.classList.remove('flash'); }, 1700);
+    setTimeout(function(){ ev.classList.remove('flash'); }, 2700);   // 0.5s × 5 下
   }
   function toast(msg){
     var t=document.createElement('div');
