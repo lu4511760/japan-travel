@@ -60,6 +60,12 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
   width:2px; background:var(--rail); border-radius:2px;
 }
 .ev{position:relative; margin-bottom:24px; scroll-margin-top:58px}
+.ev{-webkit-touch-callout:none}                    /* 長按節點是用來複製連結的，擋掉手機的系統選單 */
+.ev.flash{animation:evflash .5s ease-in-out 3; border-radius:12px}
+@keyframes evflash{
+  0%,100%{background:transparent; box-shadow:none}
+  50%{background:rgba(230,126,34,.16); box-shadow:0 0 0 6px rgba(230,126,34,.16)}
+}
 .ev::before{
   content:""; position:absolute; left:-29px; top:5px;
   width:12px; height:12px; border-radius:50%;
@@ -792,7 +798,8 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
   setInterval(function(){ tick(new Date()); }, 60000);
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) tick(new Date()); });
   // 開頁（稍等自動捲動完成後）與之後每小時，把目前行程置中
-  setTimeout(function(){ centerCurrent(new Date()); }, 800);
+  // 從節點連結（#n=…）進來時，畫面要停在那個節點，不要被拉去今天
+  if(!/^#n=/.test(location.hash||'')) setTimeout(function(){ centerCurrent(new Date()); }, 800);
   setInterval(function(){ if(!document.hidden) centerCurrent(new Date()); }, 3600000);
 })();
 
@@ -1173,6 +1180,77 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
   };
 })();
 
+// 節點連結：長按節點可複製該節點的連結，用這個連結打開會自動捲過去並閃三下
+(function(){
+  function fallback(text){
+    var ta=document.createElement('textarea');
+    ta.value=text; ta.setAttribute('readonly','');
+    ta.style.cssText='position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+  }
+  function copyText(text){
+    if(navigator.clipboard && window.isSecureContext){
+      navigator.clipboard.writeText(text)['catch'](function(){ fallback(text); });
+    }else fallback(text);
+  }
+  function flash(ev){
+    ev.classList.remove('flash');
+    void ev.offsetWidth;                       // 強制重繪，連按兩次才會重新播動畫
+    ev.classList.add('flash');
+    setTimeout(function(){ ev.classList.remove('flash'); }, 1700);
+  }
+  function toast(msg){
+    var t=document.createElement('div');
+    t.className='ed-toast'; t.textContent=msg;
+    document.body.appendChild(t);
+    setTimeout(function(){ t.remove(); }, 2200);
+  }
+
+  // ── 長按複製 ──
+  var timer=null, sx=0, sy=0;
+  function clear(){ if(timer){ clearTimeout(timer); timer=null; } }
+  document.addEventListener('pointerdown', function(e){
+    clear();
+    if(document.body.classList.contains('editing')) return;   // 編輯模式下不攔，免得跟編輯按鈕打架
+    var ev=e.target.closest && e.target.closest('.ev');
+    if(!ev || !ev.dataset.id) return;
+    if(e.target.closest('a,button,input,label,textarea,iframe')) return;
+    sx=e.clientX; sy=e.clientY;
+    timer=setTimeout(function(){
+      timer=null;
+      copyText(location.origin+location.pathname+'#n='+ev.dataset.id);
+      flash(ev);
+      toast('已複製這個行程的連結');
+      if(navigator.vibrate){ try{ navigator.vibrate(30); }catch(e2){} }
+    }, 600);
+  });
+  document.addEventListener('pointermove', function(e){
+    if(timer && (Math.abs(e.clientX-sx)>10 || Math.abs(e.clientY-sy)>10)) clear();
+  });
+  ['pointerup','pointercancel'].forEach(function(t){ document.addEventListener(t, clear, true); });
+  window.addEventListener('scroll', clear, true);
+
+  // ── 用節點連結打開 ──
+  var m=(location.hash||'').match(/^#n=([A-Za-z0-9_-]+)$/);
+  if(!m) return;
+  var id=m[1];
+  function go(){
+    var ev=document.querySelector('.ev[data-id="'+id+'"]');
+    if(!ev) return;
+    ev.scrollIntoView({block:'center', behavior:'instant'});
+    flash(ev);
+  }
+  go();
+  var tl=document.querySelector('.tl'), ob=null;
+  if(tl && window.MutationObserver){      // 雲端修改套用後會整個重建，重建完再定位一次
+    ob=new MutationObserver(go);
+    ob.observe(tl, {childList:true});
+    setTimeout(function(){ ob.disconnect(); }, 5000);
+  }
+})();
+
 // 旅途當天自動標示今天的日期，並捲動到當日行程
 (function(){
   var now=new Date();
@@ -1188,7 +1266,8 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
     toFront();
     setTimeout(toFront, 400);   // 字型載入後位置可能位移，再校一次
     var target=document.querySelector(link.getAttribute('href'));
-    if(target) setTimeout(function(){ target.scrollIntoView({behavior:'smooth',block:'start'}); },300);
+    if(target && !/^#n=/.test(location.hash||''))
+      setTimeout(function(){ target.scrollIntoView({behavior:'smooth',block:'start'}); },300);
   }
 })();
 </script>
