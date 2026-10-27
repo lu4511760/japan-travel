@@ -153,6 +153,8 @@ ul.check li.ck-group:first-child{margin-top:4px}
 ul.check li.na span{color:var(--muted); text-decoration:line-through; opacity:.7}
 ul.check li.na input{opacity:.7}
 ul.check li{padding:2px 0}
+/* 項目前的圖示：固定寬度才對得齊，inline-block 讓刪除線不會劃到它 */
+.ck-ico{display:inline-block; width:1.5em; font-style:normal; text-decoration:none}
 ul.check label{
   display:flex; gap:9px; align-items:baseline; cursor:pointer;
   user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;   /* 長按是功能，擋掉選字與系統選單 */
@@ -343,69 +345,69 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
     <div class="info">
       <ul class="check" id="cklist">
         <li class="ck-group">申辦</li>
-        <li><label><input type="checkbox" data-ck="eSIM / SIM卡"><span>eSIM / SIM卡</span></label></li>
-        <li><label><input type="checkbox" data-ck="旅平險(不便險)"><span>旅平險(不便險)</span></label></li>
-        <li><label><input type="checkbox" data-ck="Visit Japan Web"><span><a href="https://www.vjw.digital.go.jp/" target="_blank" rel="noopener">Visit Japan Web</a></span></label></li>
+        <li><label><input type="checkbox" data-ck="eSIM / SIM卡"><span><i class="ck-ico">📶</i>eSIM / SIM卡</span></label></li>
+        <li><label><input type="checkbox" data-ck="旅平險(不便險)"><span><i class="ck-ico">🛡️</i>旅平險(不便險)</span></label></li>
+        <li><label><input type="checkbox" data-ck="Visit Japan Web"><span><i class="ck-ico">🌐</i><a href="https://www.vjw.digital.go.jp/" target="_blank" rel="noopener">Visit Japan Web</a></span></label></li>
         <li class="ck-group">證件</li>
-        <li><label><input type="checkbox" data-ck="護照"><span>護照</span></label></li>
-        <li><label><input type="checkbox" data-ck="身分證"><span>身分證</span></label></li>
+        <li><label><input type="checkbox" data-ck="護照"><span><i class="ck-ico">🛂</i>護照</span></label></li>
+        <li><label><input type="checkbox" data-ck="身分證"><span><i class="ck-ico">🪪</i>身分證</span></label></li>
         <li class="ck-group">錢包</li>
-        <li><label><input type="checkbox" data-ck="台幣現金"><span>台幣現金</span></label></li>
-        <li><label><input type="checkbox" data-ck="日幣現金"><span>日幣現金</span></label></li>
-        <li><label><input type="checkbox" data-ck="信用卡(JCB)"><span>信用卡(JCB)</span></label></li>
-        <li><label><input type="checkbox" data-ck="西瓜卡(Suica)"><span>西瓜卡(Suica)</span></label></li>
+        <li><label><input type="checkbox" data-ck="台幣現金"><span><i class="ck-ico">💵</i>台幣現金</span></label></li>
+        <li><label><input type="checkbox" data-ck="日幣現金"><span><i class="ck-ico">💴</i>日幣現金</span></label></li>
+        <li><label><input type="checkbox" data-ck="信用卡(JCB)"><span><i class="ck-ico">💳</i>信用卡(JCB)</span></label></li>
+        <li><label><input type="checkbox" data-ck="西瓜卡(Suica)"><span><i class="ck-ico">🍉</i>西瓜卡(Suica)</span></label></li>
         <li class="ck-group">3C</li>
-        <li><label><input type="checkbox" data-ck="手機"><span>手機</span></label></li>
-        <li><label><input type="checkbox" data-ck="耳機"><span>耳機</span></label></li>
-        <li><label><input type="checkbox" data-ck="充電線"><span>充電線</span></label></li>
-        <li><label><input type="checkbox" data-ck="充電器"><span>充電器</span></label></li>
-        <li><label><input type="checkbox" data-ck="行動電源"><span>行動電源</span></label></li>
+        <li><label><input type="checkbox" data-ck="手機"><span><i class="ck-ico">📱</i>手機</span></label></li>
+        <li><label><input type="checkbox" data-ck="耳機"><span><i class="ck-ico">🎧</i>耳機</span></label></li>
+        <li><label><input type="checkbox" data-ck="充電線"><span><i class="ck-ico">🔌</i>充電線</span></label></li>
+        <li><label><input type="checkbox" data-ck="充電器"><span><i class="ck-ico">⚡</i>充電器</span></label></li>
+        <li><label><input type="checkbox" data-ck="行動電源"><span><i class="ck-ico">🔋</i>行動電源</span></label></li>
         <li class="ck-group">衣物(7天)</li>
-        <li><label><input type="checkbox" data-ck="內衣褲"><span>內衣褲</span></label></li>
-        <li><label><input type="checkbox" data-ck="外衣褲"><span>外衣褲</span></label></li>
-        <li><label><input type="checkbox" data-ck="襪子"><span>襪子</span></label></li>
-        <li><label><input type="checkbox" data-ck="外套"><span>外套</span></label></li>
-        <li><label><input type="checkbox" data-ck="帽子(毛帽)"><span>帽子(毛帽)</span></label></li>
-        <li><label><input type="checkbox" data-ck="拖鞋"><span>拖鞋</span></label></li>
+        <li><label><input type="checkbox" data-ck="內衣褲"><span><i class="ck-ico">🩲</i>內衣褲</span></label></li>
+        <li><label><input type="checkbox" data-ck="外衣褲"><span><i class="ck-ico">👖</i>外衣褲</span></label></li>
+        <li><label><input type="checkbox" data-ck="襪子"><span><i class="ck-ico">🧦</i>襪子</span></label></li>
+        <li><label><input type="checkbox" data-ck="外套"><span><i class="ck-ico">🧥</i>外套</span></label></li>
+        <li><label><input type="checkbox" data-ck="帽子(毛帽)"><span><i class="ck-ico">🧢</i>帽子(毛帽)</span></label></li>
+        <li><label><input type="checkbox" data-ck="拖鞋"><span><i class="ck-ico">🩴</i>拖鞋</span></label></li>
         <li class="ck-group">盥洗</li>
-        <li><label><input type="checkbox" data-ck="牙刷"><span>牙刷</span></label></li>
-        <li><label><input type="checkbox" data-ck="牙膏"><span>牙膏</span></label></li>
-        <li><label><input type="checkbox" data-ck="洗面乳"><span>洗面乳</span></label></li>
+        <li><label><input type="checkbox" data-ck="牙刷"><span><i class="ck-ico">🪥</i>牙刷</span></label></li>
+        <li><label><input type="checkbox" data-ck="牙膏"><span><i class="ck-ico">🦷</i>牙膏</span></label></li>
+        <li><label><input type="checkbox" data-ck="洗面乳"><span><i class="ck-ico">🧼</i>洗面乳</span></label></li>
         <li class="ck-group">日用品</li>
-        <li><label><input type="checkbox" data-ck="口罩"><span>口罩</span></label></li>
-        <li><label><input type="checkbox" data-ck="濕紙巾"><span>濕紙巾</span></label></li>
-        <li><label><input type="checkbox" data-ck="衛生紙"><span>衛生紙</span></label></li>
-        <li><label><input type="checkbox" data-ck="護手霜"><span>護手霜</span></label></li>
-        <li><label><input type="checkbox" data-ck="護唇膏"><span>護唇膏</span></label></li>
-        <li><label><input type="checkbox" data-ck="暖暖包"><span>暖暖包</span></label></li>
-        <li><label><input type="checkbox" data-ck="隱形眼鏡"><span>隱形眼鏡</span></label></li>
-        <li><label><input type="checkbox" data-ck="非防風打火機"><span>非防風打火機</span></label></li>
+        <li><label><input type="checkbox" data-ck="口罩"><span><i class="ck-ico">😷</i>口罩</span></label></li>
+        <li><label><input type="checkbox" data-ck="濕紙巾"><span><i class="ck-ico">🧽</i>濕紙巾</span></label></li>
+        <li><label><input type="checkbox" data-ck="衛生紙"><span><i class="ck-ico">🧻</i>衛生紙</span></label></li>
+        <li><label><input type="checkbox" data-ck="護手霜"><span><i class="ck-ico">🧴</i>護手霜</span></label></li>
+        <li><label><input type="checkbox" data-ck="護唇膏"><span><i class="ck-ico">💄</i>護唇膏</span></label></li>
+        <li><label><input type="checkbox" data-ck="暖暖包"><span><i class="ck-ico">♨️</i>暖暖包</span></label></li>
+        <li><label><input type="checkbox" data-ck="隱形眼鏡"><span><i class="ck-ico">👁️</i>隱形眼鏡</span></label></li>
+        <li><label><input type="checkbox" data-ck="非防風打火機"><span><i class="ck-ico">🔥</i>非防風打火機</span></label></li>
         <li class="ck-group">藥物</li>
-        <li><label><input type="checkbox" data-ck="止痛藥"><span>止痛藥</span></label></li>
-        <li><label><input type="checkbox" data-ck="腸胃藥"><span>腸胃藥</span></label></li>
-        <li><label><input type="checkbox" data-ck="感冒藥"><span>感冒藥</span></label></li>
-        <li><label><input type="checkbox" data-ck="酸痛貼布"><span>酸痛貼布</span></label></li>
+        <li><label><input type="checkbox" data-ck="止痛藥"><span><i class="ck-ico">💊</i>止痛藥</span></label></li>
+        <li><label><input type="checkbox" data-ck="腸胃藥"><span><i class="ck-ico">🧪</i>腸胃藥</span></label></li>
+        <li><label><input type="checkbox" data-ck="感冒藥"><span><i class="ck-ico">🤧</i>感冒藥</span></label></li>
+        <li><label><input type="checkbox" data-ck="酸痛貼布"><span><i class="ck-ico">🩹</i>酸痛貼布</span></label></li>
         <li class="ck-group">其他</li>
-        <li><label><input type="checkbox" data-ck="衣物真空袋"><span>衣物真空袋</span></label></li>
-        <li><label><input type="checkbox" data-ck="購物袋"><span>購物袋</span></label></li>
-        <li><label><input type="checkbox" data-ck="行李秤"><span>行李秤</span></label></li>
-        <li><label><input type="checkbox" data-ck="行李束帶"><span>行李束帶</span></label></li>
+        <li><label><input type="checkbox" data-ck="衣物真空袋"><span><i class="ck-ico">🗜️</i>衣物真空袋</span></label></li>
+        <li><label><input type="checkbox" data-ck="購物袋"><span><i class="ck-ico">🛍️</i>購物袋</span></label></li>
+        <li><label><input type="checkbox" data-ck="行李秤"><span><i class="ck-ico">⚖️</i>行李秤</span></label></li>
+        <li><label><input type="checkbox" data-ck="行李束帶"><span><i class="ck-ico">🔗</i>行李束帶</span></label></li>
         <li class="ck-group">雪具(外)</li>
-        <li><label><input type="checkbox" data-ck="雪衣"><span>雪衣</span></label></li>
-        <li><label><input type="checkbox" data-ck="雪褲"><span>雪褲</span></label></li>
-        <li><label><input type="checkbox" data-ck="雪鏡"><span>雪鏡</span></label></li>
-        <li><label><input type="checkbox" data-ck="手套"><span>手套</span></label></li>
+        <li><label><input type="checkbox" data-ck="雪衣"><span><i class="ck-ico">⛷️</i>雪衣</span></label></li>
+        <li><label><input type="checkbox" data-ck="雪褲"><span><i class="ck-ico">🎿</i>雪褲</span></label></li>
+        <li><label><input type="checkbox" data-ck="雪鏡"><span><i class="ck-ico">🥽</i>雪鏡</span></label></li>
+        <li><label><input type="checkbox" data-ck="手套"><span><i class="ck-ico">🧤</i>手套</span></label></li>
         <li class="ck-group">內裡</li>
-        <li><label><input type="checkbox" data-ck="頭套"><span>頭套</span></label></li>
-        <li><label><input type="checkbox" data-ck="貼身排汗衣褲"><span>貼身排汗衣褲</span></label></li>
-        <li><label><input type="checkbox" data-ck="內層手套"><span>內層手套</span></label></li>
-        <li><label><input type="checkbox" data-ck="雪襪"><span>雪襪</span></label></li>
+        <li><label><input type="checkbox" data-ck="頭套"><span><i class="ck-ico">🥷</i>頭套</span></label></li>
+        <li><label><input type="checkbox" data-ck="貼身排汗衣褲"><span><i class="ck-ico">👕</i>貼身排汗衣褲</span></label></li>
+        <li><label><input type="checkbox" data-ck="內層手套"><span><i class="ck-ico">🤲</i>內層手套</span></label></li>
+        <li><label><input type="checkbox" data-ck="雪襪"><span><i class="ck-ico">❄️</i>雪襪</span></label></li>
         <li class="ck-group">防護</li>
-        <li><label><input type="checkbox" data-ck="安全帽"><span>安全帽</span></label></li>
-        <li><label><input type="checkbox" data-ck="護甲"><span>護甲</span></label></li>
-        <li><label><input type="checkbox" data-ck="護腕"><span>護腕</span></label></li>
-        <li><label><input type="checkbox" data-ck="護臀"><span>護臀</span></label></li>
-        <li><label><input type="checkbox" data-ck="護膝"><span>護膝</span></label></li>
+        <li><label><input type="checkbox" data-ck="安全帽"><span><i class="ck-ico">⛑️</i>安全帽</span></label></li>
+        <li><label><input type="checkbox" data-ck="護甲"><span><i class="ck-ico">🦺</i>護甲</span></label></li>
+        <li><label><input type="checkbox" data-ck="護腕"><span><i class="ck-ico">🤚</i>護腕</span></label></li>
+        <li><label><input type="checkbox" data-ck="護臀"><span><i class="ck-ico">🍑</i>護臀</span></label></li>
+        <li><label><input type="checkbox" data-ck="護膝"><span><i class="ck-ico">🦵</i>護膝</span></label></li>
       </ul>
     </div>
   </details>
