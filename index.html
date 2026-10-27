@@ -368,6 +368,12 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
 </div>
 
 <script>
+// 節點連結（#n=…）在最一開始就記下來：之後網址若被改掉或被清掉，定位與閃爍仍然有效
+window.__nodeLink=(function(){
+  var m=(location.hash||'').match(/^#n=([A-Za-z0-9_-]+)$/);
+  return m?m[1]:null;
+})();
+
 // 時間軸由上方 trip-data 的 JSON 產生；之後若有雲端修改會再套用上去
 (function(){
   var data=JSON.parse(document.getElementById('trip-data').textContent);
@@ -799,7 +805,7 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) tick(new Date()); });
   // 開頁（稍等自動捲動完成後）與之後每小時，把目前行程置中
   // 從節點連結（#n=…）進來時，畫面要停在那個節點，不要被拉去今天
-  if(!/^#n=/.test(location.hash||'')) setTimeout(function(){ centerCurrent(new Date()); }, 800);
+  if(!window.__nodeLink) setTimeout(function(){ centerCurrent(new Date()); }, 800);
   setInterval(function(){ if(!document.hidden) centerCurrent(new Date()); }, 3600000);
 })();
 
@@ -936,7 +942,7 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
 
     booted=true;
     repaint();
-    if(window.__tripCenter && !/^#n=/.test(location.hash||''))
+    if(window.__tripCenter && !window.__nodeLink)
       setTimeout(function(){ window.__tripCenter(new Date()); }, 300);
     if(S.unlocked && window.__tripEditUI) window.__tripEditUI();
     // 補送離線期間存下的修改
@@ -1234,9 +1240,8 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
   window.addEventListener('scroll', clear, true);
 
   // ── 用節點連結打開 ──
-  var m=(location.hash||'').match(/^#n=([A-Za-z0-9_-]+)$/);
-  if(!m) return;
-  var id=m[1];
+  var id=window.__nodeLink;
+  if(!id) return;
   function go(){
     var ev=document.querySelector('.ev[data-id="'+id+'"]');
     if(!ev) return;
@@ -1267,7 +1272,7 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
     toFront();
     setTimeout(toFront, 400);   // 字型載入後位置可能位移，再校一次
     var target=document.querySelector(link.getAttribute('href'));
-    if(target && !/^#n=/.test(location.hash||''))
+    if(target && !window.__nodeLink)
       setTimeout(function(){ target.scrollIntoView({behavior:'smooth',block:'start'}); },300);
   }
 })();
