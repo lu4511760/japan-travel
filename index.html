@@ -66,7 +66,14 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
 }
 .ev{position:relative; margin-bottom:24px; scroll-margin-top:58px}
 .ev{-webkit-touch-callout:none}                    /* 長按節點是用來複製連結的，擋掉手機的系統選單 */
-.ev.flash{animation:evflash .5s ease-in-out 5; border-radius:12px}
+.flash{animation:evflash .5s ease-in-out 5; border-radius:12px}
+/* 行前清單的卡片本身有底色，閃背景看不出來，改成閃外框 */
+#checklist.flash{animation:none}
+#checklist.flash > summary{animation:ckflash .5s ease-in-out 5}
+@keyframes ckflash{
+  0%,100%{box-shadow:var(--shadow)}
+  50%{box-shadow:0 0 0 4px rgba(230,126,34,.55)}
+}
 @keyframes evflash{
   0%,100%{background:transparent; box-shadow:none}
   50%{background:rgba(230,126,34,.16); box-shadow:0 0 0 6px rgba(230,126,34,.16)}
@@ -148,11 +155,13 @@ footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 /* 「回到現在」：旅途期間才出現，點一下把目前行程捲回畫面中央 */
 .now-fab{
   position:fixed; right:16px; bottom:16px; z-index:50;
-  width:52px; height:52px; border-radius:50%; border:0; cursor:pointer;
-  font-size:22px; color:#fff; background:var(--accent);
+  width:52px; height:52px; border-radius:50%; border:0; cursor:pointer; padding:0;
+  font-family:inherit; font-size:13px; font-weight:700; line-height:1.25; letter-spacing:.5px;
+  color:#fff; background:var(--accent);
   box-shadow:0 3px 12px rgba(0,0,0,.35);
 }
 body.editing .now-fab{display:none}          /* 編輯模式下讓位給編輯列 */
+body.review .now-fab{display:none}           /* 回顧行程時沒有「現在」可以回 */
 .ed-fab{bottom:78px}                         /* 解鎖後鉛筆往上疊，回到現在在下面 */
 
 /* 行程結束後的畫面（最後一天之後） */
@@ -402,7 +411,7 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
 
   <div class="tl"></div>
 
-  <button type="button" class="now-fab" id="now-fab" title="回到現在">⏱</button>
+  <button type="button" class="now-fab" id="now-fab" title="回到目前行程">目前<br>行程</button>
 
   <footer>斑尾滑雪 × 東京・2027/01/16–23</footer>
 </div>
@@ -832,6 +841,7 @@ window.__nodeLink=(function(){
     // 還沒出發（或已經結束）時沒有「現在」，就帶到第一天
     if(!target) target=document.getElementById('d0116');
     if(target) target.scrollIntoView({behavior:'smooth', block:'center'});
+    return target;
   }
 
   // 已開始節點之前（不含）的行程灰階；過去的日期標題與無時刻節點也灰階
@@ -904,13 +914,38 @@ window.__nodeLink=(function(){
     var today=dateStr(now);
     var ended=isEnded(now) && !REVIEW;
     document.body.classList.toggle('ended', ended);
+    document.body.classList.toggle('review', REVIEW);
     if(ended) return;
     // 回顧模式：時間一律當成出發當天凌晨，所以沒有任何一段會被灰掉、雪場資訊也回到第 2 天
     if(REVIEW) now=new Date(DAY_DATES.d0116+'T00:00:00');
     moveSkiInfo(now); grayPast(now); fixReserveLinks(new Date());
   }
   var nowBtn=document.getElementById('now-fab');
-  if(nowBtn) nowBtn.onclick=function(){ centerCurrent(new Date()); };
+  if(nowBtn) nowBtn.onclick=function(){
+    var now=new Date(), target;
+    if(dateStr(now) < DAY_DATES.d0116){       // 還沒出發，這時該看的是行前清單
+      target=document.getElementById('checklist');
+      if(target) target.scrollIntoView({behavior:'smooth', block:'center'});
+    }else{
+      target=centerCurrent(now);
+    }
+    // 捲動是 smooth 的，等它真的停下來再閃，才不會一邊移動一邊閃
+    if(target && window.__tripFlash) afterScroll(target, function(){ window.__tripFlash(target); });
+  };
+
+  // 等畫面捲到定位再閃：要同時滿足「不再移動」和「目標已經出現在畫面上」，最多等 2.6 秒
+  function afterScroll(el, cb){
+    var done=false, last=null, same=0, deadline=Date.now()+2600;
+    var t=setInterval(function(){
+      if(done) return;
+      var y=Math.round(window.scrollY);
+      if(y===last) same++; else { last=y; same=0; }
+      var r=el.getBoundingClientRect(), shown=(r.top<window.innerHeight && r.bottom>0);
+      if((same>=3 && shown) || Date.now()>deadline){
+        done=true; clearInterval(t); cb();
+      }
+    }, 80);
+  }
   var endedBtn=document.getElementById('ended-btn');
   if(endedBtn) endedBtn.onclick=function(){
     REVIEW=true;
@@ -1332,6 +1367,8 @@ window.__nodeLink=(function(){
     ev.classList.add('flash');
     setTimeout(function(){ ev.classList.remove('flash'); }, 2700);   // 0.5s × 5 下
   }
+  window.__tripFlash=flash;     // 「目前行程」按鈕也用這個閃法
+
   function toast(msg){
     var t=document.createElement('div');
     t.className='ed-toast'; t.textContent=msg;
