@@ -7,6 +7,7 @@
 //        GET /?type=imm                      ← 入境審查各查驗處等待時間
 //   2. 行程修改的雲端儲存 —— 讓手機在解鎖後可以改行程，存在 Workers KV
 //        GET  /data                          ← 任何人都可讀（朋友才看得到你的更新）
+//        GET  /data?prev=1                   ← 上一版備份（寫入前自動留的，還原用）
 //        POST /data  + X-Edit-Token          ← 只有帶正確權杖才能寫
 //
 // 部署前需在 Cloudflare 後台設定：
@@ -16,6 +17,7 @@
 
 const ALLOWED_ORIGIN = "https://lu4511760.github.io";
 const KV_KEY = "trip-edits";
+const KV_PREV = "trip-edits-prev";   // 上一版備份：誤刪或蓋掉時可以還原
 
 const cors = (extra = {}) => ({
   "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
@@ -42,7 +44,9 @@ async function handleData(request, env) {
   if (!env.TRIP) return json({ error: "KV 未綁定（請在 Cloudflare 綁定 TRIP）" }, 500);
 
   if (request.method === "GET") {
-    const saved = await env.TRIP.get(KV_KEY);
+    // /data?prev=1 讀上一版備份（手動還原用）
+    const key = new URL(request.url).searchParams.get("prev") ? KV_PREV : KV_KEY;
+    const saved = await env.TRIP.get(key);
     return json(saved ? JSON.parse(saved) : { pub: null, priv: null, at: null });
   }
 
@@ -65,6 +69,9 @@ async function handleData(request, env) {
     };
     const text = JSON.stringify(doc);
     if (text.length > 512 * 1024) return json({ error: "too large" }, 413);
+    // 覆寫之前先把目前這版留一份，改壞了還有得救
+    const before = await env.TRIP.get(KV_KEY);
+    if (before) await env.TRIP.put(KV_PREV, before);
     await env.TRIP.put(KV_KEY, text);
     return json({ ok: true, at: doc.at });
   }

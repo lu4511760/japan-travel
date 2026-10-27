@@ -82,6 +82,7 @@ def build(size):
 
 build(180).save(BASE + "/apple-touch-icon.png")
 build(192).save(BASE + "/icon-192.png")
+build(512).save(BASE + "/icon-512.png")   # 加到主畫面（PWA）用的大圖
 build(32).save(BASE + "/favicon-32.png")
 build(48).resize((192, 192), Image.NEAREST).save("icon48_big.png")
 print("icon 已產生")
