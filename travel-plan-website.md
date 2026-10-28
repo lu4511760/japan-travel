@@ -482,24 +482,83 @@ function apply(){
 
 #### 一鍵切換（模式按鈕）
 
-右下角放一顆按鈕，**按鈕上的字就是「按下去會做的事」**，做完跳到下一個。兩組循環依「今天在不在旅程期間」切換：
+右下角放一顆按鈕，**按鈕上的字就是「按下去會做的事」**，做完跳到下一個。
+
+循環不要寫死——**按「今天是第幾天」動態產生**，因為第一天沒有「過去」可收、最後一天沒有「未來」可收，那一格留著只會讓人按下去畫面毫無變化：
 
 | 情況 | 循環 |
 |---|---|
-| 旅途中 | 全部展開 → 收合過去 → 收合未來 → … |
+| 旅途中（中間幾天） | 全部展開 → 收合過去 → 收合未來 → … |
+| 行程第一天 | 全部展開 ↔ 收合未來 |
+| 行程最後一天 | 全部展開 ↔ 收合過去 |
 | 還沒出發／已結束 | 全部展開 ↔ 全部收合 |
 
 ```js
-var ORDER_TRIP=['all','past','future'], ORDER_OFF=['all','none'];
+var ORDER_OFF=['all','none'];
+function order(){
+  if(!onTrip()) return ORDER_OFF;
+  var list=dayList(), t=today(), o=['all'];
+  if(t>list[0].date) o.push('past');                   // 不是第一天才有「過去」
+  if(t<list[list.length-1].date) o.push('future');     // 不是最後一天才有「未來」
+  return o;
+}
 function nextMode(){
-  var o=onTrip() ? ORDER_TRIP : ORDER_OFF, i=o.indexOf(mode);
+  var o=order(), i=o.indexOf(mode);
   return o[(i<0 ? 0 : i+1) % o.length];   // 模式不在這組裡（例如旅程開始後還停在「全收」）就回到全開
 }
 ```
 
+少掉的那一格不用補償邏輯：第一天停在「收合未來」跨到第二天時，下面的 rollover 會把昨天收起來，自然就補上「過去也一起收」；最後一天停在「收合過去」跨過去就是旅程結束，rollover 收掉最後一天，剛好變成全收。
+
 兩個容易漏掉的細節：
 - **初始值要設成 `all`**，不要留 null。畫面一開始本來就是全開，按鈕該顯示的是下一步，否則第一次按下去什麼都沒發生。
-- 模式不在當前循環裡時（跨進／跨出旅程期間），`indexOf` 會是 -1，要 fallback 回第一個。
+- 模式不在當前循環裡時（跨進／跨出旅程期間、或剛好跨過第一天／最後一天），`indexOf` 會是 -1，要 fallback 回第一個。
+
+#### 手動收合也要讓按鈕跟上
+
+使用者一天一天手動收，收到最後一天全部收起來時，按鈕卻還寫著「收合過去」——這是這個功能最容易出現的違和感。所以要反過來監看收合狀態，把模式校正回去：
+
+```js
+function syncBtn(){
+  var list=dayList(), st=current(), collapsed=0;
+  list.forEach(function(d){ if(st[d.id]) collapsed++; });
+  var o=order(), want=null;
+  if(collapsed===list.length) want=o[o.length-1];   // 全收 → 停在循環最後一格，按鈕就是「全部展開」
+  else if(collapsed===0)      want='all';           // 全開 → 回到起點
+  if(!want || want===mode) return;                  // 不上不下的混合狀態：按鈕不動
+  mode=want; save(); paintBtn();
+}
+```
+
+要注意的是**呼叫的位置**：放在「點標題」那條路徑（以及開頁初始化）就好，**不要放進 `apply()`**。`apply()` 也會被按鈕自己的動作呼叫，放進去兩邊會互相覆寫，變成很難追的狀態錯亂。
+
+開頁時也要對一次，否則「收到全收 → 重整 → 按鈕寫著收合過去」這個 bug 還是會出現。
+
+#### 用顏色表示收合程度
+
+四種字樣光看文字要想一下，加上漸進的深淺就直覺多了：**收得越多、顏色越深**。
+
+階數直接用「目前模式在循環裡的位置」，畫字樣時順手寫進 `data-step`，剩下交給 CSS：
+
+```js
+function paintBtn(){
+  btn.innerHTML=LABEL[nextMode()];
+  var o=order(), i=o.indexOf(mode);
+  if(i<0) i=0;
+  btn.dataset.step = (o.length<3 && i>0) ? 2 : i;   // 只有兩格的循環直接跳最深，不用中間色
+}
+```
+
+```css
+.fold-fab{transition:background .25s, color .25s, border-color .25s}
+/* step 0 用按鈕原本的樣式（最淡），不另外寫 */
+.fold-fab[data-step="1"]{background:var(--accent-soft); color:var(--accent); border-color:var(--accent)}
+.fold-fab[data-step="2"]{background:var(--fg); color:var(--bg); border-color:var(--fg)}
+```
+
+兩點經驗：
+- 最深那階**不要用主色**。如果旁邊還有一顆主色的圓鈕（例如 5.9 的「目前行程」），兩顆會看起來像同一個東西。改用 `--fg` 實心，深色佈景下自動變成淺底深字，一樣是對比最強的那一階。
+- 加 `transition`，換色是淡入而不是硬跳，手感差很多。
 
 #### 跨日只動兩天
 
@@ -552,6 +611,8 @@ function current(){ return reviewState || state; }   // 所有讀寫都走這裡
 ```
 
 這招的關鍵是**所有讀寫都要改走 `current()`**。漏掉一處（例如點標題時判斷「目前是收還是開」）就會出現「點了沒反應」的怪現象。
+
+**模式本身也要有一份暫時的**（`reviewMode`）。回顧畫面裡照樣可以按那顆按鈕、照樣會觸發上面的 `syncBtn()`，但這些都只該改記憶體裡的那一份，不能寫回 `localStorage`，否則離開回顧後使用者原本的收合設定就被回顧時的操作蓋掉了。
 
 ---
 
