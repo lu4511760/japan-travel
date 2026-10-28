@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="format-detection" content="telephone=no,date=no,address=no,email=no">
 <meta name="theme-color" content="#1a1814" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#fcfbf7" media="(prefers-color-scheme: light)">
 <title>斑尾滑雪 × 東京</title>
@@ -101,12 +102,6 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
 .when .dow{color:var(--muted); font-weight:400; margin-left:5px}
 /* 結束時間平常不佔版面，進編輯模式才顯示出來好對照 */
 .when-end{display:none}
-/* 加入行事曆的小圖示（每個有時刻的行程都有） */
-.cal-btn{
-  margin-left:8px; padding:0 2px; font-size:13px; line-height:1; vertical-align:2px;
-  border:0; background:transparent; cursor:pointer; opacity:.4;
-}
-.cal-btn:active{opacity:1}
 body.editing .when-end{display:inline; color:var(--muted); font-weight:400}
 .ev h2{font-size:16.5px; margin:1px 0 7px}
 .ev h2.meal{color:var(--meal)}
@@ -486,7 +481,7 @@ window.__nodeLink=(function(){
     if(it.time){
       h+='<div class="when" data-t="'+it.time+'"'+(it.end?' data-e="'+it.end+'"':'')+'>'+it.time
         +(it.end ? '<span class="when-end"> ~ '+it.end+'</span>' : '')
-        +'<button type="button" class="cal-btn" title="加入行事曆">📅</button></div>';
+        +'</div>';
     }
     if(it.title) h+='<h2'+(it.cls?' class="'+it.cls+'"':'')+'>'+it.title+'</h2>';
     if(it.body){                       // 可以是一張卡片或多張
@@ -1017,100 +1012,6 @@ window.__nodeLink=(function(){
       x.el.classList.toggle('past', !!past);
     });
   }
-
-  // ── 加入行事曆（每個節點一個 📅）──
-  // 行程期間用日本時間，出發前（1/16 12:00 以前）與回國後（1/23 18:45 以後）用台灣時間，
-  // 這樣不管手機在哪個時區，行事曆上的時刻都不會差一小時。
-  var TW_BEFORE='12:00', TW_AFTER='18:45';
-  function tzOf(dayId, hhmm){
-    if(dayId==='d0116' && hhmm <  TW_BEFORE) return 'Asia/Taipei';
-    if(dayId==='d0123' && hhmm >= TW_AFTER)  return 'Asia/Taipei';
-    return 'Asia/Tokyo';
-  }
-  function icsEsc(t){
-    return String(t).replace(/\\/g, '\\\\').replace(/([,;])/g, '\\$1').replace(/\r?\n/g, '\\n');
-  }
-  // RFC 5545：每行最多 75 bytes，超過要折行（續行開頭放一個空白）
-  function fold(line){
-    if(!window.TextEncoder) return line;
-    var enc=new TextEncoder(), out=[], cur='', n=0;
-    for(var i=0;i<line.length;i++){
-      var ch=line[i], b=enc.encode(ch).length;
-      if(n+b>72){ out.push(cur); cur=' '; n=1; }
-      cur+=ch; n+=b;
-    }
-    out.push(cur);
-    return out.join('\r\n');
-  }
-  function icsStamp(d){
-    function z(n){ return String(n).padStart(2,'0'); }
-    return d.getUTCFullYear()+z(d.getUTCMonth()+1)+z(d.getUTCDate())+'T'
-          +z(d.getUTCHours())+z(d.getUTCMinutes())+z(d.getUTCSeconds())+'Z';
-  }
-  function vtimezone(tz){
-    var off = tz==='Asia/Tokyo' ? '+0900' : '+0800';
-    var name= tz==='Asia/Tokyo' ? 'JST' : 'CST';
-    return ['BEGIN:VTIMEZONE','TZID:'+tz,'BEGIN:STANDARD','DTSTART:19700101T000000',
-            'TZOFFSETFROM:'+off,'TZOFFSETTO:'+off,'TZNAME:'+name,'END:STANDARD','END:VTIMEZONE'];
-  }
-  // 節點 → 行事曆事件：拿它的日期、起訖（沒填結束就用推算出來的）、標題與連結
-  function icsOf(ev){
-    var sc=scan(new Date()), me=null;
-    sc.items.forEach(function(x){ if(x.el===ev) me=x; });
-    if(!me || !me.t || !me.date) return null;
-    var dayId=null;
-    Object.keys(DAY_DATES).forEach(function(k){ if(DAY_DATES[k]===me.date) dayId=k; });
-    var endT = me.end==='24:00' ? '23:59' : me.end;
-    var tz=tzOf(dayId, me.t), ymd=me.date.replace(/-/g,'');
-    var endYmd = endT < me.t ? ymd : ymd;                 // 跨午夜的結束日要加一天
-    if(endT < me.t){
-      var d=new Date(me.date+'T00:00:00'); d.setDate(d.getDate()+1);
-      endYmd=dateStr(d).replace(/-/g,'');
-    }
-    // 標題：有大標就用大標，沒有的話用卡片第一段（電車那種只有路線的節點）
-    var h2=ev.querySelector('h2');
-    var title=h2 ? h2.textContent.trim() : '';
-    if(!title){
-      var first=ev.querySelector('.body > p') || ev.querySelector('.body');
-      title=first ? first.textContent.replace(/\s+/g,' ').trim().slice(0,40) : '行程';
-    }
-    // 內容：卡片與補充行的文字（不含時刻與按鈕）
-    var desc=[];
-    Array.prototype.forEach.call(ev.children, function(x){      // 只看直接子元素，父子才不會重複
-      if(!x.classList.contains('body') && !x.classList.contains('jr-row')) return;
-      var t=x.textContent.replace(/\s+/g,' ').trim();
-      if(t) desc.push(t);
-    });
-    var url=location.origin+location.pathname+'#n='+(ev.dataset.id||'');
-    return {
-      name: 'trip-'+(ev.dataset.id||'item')+'.ics',
-      text: ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//japan-travel//TW','CALSCALE:GREGORIAN']
-        .concat(vtimezone(tz))
-        .concat(['BEGIN:VEVENT',
-          'UID:'+(ev.dataset.id||'x')+'-'+ymd+'@'+location.host,
-          'DTSTAMP:'+icsStamp(new Date()),
-          'DTSTART;TZID='+tz+':'+ymd+'T'+me.t.replace(':','')+'00',
-          'DTEND;TZID='+tz+':'+endYmd+'T'+endT.replace(':','')+'00',
-          'SUMMARY:'+icsEsc(title),
-          'DESCRIPTION:'+icsEsc(desc.join('\n').slice(0,400)+'\n'+url),
-          'URL:'+icsEsc(url),
-          'END:VEVENT','END:VCALENDAR'])
-        .map(fold).join('\r\n')
-    };
-  }
-  document.addEventListener('click', function(e){
-    var btn=e.target.closest && e.target.closest('.cal-btn');
-    if(!btn) return;
-    e.preventDefault(); e.stopPropagation();
-    var doc=icsOf(btn.closest('.ev'));
-    if(!doc){ return; }
-    var url=URL.createObjectURL(new Blob([doc.text], {type:'text/calendar;charset=utf-8'}));
-    var a=document.createElement('a');
-    a.href=url; a.download=doc.name;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 5000);
-  });
-  window.__tripIcs=icsOf;      // 測試用
 
   // 餐廳訂位連結：日期自動代入最近的週三（當天就是週三則取下週三）
   // （ld 是日本當地時間、ssst 是 UTC，JST = UTC + 9 小時）
