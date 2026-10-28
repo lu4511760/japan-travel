@@ -1614,6 +1614,25 @@ if('serviceWorker' in navigator){
   });
 }
 
+// 日期列：用程式捲動，網址就不會留下 #d0116 這種後綴
+(function(){
+  document.addEventListener('click', function(e){
+    var a = e.target.closest && e.target.closest('#daynav a[href^="#"]');
+    if(!a) return;
+    e.preventDefault();
+    var t = document.querySelector(a.getAttribute('href'));
+    if(t) t.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+  // 有人用帶錨點的舊網址進來（或網址被外部改成 #d0116）：
+  // 讓瀏覽器自己捲過去之後，把網址清乾淨
+  function cleanDayHash(){
+    if(!/^#d\d{4}$/.test(location.hash || '')) return;
+    try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
+  }
+  setTimeout(cleanDayHash, 300);
+  window.addEventListener('hashchange', function(){ setTimeout(cleanDayHash, 300); });
+})();
+
 // 旅途當天自動標示今天的日期，並捲動到當日行程
 (function(){
   var now=new Date();
