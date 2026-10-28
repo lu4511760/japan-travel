@@ -166,6 +166,7 @@ ul.check input{accent-color:var(--accent); transform:translateY(2px)}
 /* 已核取只變灰，刪除線留給「取消檢核」用，兩者才不會搞混 */
 ul.check input:checked + span{color:var(--muted)}
 footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
+.made-by{margin:10px 0 0; text-align:center; color:var(--muted); font-size:12px; line-height:1.8}
 
 /* 測試用：改日期的小面板，只有編輯模式看得到 */
 .test-day{display:none; margin-top:34px; padding:12px 14px; border:1px dashed var(--line); border-radius:10px}
@@ -200,6 +201,7 @@ body.ended #daynav,
 body.ended #checklist,
 body.ended .tl,
 body.ended footer,
+body.ended .made-by,
 body.ended .now-fab,
 body.ended .ed-fab{display:none !important}
 #ended .ended-ico{font-size:52px; line-height:1}
@@ -454,6 +456,11 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
   </div>
 
   <footer>斑尾滑雪 × 東京・2027/01/16–23</footer>
+  <p class="made-by">
+    本網站由 <a href="https://claude.ai" target="_blank" rel="noopener">Claude.ai</a> 建置<br>
+    歡迎下載 <a href="travel-plan-website.md" download>travel-plan-website.md</a><br>
+    製作屬於自己的專屬行程
+  </p>
 </div>
 
 <script>
