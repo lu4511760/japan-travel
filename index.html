@@ -49,6 +49,8 @@ h1{font-size:23px; margin:0 0 2px; letter-spacing:.02em}
 .sub{color:var(--muted); font-size:14px; margin:0 0 14px}
 
 /* ── 日期快速跳轉列（置頂） ── */
+/* 它們是按鈕不是連結，拖曳會拉出一塊帶網址的預覽圖，擋掉 */
+nav a{-webkit-user-drag:none; user-drag:none}
 nav{
   position:sticky; top:0; z-index:10;
   background:var(--bg); border-bottom:1px solid var(--line);
@@ -385,14 +387,14 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
   <p class="sub">2027/01/16 ~ 01/23・8 天 7 夜</p>
 
   <nav id="daynav">
-    <a href="#d0116" data-d="2027-01-16"><span class="dn">Day 1</span>01/16</a>
-    <a href="#d0117" data-d="2027-01-17"><span class="dn">Day 2</span>01/17</a>
-    <a href="#d0118" data-d="2027-01-18"><span class="dn">Day 3</span>01/18</a>
-    <a href="#d0119" data-d="2027-01-19"><span class="dn">Day 4</span>01/19</a>
-    <a href="#d0120" data-d="2027-01-20"><span class="dn">Day 5</span>01/20</a>
-    <a href="#d0121" data-d="2027-01-21"><span class="dn">Day 6</span>01/21</a>
-    <a href="#d0122" data-d="2027-01-22"><span class="dn">Day 7</span>01/22</a>
-    <a href="#d0123" data-d="2027-01-23"><span class="dn">Day 8</span>01/23</a>
+    <a href="#d0116" draggable="false" data-d="2027-01-16"><span class="dn">Day 1</span>01/16</a>
+    <a href="#d0117" draggable="false" data-d="2027-01-17"><span class="dn">Day 2</span>01/17</a>
+    <a href="#d0118" draggable="false" data-d="2027-01-18"><span class="dn">Day 3</span>01/18</a>
+    <a href="#d0119" draggable="false" data-d="2027-01-19"><span class="dn">Day 4</span>01/19</a>
+    <a href="#d0120" draggable="false" data-d="2027-01-20"><span class="dn">Day 5</span>01/20</a>
+    <a href="#d0121" draggable="false" data-d="2027-01-21"><span class="dn">Day 6</span>01/21</a>
+    <a href="#d0122" draggable="false" data-d="2027-01-22"><span class="dn">Day 7</span>01/22</a>
+    <a href="#d0123" draggable="false" data-d="2027-01-23"><span class="dn">Day 8</span>01/23</a>
   </nav>
 
   <!-- ── 行前清單（可收合） ── -->
