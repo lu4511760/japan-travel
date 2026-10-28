@@ -1198,15 +1198,19 @@ window.__nodeLink=(function(){
       +(DAY_DATES.d0116===REAL_DATES.d0116 ? '（正式日期）' : '（測試中）');
   }
   if(tdIn){
+    function afterShift(){
+      refreshTd(); wake();
+      if(window.__tripFoldReapply) window.__tripFoldReapply();   // 日子平移了，收合也跟著重算
+    }
     document.getElementById('td-apply').onclick=function(){
       if(!shiftDays(tdIn.value)){ alert('請先選一個日期'); return; }
       try{ localStorage.setItem(TEST_KEY, tdIn.value); }catch(e){}
-      refreshTd(); wake();
+      afterShift();
     };
     document.getElementById('td-reset').onclick=function(){
       shiftDays(REAL_DATES.d0116);
       try{ localStorage.removeItem(TEST_KEY); }catch(e){}
-      refreshTd(); wake();
+      afterShift();
     };
   }
   var savedDay=null;
@@ -1838,6 +1842,11 @@ if('serviceWorker' in navigator){
   paintBtn();
   rollover();
   window.__tripFoldTick=rollover;     // 由每 30 秒的 tick 順便呼叫
+  // 測試日期被改掉時：日子整個平移了，直接依目前模式重新套一次（真實跨日仍只動昨天與今天）
+  window.__tripFoldReapply=function(){
+    run(curMode());
+    seenDay=dstr(new Date()); saveMode(); paintBtn();
+  };
   window.__tripFoldApply=apply;       // 切進／切出回顧模式時要重套一次
 
   // 要捲到某個節點之前先把它那天展開，否則元素是隱藏的、捲不過去
