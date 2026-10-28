@@ -221,7 +221,10 @@ body.review .now-fab{display:none}           /* 回顧行程時沒有「現在�
   box-shadow:0 3px 12px rgba(0,0,0,.35);
 }
 .fold-fab:active{transform:translateY(1px)}
-body.editing .fold-fab, body.review .fold-fab{display:none}
+body.editing .fold-fab{display:none}
+/* 回顧行程時沒有「目前行程」那顆，下面兩顆往下遞補 */
+body.review .fold-fab{bottom:16px}
+body.review .ed-fab{bottom:78px}
 .ed-fab{bottom:140px}                        /* 由下到上：目前行程 → 展開收合 → 鉛筆 */
 
 /* 行程結束後的畫面（最後一天之後） */
@@ -1704,13 +1707,22 @@ if('serviceWorker' in navigator){
   var state={};
   try{ state=JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){}
 
+  // 回顧行程時用一份暫時的收合狀態：一進去全部展開，之後想收就收，
+  // 但不會寫進 localStorage，離開回顧後原本的收合設定還在。
+  var reviewState=null, reviewMode='all';
+  function current(){ return reviewState || state; }
+  function curMode(){ return reviewState ? reviewMode : mode; }
+
   function apply(){
-    // 回顧行程時一律展開：那個畫面沒有這顆按鈕，收著就打不開了
     var review=document.body.classList.contains('review');
-    var hide=false;
+    var was=!!reviewState;
+    if(review && !reviewState){ reviewState={}; reviewMode='all'; }   // 一進回顧就是全開
+    if(!review && reviewState) reviewState=null;
+    if(was!==!!reviewState) setTimeout(paintBtn, 0);                  // 循環換了一組，字樣要重畫
+    var st=current(), hide=false;
     document.querySelectorAll('.tl > *').forEach(function(el){
       if(el.classList.contains('day-head')){
-        hide=!review && !!state[el.id];
+        hide=!!st[el.id];
         el.classList.toggle('collapsed', hide);
         return;
       }
@@ -1718,14 +1730,15 @@ if('serviceWorker' in navigator){
     });
   }
   function set(id, on){
-    if(on) state[id]=true; else delete state[id];
-    try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+    var st=current();
+    if(on) st[id]=true; else delete st[id];
+    if(st===state){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
     apply();
   }
   document.addEventListener('click', function(e){
     var h=e.target.closest && e.target.closest('.tl > .day-head');
     if(!h || !h.id) return;
-    set(h.id, !state[h.id]);
+    set(h.id, !current()[h.id]);
   });
   // 雲端修改套用後整個重畫，要重新套一次
   var tl=document.querySelector('.tl');
@@ -1770,25 +1783,27 @@ if('serviceWorker' in navigator){
     return t>=list[0].date && t<=list[list.length-1].date;
   }
   function nextMode(){
-    var o=onTrip() ? ORDER_TRIP : ORDER_OFF, i=o.indexOf(mode);
+    var o=onTrip() ? ORDER_TRIP : ORDER_OFF, i=o.indexOf(curMode());
     return o[(i<0 ? 0 : i+1) % o.length];    // 模式不在這組循環裡（例如旅程開始後還停在「全收」）就回到全開
   }
   function paintBtn(){ if(btn) btn.innerHTML=LABEL[nextMode()]; }
 
   function run(m){
-    var t=dstr(new Date());
+    var t=dstr(new Date()), st=current();
     dayList().forEach(function(d){
       var hide = m==='all'  ? false
                : m==='none' ? true              // 全部收合
                : m==='past' ? d.date < t
                :              d.date !== t;     // future：只留今天
-      if(hide) state[d.id]=true; else delete state[d.id];
+      if(hide) st[d.id]=true; else delete st[d.id];
     });
-    persist(); apply();
+    if(st===state) persist();
+    apply();
   }
 
   // 跨過午夜：收合昨天、展開今天，其他天不動
   function rollover(){
+    if(document.body.classList.contains('review')) return;   // 回顧行程時不調整
     var t=dstr(new Date());
     if(mode==='all'){ seenDay=t; saveMode(); return; }
     // 全部收合：旅程還沒開始（或已結束）就維持全收；旅程期間則跟其他模式一樣每天展開當日
@@ -1807,7 +1822,9 @@ if('serviceWorker' in navigator){
   if(btn) btn.onclick=function(){
     var m=nextMode();
     run(m);
-    mode=m; seenDay=dstr(new Date()); saveMode(); paintBtn();
+    if(reviewState) reviewMode=m;                 // 回顧模式只記在記憶體
+    else { mode=m; seenDay=dstr(new Date()); saveMode(); }
+    paintBtn();
   };
   paintBtn();
   rollover();
