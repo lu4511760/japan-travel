@@ -1112,6 +1112,7 @@ window.__nodeLink=(function(){
     var ended=isEnded(now) && !REVIEW;
     document.body.classList.toggle('ended', ended);
     document.body.classList.toggle('review', REVIEW);
+    if(window.__tripFoldApply) window.__tripFoldApply();
     if(ended) return;
     // 回顧模式：時間一律當成出發當天凌晨，所以沒有任何一段會被灰掉、雪場資訊也回到第 2 天
     if(REVIEW) now=new Date(DAY_DATES.d0116+'T00:00:00');
@@ -1704,10 +1705,12 @@ if('serviceWorker' in navigator){
   try{ state=JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){}
 
   function apply(){
+    // 回顧行程時一律展開：那個畫面沒有這顆按鈕，收著就打不開了
+    var review=document.body.classList.contains('review');
     var hide=false;
     document.querySelectorAll('.tl > *').forEach(function(el){
       if(el.classList.contains('day-head')){
-        hide=!!state[el.id];
+        hide=!review && !!state[el.id];
         el.classList.toggle('collapsed', hide);
         return;
       }
@@ -1809,6 +1812,7 @@ if('serviceWorker' in navigator){
   paintBtn();
   rollover();
   window.__tripFoldTick=rollover;     // 由每 30 秒的 tick 順便呼叫
+  window.__tripFoldApply=apply;       // 切進／切出回顧模式時要重套一次
 
   // 要捲到某個節點之前先把它那天展開，否則元素是隱藏的、捲不過去
   window.__tripRevealDay=function(el){
