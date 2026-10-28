@@ -450,25 +450,6 @@ function tick(now){
 - 把**最後一次抓到的結果存進 `localStorage`**，開頁先顯示上次的內容，新資料回來再換掉——沒網路時也不會整片空白。
 - **只在用得到的日子才打 API**：出發當天過了就不用再查去程，整趟結束後完全停掉。
 
-### 5.12 測試用的日期切換面板
-
-行程在幾個月後，但「今天是第幾天」的邏輯現在就要測。做一個小面板（平常隱藏，需要時才打開），選一個日期當第一天，其餘天數依序往後推：
-
-```js
-function shiftDays(first){
-  var base = new Date(first+'T00:00:00');
-  DAY_IDS.forEach(function(id, i){
-    var d = new Date(base.getTime());
-    d.setDate(d.getDate() + i);
-    DAY_DATES[id] = dateStr(d);
-    var a = document.querySelector('#daynav a[href="#'+id+'"]');
-    if(a) a.setAttribute('data-d', DAY_DATES[id]);
-  });
-}
-```
-
-設定存 `localStorage`，只影響自己這台裝置。**程式裡的日期永遠放正式值**，測試不要改程式。
-
 ---
 
 ## 6. 離線支援（PWA）
