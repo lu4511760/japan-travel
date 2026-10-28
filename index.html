@@ -1747,6 +1747,7 @@ if('serviceWorker' in navigator){
     if(on) st[id]=true; else delete st[id];
     if(st===state){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
     apply();
+    syncBtn();                       // 手動收合／展開後，按鈕字樣要跟著對
   }
   document.addEventListener('click', function(e){
     var h=e.target.closest && e.target.closest('.tl > .day-head');
@@ -1801,6 +1802,24 @@ if('serviceWorker' in navigator){
   }
   function paintBtn(){ if(btn) btn.innerHTML=LABEL[nextMode()]; }
 
+  // 手動一天一天收合／展開，收到（或開到）極端狀態時按鈕要自己對齊：
+  //   八天全收 → 按鈕顯示「全部展開」（mode 設成循環裡的最後一個）
+  //   八天全開 → 按鈕顯示「收合過去」／「全部收合」（mode 設回 all）
+  // 不上不下的混合狀態不動按鈕，使用者按下去還是照原本的循環走。
+  function syncBtn(){
+    var list=dayList();
+    if(!list.length) return;
+    var st=current(), collapsed=0;
+    list.forEach(function(d){ if(st[d.id]) collapsed++; });
+    var want=null;
+    if(collapsed===list.length) want = onTrip() ? 'future' : 'none';   // 全收
+    else if(collapsed===0)      want = 'all';                          // 全開
+    if(!want || want===curMode()) return;
+    if(reviewState) reviewMode=want;
+    else { mode=want; seenDay=dstr(new Date()); saveMode(); }
+    paintBtn();
+  }
+
   function run(m){
     var t=dstr(new Date()), st=current();
     dayList().forEach(function(d){
@@ -1839,6 +1858,7 @@ if('serviceWorker' in navigator){
     else { mode=m; seenDay=dstr(new Date()); saveMode(); }
     paintBtn();
   };
+  syncBtn();
   paintBtn();
   rollover();
   window.__tripFoldTick=rollover;     // 由每 30 秒的 tick 順便呼叫
