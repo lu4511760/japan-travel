@@ -794,8 +794,10 @@ window.__nodeLink=(function(){
         if(!f){ setCell(tbl,'st','尚無資料（接近當天才會公布）'); return; }
         setCell(tbl,'st', f.status && f.status.status, true);
         setCell(tbl,'otime', f.scheduledTime, false);
-        // 成田有異動時會給 changeScheduledTime（官網上表定時間會被劃掉，顯示這個）
-        setCell(tbl,'rtime', f.changeScheduledTime, true);
+        // 成田有異動時會給 changeScheduledTime（官網上表定時間會被劃掉，顯示這個）；
+        // 沒有異動就照表定時間顯示，只有真的改過才標成橘色
+        var chg = f.changeScheduledTime && f.changeScheduledTime !== f.scheduledTime;
+        setCell(tbl,'rtime', f.changeScheduledTime || f.scheduledTime, !!chg);
         setCellPoi(tbl,'gate', f.gates, true);
         if(!isArr){
           var ci=f.checkInCounterOrArrivalLobby||{};
