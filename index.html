@@ -167,6 +167,20 @@ ul.check input{accent-color:var(--accent); transform:translateY(2px)}
 ul.check input:checked + span{color:var(--muted)}
 footer{margin-top:40px; text-align:center; color:var(--muted); font-size:12.5px}
 
+/* 測試用：改日期的小面板，只有編輯模式看得到 */
+.test-day{display:none; margin-top:34px; padding:12px 14px; border:1px dashed var(--line); border-radius:10px}
+body.editing .test-day{display:block}
+.test-day .td-title{font-size:13px; font-weight:700; color:var(--priv); margin:0 0 8px}
+.test-day input[type="date"]{
+  font:inherit; font-size:14px; padding:6px 8px; margin-right:6px;
+  color:var(--fg); background:var(--bg); border:1px solid var(--line); border-radius:8px;
+}
+.test-day button{
+  font:inherit; font-size:13px; padding:6px 12px; margin-right:6px; cursor:pointer;
+  color:var(--fg); background:var(--card); border:1px solid var(--line); border-radius:8px;
+}
+.test-day .td-range{margin:8px 0 0; font-size:12.5px; color:var(--muted)}
+
 /* 「回到現在」：旅途期間才出現，點一下把目前行程捲回畫面中央 */
 .now-fab{
   position:fixed; right:16px; bottom:16px; z-index:50;
@@ -332,15 +346,14 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
   <p class="sub">2027/01/16 ~ 01/23・8 天 7 夜</p>
 
   <nav id="daynav">
-    <!-- 【測試模式】data-d 正式值：2027-01-16 ～ 2027-01-23 -->
-    <a href="#d0116" data-d="2026-10-28"><span class="dn">Day 1</span>01/16</a>
-    <a href="#d0117" data-d="2026-10-29"><span class="dn">Day 2</span>01/17</a>
-    <a href="#d0118" data-d="2026-10-30"><span class="dn">Day 3</span>01/18</a>
-    <a href="#d0119" data-d="2026-10-31"><span class="dn">Day 4</span>01/19</a>
-    <a href="#d0120" data-d="2026-11-01"><span class="dn">Day 5</span>01/20</a>
-    <a href="#d0121" data-d="2026-11-02"><span class="dn">Day 6</span>01/21</a>
-    <a href="#d0122" data-d="2026-11-03"><span class="dn">Day 7</span>01/22</a>
-    <a href="#d0123" data-d="2026-11-04"><span class="dn">Day 8</span>01/23</a>
+    <a href="#d0116" data-d="2027-01-16"><span class="dn">Day 1</span>01/16</a>
+    <a href="#d0117" data-d="2027-01-17"><span class="dn">Day 2</span>01/17</a>
+    <a href="#d0118" data-d="2027-01-18"><span class="dn">Day 3</span>01/18</a>
+    <a href="#d0119" data-d="2027-01-19"><span class="dn">Day 4</span>01/19</a>
+    <a href="#d0120" data-d="2027-01-20"><span class="dn">Day 5</span>01/20</a>
+    <a href="#d0121" data-d="2027-01-21"><span class="dn">Day 6</span>01/21</a>
+    <a href="#d0122" data-d="2027-01-22"><span class="dn">Day 7</span>01/22</a>
+    <a href="#d0123" data-d="2027-01-23"><span class="dn">Day 8</span>01/23</a>
   </nav>
 
   <!-- ── 行前清單（可收合） ── -->
@@ -428,6 +441,17 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
   <div class="tl"></div>
 
   <button type="button" class="now-fab" id="now-fab" title="回到目前行程">目前<br>行程</button>
+
+  <!-- 測試用：把第一天改成別的日期，其餘 7 天依序往後推 -->
+  <div class="test-day" id="test-day">
+    <p class="td-title">🧪 測試日期（只有你看得到）</p>
+    <label>第一天 <input type="date" id="td-input"></label>
+    <div style="margin-top:8px">
+      <button type="button" id="td-apply">套用</button>
+      <button type="button" id="td-reset">還原正式日期</button>
+    </div>
+    <p class="td-range" id="td-range"></p>
+  </div>
 
   <footer>斑尾滑雪 × 東京・2027/01/16–23</footer>
 </div>
@@ -891,9 +915,12 @@ window.__nodeLink=(function(){
 // 體驗優化：過去的行程灰階顯示、雪場資訊卡依日期移動
 (function(){
   // 各日期標題對應的日期
-  // 【測試模式】正式值：2027-01-16 ～ 2027-01-23
-  var DAY_DATES={d0116:'2026-10-28',d0117:'2026-10-29',d0118:'2026-10-30',d0119:'2026-10-31',
-                 d0120:'2026-11-01',d0121:'2026-11-02',d0122:'2026-11-03',d0123:'2026-11-04'};
+  // 正式日期；要測試請用頁面最底部（編輯模式）的「測試日期」面板改，不必動程式
+  var DAY_DATES={d0116:'2027-01-16',d0117:'2027-01-17',d0118:'2027-01-18',d0119:'2027-01-19',
+                 d0120:'2027-01-20',d0121:'2027-01-21',d0122:'2027-01-22',d0123:'2027-01-23'};
+  var DAY_IDS=['d0116','d0117','d0118','d0119','d0120','d0121','d0122','d0123'];
+  var REAL_DATES={};
+  DAY_IDS.forEach(function(id){ REAL_DATES[id]=DAY_DATES[id]; });
 
   function dateStr(d){
     return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -1057,6 +1084,46 @@ window.__nodeLink=(function(){
   // 再加一道保險：畫面只要在繪製，距上次重算超過 20 秒就立刻補算（rAF 在背景不會跑）
   var lastAt=0;
   function wake(){ lastAt=Date.now(); tick(new Date()); }
+
+  // ── 測試日期面板（編輯模式才看得到）──
+  // 設定第一天，其餘 7 天依序往後推；只存在這台手機，不影響別人看到的內容
+  var TEST_KEY='japan2027-testday';
+  function shiftDays(first){
+    var base=new Date(first+'T00:00:00');
+    if(isNaN(base)) return false;
+    DAY_IDS.forEach(function(id, i){
+      var d=new Date(base.getTime());
+      d.setDate(d.getDate()+i);
+      DAY_DATES[id]=dateStr(d);
+      var a=document.querySelector('#daynav a[href="#'+id+'"]');
+      if(a) a.setAttribute('data-d', DAY_DATES[id]);
+    });
+    return true;
+  }
+  var tdIn=document.getElementById('td-input'), tdRange=document.getElementById('td-range');
+  function refreshTd(){
+    if(!tdIn) return;
+    tdIn.value=DAY_DATES.d0116;
+    tdRange.textContent='目前：'+DAY_DATES.d0116+' ～ '+DAY_DATES.d0123
+      +(DAY_DATES.d0116===REAL_DATES.d0116 ? '（正式日期）' : '（測試中）');
+  }
+  if(tdIn){
+    document.getElementById('td-apply').onclick=function(){
+      if(!shiftDays(tdIn.value)){ alert('請先選一個日期'); return; }
+      try{ localStorage.setItem(TEST_KEY, tdIn.value); }catch(e){}
+      refreshTd(); wake();
+    };
+    document.getElementById('td-reset').onclick=function(){
+      shiftDays(REAL_DATES.d0116);
+      try{ localStorage.removeItem(TEST_KEY); }catch(e){}
+      refreshTd(); wake();
+    };
+  }
+  var savedDay=null;
+  try{ savedDay=localStorage.getItem(TEST_KEY); }catch(e){}
+  if(savedDay) shiftDays(savedDay);
+  refreshTd();
+
   wake();
   setInterval(wake, 30000);
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) wake(); });
