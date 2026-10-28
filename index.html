@@ -1052,9 +1052,20 @@ window.__nodeLink=(function(){
   window.__tripTick=tick; // 供測試模擬時間用
   window.__tripResting=function(){ return REVIEW || isEnded(new Date()); };  // 結束畫面或回顧模式：不要自動捲動
   window.__tripCenter=centerCurrent;
-  tick(new Date());
-  setInterval(function(){ tick(new Date()); }, 60000);
-  document.addEventListener('visibilitychange', function(){ if(!document.hidden) tick(new Date()); });
+  // 定時重算：手機把背景分頁的計時器凍結是常態，所以除了 30 秒一次，
+  // 回到前景（visibilitychange／pageshow／focus）也補一次；
+  // 再加一道保險：畫面只要在繪製，距上次重算超過 20 秒就立刻補算（rAF 在背景不會跑）
+  var lastAt=0;
+  function wake(){ lastAt=Date.now(); tick(new Date()); }
+  wake();
+  setInterval(wake, 30000);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) wake(); });
+  window.addEventListener('pageshow', wake);
+  window.addEventListener('focus', wake);
+  (function loop(){
+    requestAnimationFrame(loop);
+    if(Date.now()-lastAt>20000) wake();
+  })();
   // 開頁（稍等自動捲動完成後）與之後每小時，把目前行程置中
   // 從節點連結（#n=…）進來時，畫面要停在那個節點，不要被拉去今天
   if(!window.__nodeLink) setTimeout(function(){
