@@ -66,7 +66,14 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
   width:2px; background:var(--rail); border-radius:2px;
 }
 .ev{position:relative; margin-bottom:24px; scroll-margin-top:58px}
-.ev{-webkit-touch-callout:none}                    /* 長按節點是用來複製連結的，擋掉手機的系統選單 */
+/* 長按節點是用來複製連結的，擋掉手機的系統選單；
+   順便關掉文字選取——iOS 會把「12:00」這種文字認成日期，長按就跳出「新增至日曆」
+   （那個選單用裝置時區解讀，存進去會差一小時），不能選字它就不會出現。
+   卡片裡的地點都是連結，長按連結仍可複製網址，不受影響。 */
+nav, .day-head, .ev{
+  -webkit-touch-callout:none;
+  -webkit-user-select:none; user-select:none;
+}
 .flash{animation:evflash .5s ease-in-out 5; border-radius:12px}
 /* 行前清單的卡片本身有底色，閃背景看不出來，改成連卡片底色一起換；
    展開時標題與內容都在閃，捲到哪一段都看得到 */
