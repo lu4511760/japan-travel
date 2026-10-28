@@ -795,9 +795,8 @@ window.__nodeLink=(function(){
         setCell(tbl,'st', f.status && f.status.status, true);
         setCell(tbl,'otime', f.scheduledTime, false);
         // 成田有異動時會給 changeScheduledTime（官網上表定時間會被劃掉，顯示這個）；
-        // 沒有異動就照表定時間顯示，只有真的改過才標成橘色
-        var chg = f.changeScheduledTime && f.changeScheduledTime !== f.scheduledTime;
-        setCell(tbl,'rtime', f.changeScheduledTime || f.scheduledTime, !!chg);
+        // 沒有異動就照表定時間顯示，一律用橘色（跟桃園的實際時間一致）
+        setCell(tbl,'rtime', f.changeScheduledTime || f.scheduledTime, true);
         setCellPoi(tbl,'gate', f.gates, true);
         if(!isArr){
           var ci=f.checkInCounterOrArrivalLobby||{};
