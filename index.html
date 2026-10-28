@@ -35,7 +35,15 @@ html{scroll-behavior:smooth}
 body{
   margin:0; background:var(--bg); color:var(--fg);
   font:16px/1.6 -apple-system,"Noto Sans TC","Microsoft JhengHei",serif;
+  /* 整頁文字都不給選：這是一份用看的行程，長按是用來複製節點連結的，
+     而且 iOS 會把「12:00」這種文字認成日期，長按就跳出「新增至日曆」
+     （那個選單用裝置時區解讀，存進去會差一小時）。不能選字它就不會出現。
+     連結不受影響，長按仍可複製網址。 */
+  -webkit-touch-callout:none;
+  -webkit-user-select:none; user-select:none;
 }
+/* 輸入框要能打字、選字、擺游標，排除在外 */
+input, textarea, select{-webkit-user-select:text; user-select:text}
 .wrap{max-width:640px; margin:0 auto; padding:26px 16px 64px}
 h1{font-size:23px; margin:0 0 2px; letter-spacing:.02em}
 .sub{color:var(--muted); font-size:14px; margin:0 0 14px}
@@ -66,14 +74,6 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
   width:2px; background:var(--rail); border-radius:2px;
 }
 .ev{position:relative; margin-bottom:24px; scroll-margin-top:58px}
-/* 長按節點是用來複製連結的，擋掉手機的系統選單；
-   順便關掉文字選取——iOS 會把「12:00」這種文字認成日期，長按就跳出「新增至日曆」
-   （那個選單用裝置時區解讀，存進去會差一小時），不能選字它就不會出現。
-   卡片裡的地點都是連結，長按連結仍可複製網址，不受影響。 */
-nav, .day-head, .ev{
-  -webkit-touch-callout:none;
-  -webkit-user-select:none; user-select:none;
-}
 .flash{animation:evflash .5s ease-in-out 5; border-radius:12px}
 /* 行前清單的卡片本身有底色，閃背景看不出來，改成連卡片底色一起換；
    展開時標題與內容都在閃，捲到哪一段都看得到 */
@@ -155,7 +155,7 @@ details.block{margin:0 0 22px; scroll-margin-top:58px}
 details.block summary{
   font-size:16px; font-weight:700; cursor:pointer; list-style-position:inside;
   padding:9px 14px; background:var(--card); border:1px solid var(--line);
-  border-radius:10px; box-shadow:var(--shadow); user-select:none;
+  border-radius:10px; box-shadow:var(--shadow);
 }
 details.block[open] summary{border-radius:10px 10px 0 0}
 details.block.past{opacity:.45; filter:grayscale(1)}
@@ -179,7 +179,6 @@ ul.check li{padding:2px 0}
 .ck-ico{display:inline-block; width:1.5em; font-style:normal; text-decoration:none}
 ul.check label{
   display:flex; gap:9px; align-items:baseline; cursor:pointer;
-  user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;   /* 長按是功能，擋掉選字與系統選單 */
 }
 ul.check input{accent-color:var(--accent); transform:translateY(2px)}
 /* 已核取只變灰，刪除線留給「取消檢核」用，兩者才不會搞混 */
@@ -200,12 +199,6 @@ body.editing .test-day{display:block}
   color:var(--fg); background:var(--card); border:1px solid var(--line); border-radius:8px;
 }
 .test-day .td-range{margin:8px 0 0; font-size:12.5px; color:var(--muted)}
-
-/* 右下角三顆浮動鈕：按的是按鈕，不是文字，長按不該選字或跳出系統選單 */
-.now-fab, .fold-fab, .ed-fab{
-  -webkit-touch-callout:none;
-  -webkit-user-select:none; user-select:none;
-}
 
 /* 「回到現在」：旅途期間才出現，點一下把目前行程捲回畫面中央 */
 .now-fab{
