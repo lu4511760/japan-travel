@@ -450,6 +450,109 @@ function tick(now){
 - 把**最後一次抓到的結果存進 `localStorage`**，開頁先顯示上次的內容，新資料回來再換掉——沒網路時也不會整片空白。
 - **只在用得到的日子才打 API**：出發當天過了就不用再查去程，整趟結束後完全停掉。
 
+### 5.12 每日收合（行程多了一定會需要）
+
+八天的行程攤開很長，捲到腿軟。做法是**點每日標題就收合／展開那一天**，不要另外放按鈕。
+
+DOM 是一條平的時間軸（`day-head` 和 `ev` 是兄弟節點，不是巢狀），所以收合用「掃過去打標記」實作，不要為了收合去改結構——`insertItem`、時間計算那些都依賴這個平面結構：
+
+```js
+function apply(){
+  var hide=false;
+  document.querySelectorAll('.tl > *').forEach(function(el){
+    if(el.classList.contains('day-head')){
+      hide=!!state[el.id];                        // 遇到日期標題就切換「接下來要不要藏」
+      el.classList.toggle('collapsed', hide);
+      return;
+    }
+    el.classList.toggle('day-hidden', hide);      // .day-hidden{display:none !important}
+  });
+}
+```
+
+狀態存 `localStorage`（以 `day-head` 的 id 為鍵），重畫後要重新套用（`MutationObserver`）。
+
+**提示要放在標題裡**，不要做成獨立按鈕——例如在副標後面跟一個 `▾` / `▸`：
+
+```css
+.day-head{cursor:pointer}
+.day-head .day-sub::after{content:"▾"; margin-left:8px; font-size:12px; opacity:.55}
+.day-head.collapsed .day-sub::after{content:"▸"}
+```
+
+#### 一鍵切換（模式按鈕）
+
+右下角放一顆按鈕，**按鈕上的字就是「按下去會做的事」**，做完跳到下一個。兩組循環依「今天在不在旅程期間」切換：
+
+| 情況 | 循環 |
+|---|---|
+| 旅途中 | 全部展開 → 收合過去 → 收合未來 → … |
+| 還沒出發／已結束 | 全部展開 ↔ 全部收合 |
+
+```js
+var ORDER_TRIP=['all','past','future'], ORDER_OFF=['all','none'];
+function nextMode(){
+  var o=onTrip() ? ORDER_TRIP : ORDER_OFF, i=o.indexOf(mode);
+  return o[(i<0 ? 0 : i+1) % o.length];   // 模式不在這組裡（例如旅程開始後還停在「全收」）就回到全開
+}
+```
+
+兩個容易漏掉的細節：
+- **初始值要設成 `all`**，不要留 null。畫面一開始本來就是全開，按鈕該顯示的是下一步，否則第一次按下去什麼都沒發生。
+- 模式不在當前循環裡時（跨進／跨出旅程期間），`indexOf` 會是 -1，要 fallback 回第一個。
+
+#### 跨日只動兩天
+
+這是整個功能最值得想清楚的地方：跨過午夜時**只收合昨天、展開今天**，其他天一律不碰。
+
+這樣使用者手動展開的某個過去、手動收合的某個未來，都不會被自動行為洗掉。「全部展開」模式則跨日完全不動。
+
+```js
+function rollover(){
+  var t=today();
+  if(mode==='all'){ seenDay=t; save(); return; }      // 全開模式不干涉
+  if(seenDay===t) return;                             // 今天已經處理過
+  var ys=yesterday(t);
+  dayList().forEach(function(d){
+    if(d.date===ys) state[d.id]=true;                 // 收合昨天
+    if(d.date===t)  delete state[d.id];               // 展開今天
+  });
+  seenDay=t; save(); apply();
+}
+```
+
+要記得「最後處理的日期」（`seenDay`），否則同一天會被重複處理。檢查時機跟 5.4 共用那套喚醒機制（開頁、每 30 秒、回到前景），所以隔夜回來、或 App 從背景切回來都會補做。
+
+#### 自動捲動不要展開收合的天
+
+程式要捲到的節點如果在收合的那天裡，它是 `display:none`，捲不過去。直覺會想「那就先展開」，但這會把使用者刻意收起來的天打開——**開頁的自動置中尤其不該這麼做**。
+
+分開處理：
+
+```js
+function centerCurrent(now, reveal){
+  // …找出 target…
+  if(target && target.offsetParent===null){        // 目標被收起來了
+    if(reveal) revealDay(target);                  // 手動按按鈕／從分享連結進來：展開
+    else target = dayHeadOf(target);               // 自動置中：改捲到那天的標題
+  }
+  if(target) target.scrollIntoView({behavior:'smooth', block:'center'});
+}
+```
+
+#### 回顧模式用另一份狀態
+
+如果有「行程結束後回顧」這種畫面，它通常會把時間當成出發前——收合狀態也該一起還原成全開，否則使用者看到的是一片收合的行程。
+
+用一份**記憶體裡的暫時狀態**：進回顧時全開，裡面照樣可以收合切換，但不寫進 `localStorage`，離開後原本的設定原封不動。
+
+```js
+var reviewState=null;
+function current(){ return reviewState || state; }   // 所有讀寫都走這裡，不要直接碰 state
+```
+
+這招的關鍵是**所有讀寫都要改走 `current()`**。漏掉一處（例如點標題時判斷「目前是收還是開」）就會出現「點了沒反應」的怪現象。
+
 ---
 
 ## 6. 離線支援（PWA）
@@ -575,6 +678,8 @@ done
 7. **自動捲動要留逃生門**：使用者從分享連結進來、或正在看別天時，不要硬把畫面拉走。
 8. **深色模式下「半透明疊色」要實測**：卡片本身有底色時，閃爍動畫改背景色幾乎看不出來，改閃外框或提高不透明度。
 9. **GitHub Pages 的檔名**：中文、空格的檔名可以用，但連結要 URL-encode。
+10. **自動捲動會打開收合的區塊**：見 5.12，「要不要展開」必須是呼叫端決定的參數，不能寫死在捲動函式裡。
+11. **iOS 會把「12:00」認成可加入行事曆的資料**：深長按就跳出系統選單，`user-select:none` 和 `format-detection` 都擋不掉。解法是在冒號兩側插一個零寬字元（U+200B），畫面看不出來但系統認不得；因此**更不能用畫面文字去 parse 時間**（見第 2 條）。
 
 ---
 
