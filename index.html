@@ -75,7 +75,7 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
   content:""; position:absolute; left:9px; top:6px; bottom:6px;
   width:2px; background:var(--rail); border-radius:2px;
 }
-.ev{position:relative; margin-bottom:24px; scroll-margin-top:58px}
+.ev{position:relative; margin-bottom:24px; scroll-margin-top:126px}   /* 日期列 + 黏在下面的每日標題 */
 .flash{animation:evflash .5s ease-in-out 5; border-radius:12px}
 /* 行前清單的卡片本身有底色，閃背景看不出來，改成連卡片底色一起換；
    展開時標題與內容都在閃，捲到哪一段都看得到 */
@@ -97,11 +97,16 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
 }
 /* 每日標題：一天只顯示一次「第幾天・日期 週幾」 */
 .day-head{
-  position:relative; margin:30px 0 14px; scroll-margin-top:58px;
+  /* 往下捲時黏在日期列底下，才知道現在看的是第幾天。
+     背景要不透明，左右再用 box-shadow 往外抹 30px／16px，
+     否則時間軸的線與圓點會從標題兩側穿過去（它們在 .tl 的 padding 裡）。 */
+  position:sticky; top:59px; z-index:9;
+  background:var(--bg); box-shadow:-30px 0 0 var(--bg), 16px 0 0 var(--bg);
+  margin:22px 0 0; padding:8px 0 14px; scroll-margin-top:58px;
   font-size:36px; line-height:1.15; color:var(--day); font-weight:700;
   letter-spacing:.02em; font-variant-numeric:tabular-nums;
 }
-.day-head:first-child{margin-top:0}
+.day-head:first-child{margin-top:-8px}
 .day-head .dow{color:var(--muted); font-weight:400; margin-left:10px; font-size:22px}
 /* 當天行程的一句話簡述；點標題可以收合那一天，所以副標後面跟一個小箭頭 */
 .day-head{cursor:pointer}
