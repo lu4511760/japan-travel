@@ -534,11 +534,10 @@ window.__nodeLink=(function(){
   }
   function setNa(b, on){
     var k=b.getAttribute('data-ck');
-    if(on){
-      na[k]=true;
-      var ck=store(); delete ck[k];     // 取消檢核時順便把原本的勾拿掉
-      try{ localStorage.setItem(KEY, JSON.stringify(ck)); }catch(e){}
-    }else delete na[k];
+    if(on) na[k]=true; else delete na[k];
+    b.checked=false;                    // 進、出「－」都回到未勾選
+    var ck=store(); delete ck[k];
+    try{ localStorage.setItem(KEY, JSON.stringify(ck)); }catch(e){}
     try{ localStorage.setItem(NA_KEY, JSON.stringify(na)); }catch(e){}
     paint(b); count();
   }
@@ -548,6 +547,7 @@ window.__nodeLink=(function(){
   count();
   boxes.forEach(function(b){
     b.addEventListener('change', function(){
+      if(naOn(b)){ setNa(b, false); return; }   // 「－」被點到：先恢復成未勾選，不要直接變打勾
       var s=store();
       s[b.getAttribute('data-ck')]=b.checked;
       try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){}
@@ -592,15 +592,9 @@ window.__nodeLink=(function(){
   });
   window.addEventListener('scroll', clear, true);
   document.addEventListener('click', function(e){
-    var b=boxOf(e);
-    if(!b) return;
-    if(longed){                       // 長按剛做完的那一下點擊不要真的去勾選
-      e.preventDefault(); e.stopPropagation(); longed=false; return;
-    }
-    if(naOn(b)){                      // 「－」狀態下點一下＝恢復成未勾選
-      e.preventDefault(); e.stopPropagation();
-      setNa(b, false);
-    }
+    if(!longed || !boxOf(e)) return;
+    e.preventDefault(); e.stopPropagation();    // 長按剛做完的那一下點擊不要真的去勾選
+    longed=false;
   }, true);
 })();
 
