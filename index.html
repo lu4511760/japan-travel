@@ -101,11 +101,17 @@ nav, .day-head, .ev{
 }
 .day-head:first-child{margin-top:0}
 .day-head .dow{color:var(--muted); font-weight:400; margin-left:10px; font-size:22px}
-/* 當天行程的一句話簡述 */
+/* 當天行程的一句話簡述；點標題可以收合那一天，所以副標後面跟一個小箭頭 */
+.day-head{cursor:pointer}
 .day-head .day-sub{
   display:block; margin-top:3px;
   font-size:15px; font-weight:400; letter-spacing:.04em; color:var(--muted);
 }
+.day-head .day-sub::after{
+  content:"▾"; display:inline-block; margin-left:8px; font-size:12px; opacity:.55;
+}
+.day-head.collapsed .day-sub::after{content:"▸"}
+.day-hidden{display:none !important}
 .day-head::before{
   content:""; position:absolute; left:-26px; top:18px;
   width:12px; height:12px; border-radius:3px; background:var(--day);
@@ -1029,6 +1035,7 @@ window.__nodeLink=(function(){
       });
     }
     if(!target) target=document.getElementById('d0116');   // 還沒出發（或已結束）就帶到第一天
+    if(target && window.__tripRevealDay) window.__tripRevealDay(target);
     if(target) target.scrollIntoView({behavior:'smooth', block:'center'});
     return target;
   }
@@ -1638,6 +1645,7 @@ window.__nodeLink=(function(){
   function go(){
     var ev=document.querySelector('.ev[data-id="'+id+'"]');
     if(!ev) return;
+    if(window.__tripRevealDay) window.__tripRevealDay(ev);
     ev.scrollIntoView({block:'center', behavior:'instant'});
     flash(ev);
   }
@@ -1656,6 +1664,47 @@ if('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js')['catch'](function(){});   // 註冊失敗就當沒這回事
   });
 }
+
+// 點每日標題可以收合／展開那一天（只留標題與副標）；選擇存在這台裝置
+(function(){
+  var KEY='japan2027-collapsed';
+  var state={};
+  try{ state=JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){}
+
+  function apply(){
+    var hide=false;
+    document.querySelectorAll('.tl > *').forEach(function(el){
+      if(el.classList.contains('day-head')){
+        hide=!!state[el.id];
+        el.classList.toggle('collapsed', hide);
+        return;
+      }
+      el.classList.toggle('day-hidden', hide);
+    });
+  }
+  function set(id, on){
+    if(on) state[id]=true; else delete state[id];
+    try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+    apply();
+  }
+  document.addEventListener('click', function(e){
+    var h=e.target.closest && e.target.closest('.tl > .day-head');
+    if(!h || !h.id) return;
+    set(h.id, !state[h.id]);
+  });
+  // 雲端修改套用後整個重畫，要重新套一次
+  var tl=document.querySelector('.tl');
+  if(tl && window.MutationObserver) new MutationObserver(apply).observe(tl, {childList:true});
+  apply();
+
+  // 要捲到某個節點之前先把它那天展開，否則元素是隱藏的、捲不過去
+  window.__tripRevealDay=function(el){
+    if(!el || el.offsetParent!==null) return;
+    var p=el.previousElementSibling;
+    while(p && !p.classList.contains('day-head')) p=p.previousElementSibling;
+    if(p && p.id && state[p.id]) set(p.id, false);
+  };
+})();
 
 // 日期列：用程式捲動，網址就不會留下 #d0116 這種後綴
 (function(){
