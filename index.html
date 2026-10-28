@@ -480,6 +480,23 @@ window.__nodeLink=(function(){
 
 // 時間軸由上方 trip-data 的 JSON 產生；之後若有雲端修改會再套用上去
 (function(){
+  // iOS 的「深長按」會對「12:00」「01/16」這種文字跳出「新增至日曆」，
+  // 連 user-select:none 都擋不掉。在冒號／斜線兩側插一個零寬字元（畫面看不出來），
+  // 偵測器就認不出那是時間或日期了。真正的時刻一律讀 data-t／data-e，不受影響。
+  var ZW='\u200b';
+  function noDetect(t){ return String(t).replace(/([:\/])/g, ZW+'$1'+ZW); }
+  // 把一個元素底下的文字全部處理過（只動文字節點，不碰標籤與屬性）
+  function noDetectIn(root){
+    if(!root || !document.createTreeWalker) return;
+    var w=document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null), list=[], n;
+    while((n=w.nextNode())) list.push(n);
+    list.forEach(function(t){
+      if(/[:\/]/.test(t.nodeValue) && t.nodeValue.indexOf(ZW)<0) t.nodeValue=noDetect(t.nodeValue);
+    });
+  }
+  window.__tripNoDetect=noDetect;
+  window.__tripNoDetectIn=noDetectIn;
+
   var data=JSON.parse(document.getElementById('trip-data').textContent);
   window.__tripData=data;
 
@@ -502,6 +519,7 @@ window.__nodeLink=(function(){
       });
     }
     ev.innerHTML=h;
+    noDetectIn(ev);            // 連標題裡的「10:10 起飛」也要擋掉 iOS 的偵測
     ev.dataset.id=it.id;
     if(it.nodeId) ev.id=it.nodeId;
   }
@@ -526,7 +544,7 @@ window.__nodeLink=(function(){
       var head=document.createElement('div');
       head.className='day-head';
       head.id=d.id;
-      head.innerHTML=d.label+'<span class="dow">'+d.dow+'</span>';
+      head.innerHTML=noDetect(d.label)+'<span class="dow">'+d.dow+'</span>';
       tl.appendChild(head);
       data.items.forEach(function(it){
         if(it.day!==d.id) return;
@@ -539,6 +557,11 @@ window.__nodeLink=(function(){
   }
   window.__tripRender=render;
   render();
+  // 上方日期列的 01/16 也一樣處理（只動最後那段純文字，不碰 Day N）
+  document.querySelectorAll('#daynav a').forEach(function(a){
+    var last=a.lastChild;
+    if(last && last.nodeType===3) last.nodeValue=noDetect(last.nodeValue);
+  });
 })();
 
 // 行前清單勾選狀態存在瀏覽器本機（換裝置不會同步）
@@ -678,6 +701,7 @@ window.__nodeLink=(function(){
       if(!td) return;
       td.innerHTML=CUR[k].h;
       td.classList.toggle('fl-hot', !!CUR[k].hot);
+      if(window.__tripNoDetectIn) window.__tripNoDetectIn(td);   // 舊快取裡沒有零寬字元，補上
     });
     if(note && CUR_AT) setUpdated(note.replace('{t}', atText(CUR_AT)), false);
   }
@@ -687,6 +711,7 @@ window.__nodeLink=(function(){
     if(!td) return;
     td.textContent=(val && String(val).trim() && val!=='-') ? val : '—';
     td.classList.toggle('fl-hot', !!hot && !!val && String(val).trim()!=='' && val!=='-');
+    if(window.__tripNoDetectIn) window.__tripNoDetectIn(td);
     remember(td, tbl, key);
   }
 
@@ -702,6 +727,7 @@ window.__nodeLink=(function(){
       td.appendChild(document.createTextNode(line));
     });
     td.classList.toggle('fl-hot', !!hot);
+    if(window.__tripNoDetectIn) window.__tripNoDetectIn(td);
     remember(td, tbl, key);
   }
 
@@ -756,6 +782,7 @@ window.__nodeLink=(function(){
       }
     });
     td.classList.toggle('fl-hot', !!hot);
+    if(window.__tripNoDetectIn) window.__tripNoDetectIn(td);
     remember(td, tbl, key);
   }
 
@@ -810,7 +837,8 @@ window.__nodeLink=(function(){
   function setUpdated(text, isErr){
     // 每次重查，節點被改寫後仍能正確更新
     document.querySelectorAll('.fl-updated').forEach(function(el){
-      el.textContent=text; el.classList.toggle('err', !!isErr);
+      el.textContent=window.__tripNoDetect ? window.__tripNoDetect(text) : text;
+      el.classList.toggle('err', !!isErr);
     });
   }
   // 去程 1/16、回程 1/23：那天過了就不用再查該段，整趟結束後完全停打，只留最後一筆
