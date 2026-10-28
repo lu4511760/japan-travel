@@ -29,6 +29,7 @@ const PRECACHE = [
   '狐狸屋牛丼 Menu ZH.webp',
   '若葉拉麵 Menu ZH.webp',
   '蔵仕込みらーめん KURA Menu ZH.webp',
+  '退稅步驟.webp',
   '麦さと屋 Menu ZH.webp',
   '麵屋海神 Menu ZH.webp',
   '黑銀鮪屋 Menu ZH.webp'
