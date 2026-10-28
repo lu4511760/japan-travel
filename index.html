@@ -1737,8 +1737,9 @@ if('serviceWorker' in navigator){
   // 跨過午夜時（下面的 rollover）只動「昨天」與「今天」兩天，
   // 其他天不管是手動收還是手動開都保持原樣。
   var MODE_KEY='japan2027-foldmode';
-  var ORDER=['all','past','future'];
-  var LABEL={all:'全部<br>展開', past:'收合<br>過去', future:'收合<br>未來'};
+  var ORDER_TRIP=['all','past','future'];   // 旅途中：全開 → 收過去 → 收未來
+  var ORDER_OFF =['all','none'];            // 還沒出發／已結束：全開 ↔ 全收
+  var LABEL={all:'全部<br>展開', past:'收合<br>過去', future:'收合<br>未來', none:'全部<br>收合'};
   var mode='all', seenDay=null;      // 一開始畫面就是全開，所以按鈕直接顯示下一步
   try{
     var saved=JSON.parse(localStorage.getItem(MODE_KEY)||'null') || {};
@@ -1759,9 +1760,15 @@ if('serviceWorker' in navigator){
       .sort(function(a,b){ return a.date<b.date ? -1 : 1; });
   }
   var btn=document.getElementById('fold-fab');
+  function onTrip(){                        // 今天在旅程期間嗎
+    var list=dayList();
+    if(!list.length) return false;
+    var t=dstr(new Date());
+    return t>=list[0].date && t<=list[list.length-1].date;
+  }
   function nextMode(){
-    var i=ORDER.indexOf(mode);
-    return ORDER[(i<0 ? 0 : i+1) % ORDER.length];
+    var o=onTrip() ? ORDER_TRIP : ORDER_OFF, i=o.indexOf(mode);
+    return o[(i<0 ? 0 : i+1) % o.length];    // 模式不在這組循環裡（例如旅程開始後還停在「全收」）就回到全開
   }
   function paintBtn(){ if(btn) btn.innerHTML=LABEL[nextMode()]; }
 
@@ -1769,6 +1776,7 @@ if('serviceWorker' in navigator){
     var t=dstr(new Date());
     dayList().forEach(function(d){
       var hide = m==='all'  ? false
+               : m==='none' ? true              // 全部收合
                : m==='past' ? d.date < t
                :              d.date !== t;     // future：只留今天
       if(hide) state[d.id]=true; else delete state[d.id];
@@ -1780,7 +1788,9 @@ if('serviceWorker' in navigator){
   function rollover(){
     var t=dstr(new Date());
     if(mode==='all'){ seenDay=t; saveMode(); return; }
-    if(seenDay===t) return;
+    // 全部收合：旅程還沒開始（或已結束）就維持全收；旅程期間則跟其他模式一樣每天展開當日
+    if(mode==='none' && !onTrip()){ seenDay=t; saveMode(); return; }
+    if(seenDay===t){ paintBtn(); return; }
     var y=new Date(t+'T00:00:00'); y.setDate(y.getDate()-1);
     var ys=dstr(y), touched=false;
     dayList().forEach(function(d){
@@ -1788,6 +1798,7 @@ if('serviceWorker' in navigator){
       if(d.date===t  &&  state[d.id]){ delete state[d.id]; touched=true; }
     });
     seenDay=t; saveMode();
+    paintBtn();                 // 跨進旅程後，循環會從兩種變三種
     if(touched){ persist(); apply(); }
   }
   if(btn) btn.onclick=function(){
