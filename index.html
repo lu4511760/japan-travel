@@ -1043,7 +1043,9 @@ window.__nodeLink=(function(){
   }
 
   // 把目前行程捲到畫面中間；空檔時改成捲到接下來的那一個
-  function centerCurrent(now){
+  // reveal=true 才會把收合起來的那天展開（手動按「目前行程」或用節點連結進來時）；
+  // 自動置中不展開，否則使用者刻意收起來的天會被打開
+  function centerCurrent(now, reveal){
     var sc=scan(now), target=sc.cur ? sc.cur.el : (sc.next ? sc.next.el : null);
     if(!target){                                        // 今天沒有任何行程：對齊今天的日期標題
       var today=dateStr(now);
@@ -1052,7 +1054,14 @@ window.__nodeLink=(function(){
       });
     }
     if(!target) target=document.getElementById('d0116');   // 還沒出發（或已結束）就帶到第一天
-    if(target && window.__tripRevealDay) window.__tripRevealDay(target);
+    if(target && target.offsetParent===null){              // 目標在收合起來的那天裡
+      if(reveal && window.__tripRevealDay) window.__tripRevealDay(target);
+      else {                                               // 不展開的話，改捲到那天的標題
+        var p=target.previousElementSibling;
+        while(p && !p.classList.contains('day-head')) p=p.previousElementSibling;
+        if(p) target=p;
+      }
+    }
     if(target) target.scrollIntoView({behavior:'smooth', block:'center'});
     return target;
   }
@@ -1128,7 +1137,7 @@ window.__nodeLink=(function(){
       target=document.getElementById('checklist');
       if(target) target.scrollIntoView({behavior:'smooth', block:'center'});
     }else{
-      target=centerCurrent(now);
+      target=centerCurrent(now, true);
     }
     // 捲動是 smooth 的，等它真的停下來再閃，才不會一邊移動一邊閃
     if(target && window.__tripFlash) afterScroll(target, function(){ window.__tripFlash(target); });
@@ -1836,7 +1845,7 @@ if('serviceWorker' in navigator){
     if(!el || el.offsetParent!==null) return;
     var p=el.previousElementSibling;
     while(p && !p.classList.contains('day-head')) p=p.previousElementSibling;
-    if(p && p.id && state[p.id]) set(p.id, false);
+    if(p && p.id && current()[p.id]) set(p.id, false);
   };
 })();
 
