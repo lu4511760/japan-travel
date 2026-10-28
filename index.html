@@ -221,6 +221,10 @@ body.review .now-fab{display:none}           /* 回顧行程時沒有「現在�
   box-shadow:0 3px 12px rgba(0,0,0,.35);
 }
 .fold-fab:active{transform:translateY(1px)}
+/* 收得越多顏色越深：全開（最淡）→ 收一半 → 收到剩一天／全收（實心） */
+.fold-fab{transition:background .25s, color .25s, border-color .25s}
+.fold-fab[data-step="1"]{background:var(--accent-soft); color:var(--accent); border-color:var(--accent)}
+.fold-fab[data-step="2"]{background:var(--fg); color:var(--bg); border-color:var(--fg)}
 body.editing .fold-fab{display:none}
 /* 回顧行程時沒有「目前行程」那顆，下面兩顆往下遞補 */
 body.review .fold-fab{bottom:16px}
@@ -1810,7 +1814,15 @@ if('serviceWorker' in navigator){
     var o=order(), i=o.indexOf(curMode());
     return o[(i<0 ? 0 : i+1) % o.length];    // 模式不在這組循環裡（例如旅程開始後還停在「全收」）就回到全開
   }
-  function paintBtn(){ if(btn) btn.innerHTML=LABEL[nextMode()]; }
+  function paintBtn(){
+    if(!btn) return;
+    btn.innerHTML=LABEL[nextMode()];
+    // 目前模式在循環裡的位置就是「收合程度」，用它決定深淺；
+    // 循環只有兩格時（非旅途、第一天、最後一天）直接用最深的那一階。
+    var o=order(), i=o.indexOf(curMode());
+    if(i<0) i=0;
+    btn.dataset.step = (o.length<3 && i>0) ? 2 : i;
+  }
 
   // 手動一天一天收合／展開，收到（或開到）極端狀態時按鈕要自己對齊：
   //   八天全收 → 按鈕顯示「全部展開」（mode 設成循環裡的最後一個）
