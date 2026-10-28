@@ -1665,6 +1665,20 @@ if('serviceWorker' in navigator){
   });
 }
 
+// 可收合區塊（行前清單）的開合狀態也記在這台裝置，重整或重開都維持原樣
+(function(){
+  var KEY='japan2027-open';
+  var state={};
+  try{ state=JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){}
+  document.querySelectorAll('details.block[id]').forEach(function(d){
+    if(d.id in state) d.open=!!state[d.id];     // 沒記錄過就照 HTML 的預設
+    d.addEventListener('toggle', function(){
+      state[d.id]=d.open;
+      try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+    });
+  });
+})();
+
 // 點每日標題可以收合／展開那一天（只留標題與副標）；選擇存在這台裝置
 (function(){
   var KEY='japan2027-collapsed';
