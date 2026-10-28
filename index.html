@@ -211,7 +211,18 @@ body.editing .test-day{display:block}
 }
 body.editing .now-fab{display:none}          /* 編輯模式下讓位給編輯列 */
 body.review .now-fab{display:none}           /* 回顧行程時沒有「現在」可以回 */
-.ed-fab{bottom:78px}                         /* 解鎖後鉛筆往上疊，回到現在在下面 */
+
+/* 展開／收合各天：按一下做一件事，字樣跳到下一個動作 */
+.fold-fab{
+  position:fixed; right:16px; bottom:78px; z-index:50;
+  width:52px; height:52px; border-radius:50%; cursor:pointer; padding:0;
+  font-family:inherit; font-size:13px; font-weight:700; line-height:1.25; letter-spacing:.5px;
+  color:var(--fg); background:var(--card); border:1px solid var(--line);
+  box-shadow:0 3px 12px rgba(0,0,0,.35);
+}
+.fold-fab:active{transform:translateY(1px)}
+body.editing .fold-fab, body.review .fold-fab{display:none}
+.ed-fab{bottom:140px}                        /* 由下到上：目前行程 → 展開收合 → 鉛筆 */
 
 /* 行程結束後的畫面（最後一天之後） */
 #ended{display:none; text-align:center; padding:56px 16px 72px}
@@ -222,6 +233,7 @@ body.ended .tl,
 body.ended footer,
 body.ended .made-by,
 body.ended .now-fab,
+body.ended .fold-fab,
 body.ended .ed-fab{display:none !important}
 #ended .ended-ico{font-size:52px; line-height:1}
 #ended .ended-t{margin:18px 0 28px; font-size:22px; font-weight:700; letter-spacing:.5px}
@@ -461,6 +473,7 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
 
   <div class="tl"></div>
 
+  <button type="button" class="fold-fab" id="fold-fab" title="展開／收合各天">全部<br>展開</button>
   <button type="button" class="now-fab" id="now-fab" title="回到目前行程">目前<br>行程</button>
 
   <!-- 測試用：把第一天改成別的日期，其餘 7 天依序往後推 -->
@@ -977,6 +990,7 @@ window.__nodeLink=(function(){
   var DAY_DATES={d0116:'2027-01-16',d0117:'2027-01-17',d0118:'2027-01-18',d0119:'2027-01-19',
                  d0120:'2027-01-20',d0121:'2027-01-21',d0122:'2027-01-22',d0123:'2027-01-23'};
   var DAY_IDS=['d0116','d0117','d0118','d0119','d0120','d0121','d0122','d0123'];
+  window.__tripDays=DAY_DATES;    // 收合模式要用（同一個物件，測試日期改了這裡也會跟著變）
   var REAL_DATES={};
   DAY_IDS.forEach(function(id){ REAL_DATES[id]=DAY_DATES[id]; });
 
@@ -1142,7 +1156,11 @@ window.__nodeLink=(function(){
   // 回到前景（visibilitychange／pageshow／focus）也補一次；
   // 再加一道保險：畫面只要在繪製，距上次重算超過 20 秒就立刻補算（rAF 在背景不會跑）
   var lastAt=0;
-  function wake(){ lastAt=Date.now(); tick(new Date()); }
+  function wake(){
+    lastAt=Date.now();
+    tick(new Date());
+    if(window.__tripFoldTick) window.__tripFoldTick();   // 跨過午夜時調整收合
+  }
 
   // ── 測試日期面板（編輯模式才看得到）──
   // 設定第一天，其餘 7 天依序往後推；只存在這台手機，不影響別人看到的內容
@@ -1710,6 +1728,76 @@ if('serviceWorker' in navigator){
   var tl=document.querySelector('.tl');
   if(tl && window.MutationObserver) new MutationObserver(apply).observe(tl, {childList:true});
   apply();
+
+  // ── 一鍵展開／收合 ──
+  // 按鈕上的字就是「按下去會做的事」，做完跳到下一個：全部展開 → 收合過去 → 收合未來 → …
+  //   全部展開：八天全開
+  //   收合過去：今天以前收起來，今天與之後維持展開
+  //   收合未來：在上面的基礎上再把未來收起來，只留今天
+  // 跨過午夜時（下面的 rollover）只動「昨天」與「今天」兩天，
+  // 其他天不管是手動收還是手動開都保持原樣。
+  var MODE_KEY='japan2027-foldmode';
+  var ORDER=['all','past','future'];
+  var LABEL={all:'全部<br>展開', past:'收合<br>過去', future:'收合<br>未來'};
+  var mode=null, seenDay=null;
+  try{
+    var saved=JSON.parse(localStorage.getItem(MODE_KEY)||'null') || {};
+    mode=saved.mode||null; seenDay=saved.day||null;
+  }catch(e){}
+  function saveMode(){
+    try{ localStorage.setItem(MODE_KEY, JSON.stringify({mode:mode, day:seenDay})); }catch(e){}
+  }
+  function persist(){
+    try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+  }
+  function dstr(d){
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function dayList(){
+    var days=window.__tripDays||{};
+    return Object.keys(days).map(function(id){ return {id:id, date:days[id]}; })
+      .sort(function(a,b){ return a.date<b.date ? -1 : 1; });
+  }
+  var btn=document.getElementById('fold-fab');
+  function nextMode(){
+    if(!mode) return 'all';
+    return ORDER[(ORDER.indexOf(mode)+1) % ORDER.length];
+  }
+  function paintBtn(){ if(btn) btn.innerHTML=LABEL[nextMode()]; }
+
+  function run(m){
+    var t=dstr(new Date());
+    dayList().forEach(function(d){
+      var hide = m==='all'  ? false
+               : m==='past' ? d.date < t
+               :              d.date !== t;     // future：只留今天
+      if(hide) state[d.id]=true; else delete state[d.id];
+    });
+    persist(); apply();
+  }
+
+  // 跨過午夜：收合昨天、展開今天，其他天不動
+  function rollover(){
+    var t=dstr(new Date());
+    if(!mode || mode==='all'){ seenDay=t; saveMode(); return; }
+    if(seenDay===t) return;
+    var y=new Date(t+'T00:00:00'); y.setDate(y.getDate()-1);
+    var ys=dstr(y), touched=false;
+    dayList().forEach(function(d){
+      if(d.date===ys && !state[d.id]){ state[d.id]=true; touched=true; }
+      if(d.date===t  &&  state[d.id]){ delete state[d.id]; touched=true; }
+    });
+    seenDay=t; saveMode();
+    if(touched){ persist(); apply(); }
+  }
+  if(btn) btn.onclick=function(){
+    var m=nextMode();
+    run(m);
+    mode=m; seenDay=dstr(new Date()); saveMode(); paintBtn();
+  };
+  paintBtn();
+  rollover();
+  window.__tripFoldTick=rollover;     // 由每 30 秒的 tick 順便呼叫
 
   // 要捲到某個節點之前先把它那天展開，否則元素是隱藏的、捲不過去
   window.__tripRevealDay=function(el){
