@@ -1739,10 +1739,10 @@ if('serviceWorker' in navigator){
   var MODE_KEY='japan2027-foldmode';
   var ORDER=['all','past','future'];
   var LABEL={all:'全部<br>展開', past:'收合<br>過去', future:'收合<br>未來'};
-  var mode=null, seenDay=null;
+  var mode='all', seenDay=null;      // 一開始畫面就是全開，所以按鈕直接顯示下一步
   try{
     var saved=JSON.parse(localStorage.getItem(MODE_KEY)||'null') || {};
-    mode=saved.mode||null; seenDay=saved.day||null;
+    mode=saved.mode||'all'; seenDay=saved.day||null;
   }catch(e){}
   function saveMode(){
     try{ localStorage.setItem(MODE_KEY, JSON.stringify({mode:mode, day:seenDay})); }catch(e){}
@@ -1760,8 +1760,8 @@ if('serviceWorker' in navigator){
   }
   var btn=document.getElementById('fold-fab');
   function nextMode(){
-    if(!mode) return 'all';
-    return ORDER[(ORDER.indexOf(mode)+1) % ORDER.length];
+    var i=ORDER.indexOf(mode);
+    return ORDER[(i<0 ? 0 : i+1) % ORDER.length];
   }
   function paintBtn(){ if(btn) btn.innerHTML=LABEL[nextMode()]; }
 
@@ -1779,7 +1779,7 @@ if('serviceWorker' in navigator){
   // 跨過午夜：收合昨天、展開今天，其他天不動
   function rollover(){
     var t=dstr(new Date());
-    if(!mode || mode==='all'){ seenDay=t; saveMode(); return; }
+    if(mode==='all'){ seenDay=t; saveMode(); return; }
     if(seenDay===t) return;
     var y=new Date(t+'T00:00:00'); y.setDate(y.getDate()-1);
     var ys=dstr(y), touched=false;
