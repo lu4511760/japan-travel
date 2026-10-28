@@ -1767,7 +1767,6 @@ if('serviceWorker' in navigator){
   // 跨過午夜時（下面的 rollover）只動「昨天」與「今天」兩天，
   // 其他天不管是手動收還是手動開都保持原樣。
   var MODE_KEY='japan2027-foldmode';
-  var ORDER_TRIP=['all','past','future'];   // 旅途中：全開 → 收過去 → 收未來
   var ORDER_OFF =['all','none'];            // 還沒出發／已結束：全開 ↔ 全收
   var LABEL={all:'全部<br>展開', past:'收合<br>過去', future:'收合<br>未來', none:'全部<br>收合'};
   var mode='all', seenDay=null;      // 一開始畫面就是全開，所以按鈕直接顯示下一步
@@ -1796,8 +1795,19 @@ if('serviceWorker' in navigator){
     var t=dstr(new Date());
     return t>=list[0].date && t<=list[list.length-1].date;
   }
+  // 旅途中的循環：全開 → 收過去 → 收未來 → …
+  // 但第一天沒有「過去」、最後一天沒有「未來」，那一格就不要出現，
+  // 省得按下去畫面毫無變化。（第一天停在「收未來」跨到第二天時，
+  // rollover 會把昨天收起來，自然就補上「過去也收合」這件事。）
+  function order(){
+    if(!onTrip()) return ORDER_OFF;
+    var list=dayList(), t=dstr(new Date()), o=['all'];
+    if(t>list[0].date) o.push('past');
+    if(t<list[list.length-1].date) o.push('future');
+    return o;
+  }
   function nextMode(){
-    var o=onTrip() ? ORDER_TRIP : ORDER_OFF, i=o.indexOf(curMode());
+    var o=order(), i=o.indexOf(curMode());
     return o[(i<0 ? 0 : i+1) % o.length];    // 模式不在這組循環裡（例如旅程開始後還停在「全收」）就回到全開
   }
   function paintBtn(){ if(btn) btn.innerHTML=LABEL[nextMode()]; }
@@ -1812,7 +1822,8 @@ if('serviceWorker' in navigator){
     var st=current(), collapsed=0;
     list.forEach(function(d){ if(st[d.id]) collapsed++; });
     var want=null;
-    if(collapsed===list.length) want = onTrip() ? 'future' : 'none';   // 全收
+    var o=order();
+    if(collapsed===list.length) want = o[o.length-1];                  // 全收：停在循環最後一格，按鈕就是「全部展開」
     else if(collapsed===0)      want = 'all';                          // 全開
     if(!want || want===curMode()) return;
     if(reviewState) reviewMode=want;
