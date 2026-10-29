@@ -2005,20 +2005,30 @@ if('serviceWorker' in navigator){
     btn.dataset.step = (o.length<3 && i>0) ? 2 : i;
   }
 
-  // 手動一天一天收合／展開，收到（或開到）極端狀態時按鈕要自己對齊：
-  //   八天全收 → 按鈕顯示「全部展開」（mode 設成循環裡的最後一個）
-  //   八天全開 → 按鈕顯示「收合過去」／「全部收合」（mode 設回 all）
-  // 不上不下的混合狀態不動按鈕，使用者按下去還是照原本的循環走。
+  // 某個模式下這一天該不該收起來
+  function hiddenBy(m, d, t){
+    return m==='all'  ? false
+         : m==='none' ? true              // 全部收合
+         : m==='past' ? d.date < t
+         :              d.date !== t;     // future：只留今天
+  }
+
+  // 手動一天一天收合／展開，剛好湊成某個模式的樣子時，按鈕就對齊到那個模式，
+  // 下一按才會接著往下走：例如第二天手動把第一天收起來，畫面就等於「收合過去」，
+  // 按鈕要跟著變成「收合未來」，而不是停在「收合過去」讓人再按一次沒反應。
+  // 湊不出任何一個模式的混合狀態就不動按鈕，使用者按下去還是照原本的循環走。
   function syncBtn(){
     var list=dayList();
     if(!list.length) return;
-    var st=current(), collapsed=0;
-    list.forEach(function(d){ if(st[d.id]) collapsed++; });
-    var want=null;
-    var o=order();
-    if(collapsed===list.length) want = o[o.length-1];                  // 全收：停在循環最後一格，按鈕就是「全部展開」
-    else if(collapsed===0)      want = 'all';                          // 全開
-    if(!want || want===curMode()) return;
+    var st=current(), t=dstr(new Date()), o=order(), want=null;
+    o.forEach(function(m){
+      if(want!==null) return;
+      var same=list.every(function(d){ return !!st[d.id]===hiddenBy(m, d, t); });
+      if(same) want=m;
+    });
+    // 八天全收，但旅途中的循環裡沒有「全部收合」這一格：停在最後一格，按鈕就是「全部展開」
+    if(want===null && list.every(function(d){ return !!st[d.id]; })) want=o[o.length-1];
+    if(want===null || want===curMode()) return;
     if(reviewState) reviewMode=want;
     else { mode=want; seenDay=dstr(new Date()); saveMode(); }
     paintBtn();
@@ -2027,11 +2037,7 @@ if('serviceWorker' in navigator){
   function run(m){
     var t=dstr(new Date()), st=current();
     dayList().forEach(function(d){
-      var hide = m==='all'  ? false
-               : m==='none' ? true              // 全部收合
-               : m==='past' ? d.date < t
-               :              d.date !== t;     // future：只留今天
-      if(hide) st[d.id]=true; else delete st[d.id];
+      if(hiddenBy(m, d, t)) st[d.id]=true; else delete st[d.id];
     });
     if(st===state) persist();
     apply();
