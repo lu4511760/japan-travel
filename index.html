@@ -1167,6 +1167,21 @@ window.__nodeLink=(function(){
     if(head && card && head.nextElementSibling!==card) head.insertAdjacentElement('afterend', card);
   }
 
+  // 飛機上收不到訊號，手機時區會停在出發地（台灣 UTC+8），落地連上日本網路才跳成 UTC+9。
+  // 這段期間手機的「現在幾點」比日本早一小時，寫日本時間的節點就會提早變成過去式
+  // （14:20 抵達成田，台灣時間 14:20 就灰掉，連上網又亮回來）。
+  // 所以 JST_ONLY 裡的節點改成：手機時區比日本慢幾分鐘，判定時就往後挪幾分鐘。
+  // 手機已經是日本時間（或更東）就不挪，其餘節點一律照手機當地時間，不受影響。
+  var JST_ONLY={n003:1};        // 1/16 抵達成田：落地那一刻手機多半還停在台灣時間
+  window.__tripTzOffset=null;   // 測試用：假裝手機在這個時區（相對 UTC 的分鐘數，台北 480、東京 540）
+  function jstGap(now){
+    var off=(typeof window.__tripTzOffset==='number') ? window.__tripTzOffset : -now.getTimezoneOffset();
+    var gap=540-off;
+    // 只補台灣／香港這一類 UTC+8（差 60 分）的情形：那才是「人已經到日本、手機還沒跟上」。
+    // 差更多表示人根本不在這趟行程的路線上，照手機當地時間就好，別亂挪。
+    return (gap>0 && gap<=60) ? gap : 0;
+  }
+
   // 掃一次時間軸，算出每個節點的「有效結束時間」，並找出目前進行中與接下來的節點
   // · 有填結束時間就以它為準
   // · 沒填就沿用舊規則：做到同一天下一個節點開始為止，當天最後一個算到午夜
@@ -1188,12 +1203,16 @@ window.__nodeLink=(function(){
       x.end=x.e || nextStart[x.date] || '24:00';
       nextStart[x.date]=x.t;
     }
-    var cur=null, next=null;
+    var cur=null, next=null, gap=jstGap(now);
     items.forEach(function(x){
       if(x.head || !x.t || !x.date) return;
       x.start=new Date(x.date+'T'+x.t+':00');
       x.stop =new Date(x.date+'T'+(x.end==='24:00' ? '23:59:59' : x.end+':00'));
       if(x.end!=='24:00' && x.end<x.t) x.stop.setDate(x.stop.getDate()+1);     // 結束時間跨過午夜
+      if(gap && JST_ONLY[x.el.getAttribute('data-id')]){                       // 手機還停在出發地時區
+        x.start=new Date(x.start.getTime()+gap*60000);
+        x.stop =new Date(x.stop.getTime() +gap*60000);
+      }
       if(x.start<=now && now<x.stop) cur=x;             // 重疊時以較晚開始的為準
       if(x.start>now && !next) next=x;
     });
