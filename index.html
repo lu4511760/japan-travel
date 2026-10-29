@@ -1918,7 +1918,7 @@ if('serviceWorker' in navigator){
     var was=!!reviewState;
     if(review && !reviewState){ reviewState={}; reviewMode='all'; }   // 一進回顧就是全開
     if(!review && reviewState) reviewState=null;
-    if(was!==!!reviewState) setTimeout(paintBtn, 0);                  // 循環換了一組，字樣要重畫
+    if(was!==!!reviewState) setTimeout(refreshBtn, 0);                // 循環換了一組，字樣要重畫
     var st=current();
     document.querySelectorAll('.tl > .day').forEach(function(sec){
       var h=sec.querySelector('.day-head');
@@ -2033,6 +2033,9 @@ if('serviceWorker' in navigator){
     else { mode=want; seenDay=dstr(new Date()); saveMode(); }
     paintBtn();
   }
+  // 畫面動過（或循環換了一組）之後都走這個：先把 mode 對齊現在的畫面，再重畫按鈕。
+  // 少了前半段，按鈕上的字就會跟畫面脫節，按下去「看起來沒反應」。
+  function refreshBtn(){ syncBtn(); paintBtn(); }
 
   function run(m){
     var t=dstr(new Date()), st=current();
@@ -2047,10 +2050,10 @@ if('serviceWorker' in navigator){
   function rollover(){
     if(document.body.classList.contains('review')) return;   // 回顧行程時不調整
     var t=dstr(new Date());
-    if(mode==='all'){ seenDay=t; saveMode(); return; }
-    // 全部收合：旅程還沒開始（或已結束）就維持全收；旅程期間則跟其他模式一樣每天展開當日
-    if(mode==='none' && !onTrip()){ seenDay=t; saveMode(); return; }
-    if(seenDay===t){ paintBtn(); return; }
+    // 全開不用調整；全部收合在旅程外也維持全收（旅程期間則跟其他模式一樣每天展開當日）。
+    // 這兩條不動畫面，但跨進旅程時循環會從兩種變三種，按鈕還是要重畫。
+    if(mode==='all' || (mode==='none' && !onTrip())){ seenDay=t; saveMode(); refreshBtn(); return; }
+    if(seenDay===t){ refreshBtn(); return; }
     var y=new Date(t+'T00:00:00'); y.setDate(y.getDate()-1);
     var ys=dstr(y), touched=false;
     dayList().forEach(function(d){
@@ -2058,8 +2061,8 @@ if('serviceWorker' in navigator){
       if(d.date===t  &&  state[d.id]){ delete state[d.id]; touched=true; }
     });
     seenDay=t; saveMode();
-    paintBtn();                 // 跨進旅程後，循環會從兩種變三種
     if(touched){ persist(); apply(); }
+    refreshBtn();               // 畫面動過了，按鈕要重新對齊（跨進旅程時循環也會從兩種變三種）
   }
   if(btn) btn.onclick=function(){
     var m=nextMode();
@@ -2068,14 +2071,13 @@ if('serviceWorker' in navigator){
     else { mode=m; seenDay=dstr(new Date()); saveMode(); }
     paintBtn();
   };
-  syncBtn();
-  paintBtn();
+  refreshBtn();
   rollover();
   window.__tripFoldTick=rollover;     // 由每 30 秒的 tick 順便呼叫
   // 測試日期被改掉時：日子整個平移了，直接依目前模式重新套一次（真實跨日仍只動昨天與今天）
   window.__tripFoldReapply=function(){
     run(curMode());
-    seenDay=dstr(new Date()); saveMode(); paintBtn();
+    seenDay=dstr(new Date()); saveMode(); refreshBtn();
   };
   window.__tripFoldApply=apply;       // 切進／切出回顧模式時要重套一次
 
