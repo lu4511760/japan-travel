@@ -456,6 +456,9 @@ function tick(now){
 
 DOM 是一條平的時間軸（`day-head` 和 `ev` 是兄弟節點，不是巢狀），所以收合用「掃過去打標記」實作，不要為了收合去改結構——`insertItem`、時間計算那些都依賴這個平面結構：
 
+> 例外：如果你也要做 5.13 的「標題黏在頂端」，那就得改成一天一個容器。**先讀 5.13 再決定**，兩個一起做比先平面做完再改省事，而且收合會因此簡單很多（容器加一個 class 就好）。
+
+
 ```js
 function apply(){
   var hide=false;
@@ -613,6 +616,104 @@ function current(){ return reviewState || state; }   // 所有讀寫都走這裡
 這招的關鍵是**所有讀寫都要改走 `current()`**。漏掉一處（例如點標題時判斷「目前是收還是開」）就會出現「點了沒反應」的怪現象。
 
 **模式本身也要有一份暫時的**（`reviewMode`）。回顧畫面裡照樣可以按那顆按鈕、照樣會觸發上面的 `syncBtn()`，但這些都只該改記憶體裡的那一份，不能寫回 `localStorage`，否則離開回顧後使用者原本的收合設定就被回顧時的操作蓋掉了。
+
+### 5.13 每日標題黏在頂端（請先讀完再動手）
+
+行程一長，捲到中間就不知道看的是第幾天了。解法是讓「第 N 天」的標題黏在日期列底下，捲到下一天時被推走。
+
+這一節的每一條都是踩過才知道的，照著做可以少繞一大圈。
+
+#### 一天一個容器——這是整件事的前提
+
+```html
+<div class="tl">
+  <section class="day">
+    <div class="day-head" id="d0116">第1天・01/16<span class="day-sub">…</span></div>
+    <div class="ev">…</div>
+    <div class="ev">…</div>
+  </section>
+  <section class="day">…</section>
+</div>
+```
+
+```css
+.day-head{position:sticky; top:59px; z-index:9}   /* 59 = 日期列高度 - 1，壓住不留縫 */
+```
+
+sticky 的黏住範圍就是它的父容器。包成容器之後，標題黏到自己那一天結束就被下一天推走，**整段動畫由瀏覽器的合成器執行**。
+
+5.12 提過「DOM 是一條平的時間軸，不要為了收合去改結構」——但為了這個推走，值得改。收合反而因此變簡單（容器加一個 class 就好）：
+
+```css
+.day.collapsed > :not(.day-head){display:none !important}
+```
+
+#### 千萬不要用 JS 去推
+
+平面 DOM 下兩個 sticky 標題會重疊（後面的蓋住前面的），很自然會想：監聽 scroll，量出重疊量，給前一個加 `translateY`。
+
+**這條路走不通，桌機看起來順，手機上一定抖。** iOS 的捲動與 sticky 都在合成器上跑，JS 要等 scroll 事件再等一個 `requestAnimationFrame`，永遠慢一拍。以下優化全都試過，只能減輕、不能解決：
+
+- 預先量好位置，捲動時只做算術，不碰 DOM 量測
+- 位移取整數（避免半個像素抖）
+- `will-change:transform` 讓標題獨立成圖層
+- 拿掉 `backdrop-filter`（模糊確實很耗，但不是主因）
+
+真正的解法只有「讓瀏覽器自己做」。如果你已經寫了 JS 版本，直接刪掉，改結構。
+
+#### 背景要往左右撐滿，用負 margin 不要用 box-shadow
+
+標題黏住時背景必須不透明，否則下面的內容會穿過去。但時間軸的線與節點圓點通常落在容器的 padding 區，標題的背景蓋不到，捲動時會看到它們從標題兩側穿出來。
+
+一開始用 `box-shadow:-30px 0 0 var(--bg)` 做純色延伸，可以，但**陰影沒辦法做漸層**。要下緣淡出就得改成負 margin ＋ 等量 padding：
+
+```css
+.day-head{
+  margin:22px -16px 0 -46px;
+  padding:8px 16px 14px 46px;
+  background:linear-gradient(to bottom, var(--bg) 0, var(--bg) 10%, transparent 100%);
+  backdrop-filter:blur(7px);           /* 透出來的內容糊掉，才不會跟標題搶讀 */
+}
+```
+
+左邊為什麼是 46 不是 16：標題的定位基準是外層容器的 content box，而時間軸自己還有 `padding-left:30px`，加上頁面的 16px 才碰得到畫面邊緣。配 `box-sizing:border-box` 時，這裡算錯會直接把標題擠成兩行。
+
+**下方間距一定要用 padding，不能用 margin。** margin 不是元素的一部分，背景蓋不到，捲動時下一個行程的時間會從那道縫露出半截。
+
+漸層的百分比愈小愈透。有 `backdrop-filter` 打底時 10% 很好看；若基於效能拿掉模糊，就得拉到 80% 以上，否則下面的字會清清楚楚疊在標題上。
+
+#### scrollIntoView 對黏住的標題無效
+
+這個 bug 很隱蔽：日期快選點「未來的日期」正常，點「已經捲過去的日期」卻毫無反應。
+
+因為那天的標題**正黏在畫面頂端**，`scrollIntoView` 一看「它已經在視窗裡而且貼著上緣」，就判斷不用捲。`offsetTop` 也救不了，sticky 的位移會算進去。
+
+捲之前先把它變回普通元素：
+
+```js
+function scrollToDay(el){
+  var p=el.style.position;
+  el.style.position='static';     // 解除 sticky，瀏覽器才看得到它在文件流裡的位置
+  el.scrollIntoView({behavior:'smooth', block:'start'});
+  el.style.position=p;            // 同一個同步區塊內還原，不會重繪
+}
+```
+
+#### 其他會被連帶影響的地方
+
+改成容器之後，所有「平面走訪」的程式都要檢查一遍：
+
+| 原本 | 改成 |
+|---|---|
+| `.tl > .ev`、`.tl > .day-head` | `.tl .ev`、`.tl .day-head` |
+| 走訪 `.tl > *` 判斷 day-head / ev | `.tl .day-head, .tl .ev`（回傳仍是文件順序） |
+| 往前找兄弟取得那天的標題 | `el.closest('.day').querySelector('.day-head')` |
+| 插入節點時「走到下一個 day-head 為止」 | 走到 `null` 就是那天結束 |
+| `.day-head:first-child` | `.tl > .day:first-child .day-head` |
+
+最後一個坑：如果你有 `MutationObserver` 在等「時間軸被重畫」，**不要因為改了結構就順手加 `subtree:true`**。那些 observer 等的是 `.tl` 直接子元素的變動，加了 subtree 之後，任何「會改 DOM 的 observer」都會自己觸發自己——我們的航班表格就這樣無限迴圈把分頁卡死。
+
+---
 
 ---
 
