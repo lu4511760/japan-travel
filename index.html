@@ -278,8 +278,6 @@ body.ended .ed-fab{display:none !important}
 .fl-table td:first-child{color:var(--muted); width:7em; font-size:13px}
 .fl-table td[data-f]{font-weight:600; font-variant-numeric:tabular-nums}
 .fl-table td.fl-hot{color:var(--accent)}
-/* 早班機誤點的提醒，接在回程「實際起飛」後面 */
-.fl-table .fl-morning{margin-left:6px; font-size:12.5px; font-weight:500; color:var(--muted)}
 
 /* ── 雪場直播影像（響應式 16:9） ── */
 .live-cam{width:100%; aspect-ratio:16/9; border:0; border-radius:8px; margin-top:2px; background:#000}
@@ -597,7 +595,9 @@ window.__nodeLink=(function(){
   // min 傳 0 就是還原成表定。節點被重畫過要再呼叫一次（重畫會還原成表定時刻）。
   // 註：誤點超過午夜（例如 23:30 挪到隔天 00:40）時刻會繞回來，但節點還是掛在原本那一天，
   //     scan() 會把它算成當天的凌晨。要誤點五小時以上才會遇到，先不處理。
-  window.__tripShift=function(id, min){
+  var WHEN={};      // {節點 id: {min:挪幾分鐘, note:'接在後面的一句提醒'}}
+  function whenOf(id){ return WHEN[id] || (WHEN[id]={min:0, note:''}); }
+  function paintWhen(id){
     var ev=document.querySelector('.tl .ev[data-id="'+id+'"]');
     var w=ev && ev.querySelector('.when');
     if(!w) return false;
@@ -605,9 +605,9 @@ window.__nodeLink=(function(){
       w.setAttribute('data-t0', w.getAttribute('data-t')||'');
       if(w.getAttribute('data-e')) w.setAttribute('data-e0', w.getAttribute('data-e'));
     }
-    var t0=w.getAttribute('data-t0'), e0=w.getAttribute('data-e0');
+    var st=whenOf(id), t0=w.getAttribute('data-t0'), e0=w.getAttribute('data-e0');
     if(!t0) return false;
-    var t=addMin(t0, min), e=e0 ? addMin(e0, min) : null;
+    var t=addMin(t0, st.min), e=e0 ? addMin(e0, st.min) : null;
     w.setAttribute('data-t', t);
     if(e) w.setAttribute('data-e', e);
     w.textContent='';
@@ -618,15 +618,31 @@ window.__nodeLink=(function(){
       sp.textContent=' ~ '+noDetect(e);
       w.appendChild(sp);
     }
-    if(min){
+    // 挪過就先寫表定幾點，早班誤點的提醒接在同一句後面
+    var bits=[];
+    if(st.min) bits.push('表定 '+noDetect(t0));
+    if(st.note) bits.push(st.note);
+    if(bits.length){
       var was=document.createElement('span');
       was.className='when-was';
-      was.textContent='表定 '+noDetect(t0);
+      was.textContent=bits.join('，');
       w.appendChild(was);
     }
-    if(window.__tripTick) window.__tripTick(new Date());   // 目前行程、旅程結束都要跟著重算
     return true;
+  }
+  window.__tripShift=function(id, min){
+    whenOf(id).min=min||0;
+    var ok=paintWhen(id);
+    if(ok && window.__tripTick) window.__tripTick(new Date());   // 目前行程、旅程結束都要跟著重算
+    return ok;
   };
+  // 接在時刻後面的一句提醒（目前只有回程用：早上那班飛機晚了幾分鐘）
+  window.__tripWhenNote=function(id, note){
+    whenOf(id).note=note||'';
+    return paintWhen(id);
+  };
+  // 節點重畫後時刻與提醒都會還原，整批再套一次
+  window.__tripWhenReapply=function(){ Object.keys(WHEN).forEach(paintWhen); };
   function addMin(hm, min){
     var p=String(hm).split(':'), v=(+p[0])*60+(+p[1])+(min||0);
     v=((v%1440)+1440)%1440;
@@ -815,7 +831,6 @@ window.__nodeLink=(function(){
     td.classList.toggle('fl-hot', !!hot && !!val && String(val).trim()!=='' && val!=='-');
     if(window.__tripNoDetectIn) window.__tripNoDetectIn(td);
     remember(td, tbl, key);
-    if(tbl==='fl-ret-nrt' && key==='rtime') addMorning(td);   // 這格被重寫就把早班誤點接回去
   }
 
   // 多行顯示（每個查驗處/安檢站一行），用 DOM 組避免字串injection
@@ -972,8 +987,9 @@ window.__nodeLink=(function(){
     var a=(typeof arr==='number') ? arr : -1;
     var best=(d>=a) ? {min:d, kind:'出發'} : {min:a, kind:'抵達'};
     MORNING=(best.min>=MORNING_MIN) ? best : null;
-    var td=document.querySelector('#fl-ret-nrt td[data-f="rtime"]');
-    if(td) addMorning(td);
+    // 接在回程節點的時刻旁邊，跟「表定 15:40」併成同一句
+    if(window.__tripWhenNote)
+      window.__tripWhenNote('n055', MORNING ? ('早上飛機晚'+MORNING.min+'分鐘'+MORNING.kind) : '');
   }
   window.__flightMorning=setMorning;   // 供測試模擬早班誤點用
 
@@ -987,29 +1003,14 @@ window.__nodeLink=(function(){
     SHIFT[id]=min;
     if(window.__tripShift) window.__tripShift(id, min);
   }
-  // 節點被重畫（雲端修改、解鎖私人行程）後時刻會還原成表定，把挪過的再套一次
+  // 節點被重畫（雲端修改、解鎖私人行程）後時刻與提醒都會還原，整批再套一次
   function reshift(){
-    Object.keys(SHIFT).forEach(function(id){
-      if(SHIFT[id] && window.__tripShift) window.__tripShift(id, SHIFT[id]);
-    });
+    if(window.__tripWhenReapply) window.__tripWhenReapply();
   }
   function shiftOn(p, id){
     p.then(function(min){ setShift(id, min); }, function(){});
   }
   window.__flightShift=setShift;   // 供測試模擬誤點用
-  function addMorning(td){
-    var old=td.querySelector('.fl-morning');
-    if(old) old.parentNode.removeChild(old);
-    if(MORNING){
-      var sp=document.createElement('span');
-      sp.className='fl-morning';
-      sp.textContent='早上飛機晚'+MORNING.min+'分鐘'+MORNING.kind;
-      td.appendChild(sp);
-      if(window.__tripNoDetectIn) window.__tripNoDetectIn(td);
-    }
-    remember(td, 'fl-ret-nrt', 'rtime');   // 連提醒一起存進快取
-  }
-
   function setUpdated(text, isErr){
     // 每次重查，節點被改寫後仍能正確更新
     document.querySelectorAll('.fl-updated').forEach(function(el){
