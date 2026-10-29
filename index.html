@@ -962,8 +962,9 @@ window.__nodeLink=(function(){
 
   function refresh(){
     var t=ymd();
-    if(t>RET_DAY){ stop(); return; }
-    // 成田與桃園官網連結同步換成當天日期
+    // 成田與桃園官網連結同步換成當天日期。
+    // 這段放在「行程結束就不查了」之前：API 停打，連結還是要一直跟著當天走，
+    // 之後回顧時點進去才是機場官網查得到的日期，不會變成過期的查詢頁。
     var la=document.getElementById('nrt-arr-link'); if(la) la.href='https://www.narita-airport.jp/zh-tc/flight/arr-search/'+t+'-JX0802/';
     var ld=document.getElementById('nrt-dep-link'); if(ld) ld.href='https://www.narita-airport.jp/zh-tc/flight/dep-search/'+t+'-JX0803/';
     var ta=document.getElementById('tpe-dep-link'); if(ta) ta.href='https://www.taoyuan-airport.com/flight_depart/'+t+'_D_JX802?lang=ch';
@@ -971,6 +972,7 @@ window.__nodeLink=(function(){
     // 利木津巴士時刻表帶當天日期（yyyy-mm-dd）
     var td=t.slice(0,4)+'-'+t.slice(4,6)+'-'+t.slice(6,8);
     var lm=document.getElementById('limousine-link'); if(lm) lm.href='https://www.limousinebus.co.jp/zh-tw/timetable/detail/Narita-Ikebukuro/?dir=2&d='+td;
+    if(t>RET_DAY){ stop(); return; }
     var jobs=[];
     // 早班 JX802 整趟都查：1/16 當天畫到去程那兩張表，之後只是拿來算誤點（quiet）
     var quiet=(t>DEP_DAY);
