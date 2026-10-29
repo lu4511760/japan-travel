@@ -206,17 +206,20 @@ https://www.google.com/maps?cid=<十進位 CID>
     var tl = document.querySelector('.tl');
     tl.textContent = '';
     data.days.forEach(function(d){
+      var sec = document.createElement('section');   // 一天一個容器，理由見 5.13
+      sec.className = 'day';
       var head = document.createElement('div');
       head.className = 'day-head'; head.id = d.id;
       head.innerHTML = d.label + '<span class="dow">'+d.dow+'</span>';
-      tl.appendChild(head);
+      sec.appendChild(head);
       data.items.forEach(function(it){
         if(it.day !== d.id) return;
         var ev = document.createElement('div');
         ev.className = 'ev';
         fill(ev, it);
-        tl.appendChild(ev);
+        sec.appendChild(ev);
       });
+      tl.appendChild(sec);
     });
   }
   render();
@@ -255,7 +258,7 @@ var DAY_DATES = {d0116:'2027-01-16', d0117:'2027-01-17', /* … */ d0123:'2027-0
 ```js
 function scan(now){
   var curDate=null, items=[];
-  document.querySelectorAll('.tl > *').forEach(function(el){
+  document.querySelectorAll('.tl .day-head, .tl .ev').forEach(function(el){   // 回傳是文件順序
     if(el.classList.contains('day-head')){
       curDate = DAY_DATES[el.id] || curDate;
       items.push({el:el, date:curDate, head:true});
@@ -454,26 +457,28 @@ function tick(now){
 
 八天的行程攤開很長，捲到腿軟。做法是**點每日標題就收合／展開那一天**，不要另外放按鈕。
 
-DOM 是一條平的時間軸（`day-head` 和 `ev` 是兄弟節點，不是巢狀），所以收合用「掃過去打標記」實作，不要為了收合去改結構——`insertItem`、時間計算那些都依賴這個平面結構：
-
-> 例外：如果你也要做 5.13 的「標題黏在頂端」，那就得改成一天一個容器。**先讀 5.13 再決定**，兩個一起做比先平面做完再改省事，而且收合會因此簡單很多（容器加一個 class 就好）。
-
+前提是 **5.13 的那個結構：一天一個 `<section class="day">`**。那一節是為了「標題黏在頂端」才需要容器，但收合也跟著受惠——不必逐一標記每個節點，容器加一個 class 就好：
 
 ```js
 function apply(){
-  var hide=false;
-  document.querySelectorAll('.tl > *').forEach(function(el){
-    if(el.classList.contains('day-head')){
-      hide=!!state[el.id];                        // 遇到日期標題就切換「接下來要不要藏」
-      el.classList.toggle('collapsed', hide);
-      return;
-    }
-    el.classList.toggle('day-hidden', hide);      // .day-hidden{display:none !important}
+  document.querySelectorAll('.tl > .day').forEach(function(sec){
+    var head=sec.querySelector('.day-head');
+    var hide=!!(head && state[head.id]);
+    sec.classList.toggle('collapsed', hide);       // CSS 負責把裡面的節點藏起來
+    if(head) head.classList.toggle('collapsed', hide);
   });
 }
 ```
 
+```css
+.day.collapsed > :not(.day-head){display:none !important}
+```
+
+這樣連編輯模式之類後來加進容器的東西都會一起藏，不用再逐一掛 class。
+
 狀態存 `localStorage`（以 `day-head` 的 id 為鍵），重畫後要重新套用（`MutationObserver`）。
+
+> 如果你決定不做 5.13、想維持一條平的時間軸（`day-head` 和 `ev` 是兄弟節點），收合就得改成「掃過去打標記」：從頭走訪 `.tl > *`，遇到 `day-head` 就切換「接下來要不要藏」的旗標，其餘元素依旗標加上 `.day-hidden`。可行，只是後面每個功能都要自己處理「同一天的範圍到哪裡結束」。
 
 **提示要放在標題裡**，不要做成獨立按鈕——例如在副標後面跟一個 `▾` / `▸`：
 
@@ -642,11 +647,7 @@ function current(){ return reviewState || state; }   // 所有讀寫都走這裡
 
 sticky 的黏住範圍就是它的父容器。包成容器之後，標題黏到自己那一天結束就被下一天推走，**整段動畫由瀏覽器的合成器執行**。
 
-5.12 提過「DOM 是一條平的時間軸，不要為了收合去改結構」——但為了這個推走，值得改。收合反而因此變簡單（容器加一個 class 就好）：
-
-```css
-.day.collapsed > :not(.day-head){display:none !important}
-```
+這個容器也是 5.12 收合的基礎：收合就是容器加一個 class，不必逐一標記裡面的節點。
 
 #### 千萬不要用 JS 去推
 
@@ -701,7 +702,8 @@ function scrollToDay(el){
 
 #### 其他會被連帶影響的地方
 
-改成容器之後，所有「平面走訪」的程式都要檢查一遍：
+照本文順序做的話，5.1 的 `render()` 一開始就是容器版，這裡不用再動。
+下面這張表是給**已經寫成平面結構、現在要改過來**的人對照用的：
 
 | 原本 | 改成 |
 |---|---|
@@ -841,7 +843,9 @@ done
 8. **深色模式下「半透明疊色」要實測**：卡片本身有底色時，閃爍動畫改背景色幾乎看不出來，改閃外框或提高不透明度。
 9. **GitHub Pages 的檔名**：中文、空格的檔名可以用，但連結要 URL-encode。
 10. **自動捲動會打開收合的區塊**：見 5.12，「要不要展開」必須是呼叫端決定的參數，不能寫死在捲動函式裡。
-11. **iOS 會把「12:00」認成可加入行事曆的資料**：深長按就跳出系統選單，`user-select:none` 和 `format-detection` 都擋不掉。解法是在冒號兩側插一個零寬字元（U+200B），畫面看不出來但系統認不得；因此**更不能用畫面文字去 parse 時間**（見第 2 條）。
+11. **sticky 的「推走」不要用 JS 算位移**：見 5.13，桌機看起來順，手機上一定抖；改成一天一個容器讓瀏覽器自己做。
+12. **`MutationObserver` 不要隨手加 `subtree:true`**：見 5.13，會改 DOM 的 observer 會自己觸發自己，無限迴圈把分頁卡死。
+13. **iOS 會把「12:00」認成可加入行事曆的資料**：深長按就跳出系統選單，`user-select:none` 和 `format-detection` 都擋不掉。解法是在冒號兩側插一個零寬字元（U+200B），畫面看不出來但系統認不得；因此**更不能用畫面文字去 parse 時間**（見第 2 條）。
 
 ---
 
