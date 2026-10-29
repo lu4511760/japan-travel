@@ -102,15 +102,16 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
      否則節點圓點會從標題兩側穿過去（它們在 .tl 的 padding 裡）。
      下緣不要硬切一刀，用漸層淡出。
      （本來還加了 backdrop-filter 把透出來的部分模糊掉，但那個模糊在手機上每一格都要重算，
-     捲動掉幀、標題被推的時候會抖，所以拿掉。） */
+     捲動掉幀、標題被推的時候會抖，所以拿掉。）
+     黏住的範圍由外層的 .day 決定，捲到下一天時瀏覽器自己把它推走。 */
   position:sticky; top:59px; z-index:9;
   margin:22px -16px 0 -46px; padding:8px 16px 14px 46px; scroll-margin-top:58px;
   background:linear-gradient(to bottom, var(--bg) 0, var(--bg) 80%, transparent 100%);
-  will-change:transform;
+
   font-size:36px; line-height:1.15; color:var(--day); font-weight:700;
   letter-spacing:.02em; font-variant-numeric:tabular-nums;
 }
-.day-head:first-child{margin-top:-8px}
+.tl > .day:first-child .day-head{margin-top:-8px}
 .day-head .dow{color:var(--muted); font-weight:400; margin-left:10px; font-size:22px}
 /* 當天行程的一句話簡述；點標題可以收合那一天，所以副標後面跟一個小箭頭 */
 .day-head{cursor:pointer}
@@ -122,7 +123,7 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
   content:"▾"; display:inline-block; margin-left:8px; font-size:12px; opacity:.55;
 }
 .day-head.collapsed .day-sub::after{content:"▸"}
-.day-hidden{display:none !important}
+.day.collapsed > :not(.day-head){display:none !important}
 /* 時間軸的線要連著穿過標題，不然黏住時上下看起來是斷開的兩段 */
 .day-head::after{
   content:""; position:absolute; left:25px; top:0; bottom:0;
@@ -587,19 +588,24 @@ window.__nodeLink=(function(){
     var tl=document.querySelector('.tl');
     tl.textContent='';
     data.days.forEach(function(d){
+      // 一天一個容器：每日標題的 sticky 範圍就被限制在自己這一天裡，
+      // 捲到下一天時由瀏覽器自己把它推走（跟 iOS 原生列表一樣，不用 JS 跟著算，才不會抖）
+      var sec=document.createElement('section');
+      sec.className='day';
       var head=document.createElement('div');
       head.className='day-head';
       head.id=d.id;
       head.innerHTML=noDetect(d.label)+'<span class="dow">'+d.dow+'</span>'
         +(d.sub ? '<span class="day-sub">'+d.sub+'</span>' : '');
-      tl.appendChild(head);
+      sec.appendChild(head);
       data.items.forEach(function(it){
         if(it.day!==d.id) return;
         var ev=document.createElement('div');
         ev.className='ev';
         fill(ev, it);
-        tl.appendChild(ev);
+        sec.appendChild(ev);
       });
+      tl.appendChild(sec);
     });
   }
   window.__tripRender=render;
@@ -1033,7 +1039,7 @@ window.__nodeLink=(function(){
   // · 沒填就沿用舊規則：做到同一天下一個節點開始為止，當天最後一個算到午夜
   function scan(now){
     var curDate=null, items=[];
-    document.querySelectorAll('.tl > *').forEach(function(el){
+    document.querySelectorAll('.tl .day-head, .tl .ev').forEach(function(el){
       if(el.classList.contains('day-head')){
         curDate=DAY_DATES[el.id]||curDate;
         items.push({el:el, date:curDate, head:true});
@@ -1076,8 +1082,8 @@ window.__nodeLink=(function(){
     if(target && target.offsetParent===null){              // 目標在收合起來的那天裡
       if(reveal && window.__tripRevealDay) window.__tripRevealDay(target);
       else {                                               // 不展開的話，改捲到那天的標題
-        var p=target.previousElementSibling;
-        while(p && !p.classList.contains('day-head')) p=p.previousElementSibling;
+        var sec=target.closest && target.closest('.day');
+        var p=sec && sec.querySelector('.day-head');
         if(p) target=p;
       }
     }
@@ -1301,7 +1307,7 @@ window.__nodeLink=(function(){
     ev.className='ev'+(isPrivate?' private':'');
     window.__tripFill(ev, it);
     var node=head.nextElementSibling, before=null;
-    while(node && !node.classList.contains('day-head')){
+    while(node){                                  // 同一天的節點都在同一個容器裡，走到 null 就是那天結束
       var tm=window.__tripTimeOf(node);
       if(it.time && tm && tm.t>it.time){ before=node; break; }
       node=node.nextElementSibling;
@@ -1520,7 +1526,7 @@ window.__nodeLink=(function(){
 
   // 進出編輯模式、儲存後都會重建或插入元素，這裡記住畫面上第一個可見節點，做完再捲回原位
   async function keepView(fn){
-    var els=document.querySelectorAll('.tl > .ev'), key=null, top=0;
+    var els=document.querySelectorAll('.tl .ev'), key=null, top=0;
     for(var i=0;i<els.length;i++){
       var r=els[i].getBoundingClientRect();
       if(r.bottom<=0 || !els[i].dataset.id) continue;
@@ -1529,7 +1535,7 @@ window.__nodeLink=(function(){
     }
     await fn();
     if(!key) return;
-    var back=document.querySelector('.tl > [data-id="'+key+'"]');
+    var back=document.querySelector('.tl [data-id="'+key+'"]');
     if(back) window.scrollBy({top:Math.round(back.getBoundingClientRect().top-top), behavior:'instant'});
   }
 
@@ -1567,7 +1573,7 @@ window.__nodeLink=(function(){
     document.querySelectorAll('.ed-tools, .ed-add, .rsv-chk').forEach(function(e){ e.remove(); });
     document.body.classList.toggle('editing', editing);
     if(!editing) return;
-    document.querySelectorAll('.tl > .ev').forEach(function(ev){
+    document.querySelectorAll('.tl .ev').forEach(function(ev){
       var id=ev.dataset.id;
       if(!id) return;
       var tools=el('div','ed-tools',
@@ -1592,7 +1598,7 @@ window.__nodeLink=(function(){
         ev.appendChild(lab);        // 一律放在節點最下面，有沒有標題都是同一個位置
       }
     });
-    document.querySelectorAll('.tl > .day-head').forEach(function(h){
+    document.querySelectorAll('.tl .day-head').forEach(function(h){
       var add=el('div','ed-add',
         '<button data-p="0">＋ 新增節點</button><button data-p="1">＋ 新增私人節點</button>');
       add.onclick=function(e){
@@ -1606,7 +1612,7 @@ window.__nodeLink=(function(){
   // 預約狀態存在雲端（朋友也看得到）：已預約就把「需預約」連結換成不帶連結的文字
   function applyBooked(){
     var booked=(S.pub&&S.pub.booked)||{};
-    document.querySelectorAll('.tl > .ev').forEach(function(ev){
+    document.querySelectorAll('.tl .ev').forEach(function(ev){
       if(!booked[ev.dataset.id]) return;
       ev.querySelectorAll('a.rsv').forEach(function(a){
         a.parentNode.replaceChild(el('span','rsv','已預約'), a);
@@ -1751,14 +1757,12 @@ if('serviceWorker' in navigator){
     if(review && !reviewState){ reviewState={}; reviewMode='all'; }   // 一進回顧就是全開
     if(!review && reviewState) reviewState=null;
     if(was!==!!reviewState) setTimeout(paintBtn, 0);                  // 循環換了一組，字樣要重畫
-    var st=current(), hide=false;
-    document.querySelectorAll('.tl > *').forEach(function(el){
-      if(el.classList.contains('day-head')){
-        hide=!!st[el.id];
-        el.classList.toggle('collapsed', hide);
-        return;
-      }
-      el.classList.toggle('day-hidden', hide);
+    var st=current();
+    document.querySelectorAll('.tl > .day').forEach(function(sec){
+      var h=sec.querySelector('.day-head');
+      var hide=!!(h && st[h.id]);
+      sec.classList.toggle('collapsed', hide);      // 容器一收，裡面的節點全藏（CSS 處理）
+      if(h) h.classList.toggle('collapsed', hide);  // 標題上的箭頭
     });
   }
   function set(id, on){
@@ -1769,7 +1773,7 @@ if('serviceWorker' in navigator){
     syncBtn();                       // 手動收合／展開後，按鈕字樣要跟著對
   }
   document.addEventListener('click', function(e){
-    var h=e.target.closest && e.target.closest('.tl > .day-head');
+    var h=e.target.closest && e.target.closest('.tl .day-head');
     if(!h || !h.id) return;
     set(h.id, !current()[h.id]);
   });
@@ -1910,8 +1914,7 @@ if('serviceWorker' in navigator){
   // 要捲到某個節點之前先把它那天展開，否則元素是隱藏的、捲不過去
   window.__tripRevealDay=function(el){
     if(!el || el.offsetParent!==null) return;
-    var p=el.previousElementSibling;
-    while(p && !p.classList.contains('day-head')) p=p.previousElementSibling;
+    var sec=el.closest && el.closest('.day'), p=sec && sec.querySelector('.day-head');
     if(p && p.id && current()[p.id]) set(p.id, false);
   };
 })();
@@ -1924,7 +1927,6 @@ if('serviceWorker' in navigator){
   // 讓瀏覽器看到它在文件流裡的真實位置，算完目標再還原，中間不會重繪。
   window.__tripScrollToDay=function(el){
     var p=el.style.position;
-    el.style.transform='';          // 可能正被下一天往上推，那個位移也要先拿掉（捲完會自己重算）
     el.style.position='static';
     el.scrollIntoView({behavior:'smooth', block:'start'});
     el.style.position=p;
@@ -1944,64 +1946,6 @@ if('serviceWorker' in navigator){
   }
   setTimeout(cleanDayHash, 300);
   window.addEventListener('hashchange', function(){ setTimeout(cleanDayHash, 300); });
-})();
-
-// 黏住的每日標題被下一天頂到時要讓位，不然兩個會疊在一起，上面那個只剩半截
-(function(){
-  var TOP=59;                      // 跟 CSS 的 .day-head{top:59px} 對齊
-  var heads=[];
-  function refresh(){ heads=[].slice.call(document.querySelectorAll('.tl > .day-head')); }
-  refresh();
-  var tl=document.querySelector('.tl');
-  if(tl && window.MutationObserver)
-    new MutationObserver(function(){ refresh(); measure(); }).observe(tl, {childList:true});
-
-  // 位置先量好存起來，捲動時只做算術。
-  // 之前是每一格都「清掉 transform → 重新量 → 再設回去」，那等於每格強迫重排一次，
-  // 量到的值又帶小數，標題被推的時候會抖。
-  var box=[];                      // 每個標題在文件裡的位置、高度，以及它自己的上間距
-  function measure(){
-    box=heads.map(function(h){
-      var t=h.style.transform, p=h.style.position;
-      h.style.transform=''; h.style.position='static';         // 先拆掉 sticky 才量得到文件流位置
-      var r=h.getBoundingClientRect();
-      var o={top:Math.round(r.top+window.pageYOffset), h:Math.round(r.height),
-             gap:Math.round(parseFloat(getComputedStyle(h).marginTop)||0),
-             on:r.height>0};
-      h.style.position=p; h.style.transform=t;
-      return o;
-    });
-    run();
-  }
-
-  var ticking=false;
-  function run(){
-    ticking=false;
-    if(!box.length) return;
-    var y=window.pageYOffset, i, want=[];
-    // 由後往前：前一個能待的位置，取決於後一個「被推完之後」在哪
-    for(i=heads.length-1;i>=0;i--){
-      var b=box[i];
-      if(!b || !b.on){ want[i]=1e9; continue; }
-      var natural=Math.max(TOP, b.top-y);                      // CSS sticky 算出來的位置
-      var stuck=natural, nb=box[i+1];
-      // 只有「正黏在頂端」的那個需要讓位；還在自己位置上的不要碰，
-      // 不然量到的 1px 誤差會讓它們跟著微微位移，看起來就是在抖
-      if(natural<=TOP+0.5 && nb && nb.on && want[i+1]<1e9){
-        var limit=want[i+1]-nb.gap-b.h;                        // 被下一個頂到的上限
-        if(limit<stuck) stuck=limit;
-      }
-      want[i]=stuck;
-      var shift=Math.round(stuck-natural);                     // 0 或負數；取整數，免得半個像素在抖
-      heads[i].style.transform = shift<0 ? 'translateY('+shift+'px)' : '';
-    }
-  }
-  function onScroll(){ if(!ticking){ ticking=true; requestAnimationFrame(run); } }
-  window.addEventListener('scroll', onScroll, {passive:true});
-  window.addEventListener('resize', measure);
-  document.addEventListener('click', function(){ setTimeout(measure, 0); });   // 收合、展開之後高度會變
-  if(document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
-  measure();
 })();
 
 // 旅途當天自動標示今天的日期，並捲動到當日行程
