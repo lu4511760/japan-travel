@@ -672,16 +672,19 @@ sticky 的黏住範圍就是它的父容器。包成容器之後，標題黏到�
 .day-head{
   margin:22px -16px 0 -46px;
   padding:8px 16px 14px 46px;
-  background:linear-gradient(to bottom, var(--bg) 0, var(--bg) 10%, transparent 100%);
-  backdrop-filter:blur(7px);           /* 透出來的內容糊掉，才不會跟標題搶讀 */
+  background:linear-gradient(to bottom, var(--bg) 0, var(--bg) 80%, transparent 100%);
 }
 ```
+
+**`backdrop-filter:blur()` 很誘人，但跟時間軸的線不能共存。** 加了模糊，透出來的內容會糊掉、很好看，可是背後那條線也會被糊成一片，從漸層透出來疊在標題自己那條線旁邊，線就變得忽粗忽細。想在線的位置補一塊底色遮住它，收合時看不出來，展開時那塊「沒有內容透出來」的色帶又特別明顯。兩者只能選一個。
+
+沒有模糊打底時，漸層的實色要拉到 80% 以上，不然下面的字會清清楚楚疊在標題上。
 
 左邊為什麼是 46 不是 16：標題的定位基準是外層容器的 content box，而時間軸自己還有 `padding-left:30px`，加上頁面的 16px 才碰得到畫面邊緣。配 `box-sizing:border-box` 時，這裡算錯會直接把標題擠成兩行。
 
 **下方間距一定要用 padding，不能用 margin。** margin 不是元素的一部分，背景蓋不到，捲動時下一個行程的時間會從那道縫露出半截。
 
-漸層的百分比愈小愈透。有 `backdrop-filter` 打底時 10% 很好看；若基於效能拿掉模糊，就得拉到 80% 以上，否則下面的字會清清楚楚疊在標題上。
+漸層的百分比愈小愈透，自己拿捏。
 
 #### scrollIntoView 對黏住的標題無效
 

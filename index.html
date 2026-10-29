@@ -100,14 +100,14 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
   /* 往下捲時黏在日期列底下，才知道現在看的是第幾天。
      用負 margin ＋ 等量 padding 把背景往左右撐滿（文字位置不變），
      否則節點圓點會從標題兩側穿過去（它們在 .tl 的 padding 裡）。
-     下緣不要硬切一刀：漸層淡出，透出來的部分再模糊掉。
-     黏住的範圍由外層的 .day 決定，捲到下一天時瀏覽器自己把它推走——
-     以前是用 JS 算位移去推，那在手機上會抖（見變動紀錄），模糊也一度被當成兇手拿掉；
-     改成容器之後捲動期間沒有 JS 介入，模糊就加得回來了。 */
+     下緣不要硬切一刀，用漸層淡出。
+     （試過再加 backdrop-filter 把透出來的部分模糊掉，很好看，但模糊會把背後那條
+     時間軸的線也糊成一片，從漸層透出來疊在標題自己那條線旁邊，線就忽粗忽細；
+     想遮又會在展開時留下一塊和周圍不一樣的色帶。模糊與線只能二選一，選了線。）
+     黏住的範圍由外層的 .day 決定，捲到下一天時瀏覽器自己把它推走。 */
   position:sticky; top:59px; z-index:9;
   margin:22px -16px 0 -46px; padding:8px 16px 14px 46px; scroll-margin-top:58px;
-  background:linear-gradient(to bottom, var(--bg) 0, var(--bg) 10%, transparent 100%);
-  -webkit-backdrop-filter:blur(7px); backdrop-filter:blur(7px);
+  background:linear-gradient(to bottom, var(--bg) 0, var(--bg) 80%, transparent 100%);
 
   font-size:36px; line-height:1.15; color:var(--day); font-weight:700;
   letter-spacing:.02em; font-variant-numeric:tabular-nums;
@@ -126,13 +126,10 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
 .day-head.collapsed .day-sub::after{content:"▸"}
 .day.collapsed > :not(.day-head){display:none !important}
 /* 時間軸的線要連著穿過標題，不然黏住時上下看起來是斷開的兩段。
-   左右各留一段底色的邊：背後那條線會被 backdrop-filter 糊成一片，
-   從漸層透出來疊在這條清晰的線旁邊，線看起來就忽粗忽細。 */
+   位置跟 .tl::before 完全對齊，背後那條透出來也剛好疊在一起，看不出兩條。 */
 .day-head::after{
-  content:""; position:absolute; left:15px; top:0; bottom:0;
-  width:22px; box-sizing:border-box;
-  border-left:10px solid var(--bg); border-right:10px solid var(--bg);
-  background:var(--rail);
+  content:""; position:absolute; left:25px; top:0; bottom:0;
+  width:2px; background:var(--rail);
 }
 .day-head::before{
   content:""; position:absolute; left:20px; top:18px; z-index:1;   /* 壓在線上面 */
