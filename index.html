@@ -1163,7 +1163,7 @@ window.__nodeLink=(function(){
     var now=new Date(), target;
     if(dateStr(now) < DAY_DATES.d0116){       // 還沒出發，這時該看的是行前清單
       target=document.getElementById('checklist');
-      if(target) target.scrollIntoView({behavior:'smooth', block:'center'});
+      if(target) target.scrollIntoView({behavior:'smooth', block:'start'});   // 清單很長，要對齊開頭不是置中
     }else{
       target=centerCurrent(now, true);
     }
