@@ -47,6 +47,7 @@ input, textarea, select{-webkit-user-select:text; user-select:text}
 .wrap{max-width:640px; margin:0 auto; padding:26px 16px 64px}
 h1{font-size:23px; margin:0 0 2px; letter-spacing:.02em}
 .sub{color:var(--muted); font-size:14px; margin:0 0 14px}
+.sub .last-upd{display:block; margin-top:2px; font-size:12.5px; opacity:.85}   /* 解鎖後才出現，標出這份網頁的更新時間 */
 
 /* ── 日期快速跳轉列（置頂） ── */
 /* 它們是按鈕不是連結，拖曳會拉出一塊帶網址的預覽圖，擋掉 */
@@ -100,14 +101,14 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
   /* 往下捲時黏在日期列底下，才知道現在看的是第幾天。
      用負 margin ＋ 等量 padding 把背景往左右撐滿（文字位置不變），
      否則節點圓點會從標題兩側穿過去（它們在 .tl 的 padding 裡）。
-     下緣不要硬切一刀，用漸層淡出。
-     （試過再加 backdrop-filter 把透出來的部分模糊掉，很好看，但模糊會把背後那條
-     時間軸的線也糊成一片，從漸層透出來疊在標題自己那條線旁邊，線就忽粗忽細；
-     想遮又會在展開時留下一塊和周圍不一樣的色帶。模糊與線只能二選一，選了線。）
+     背景是純色。下緣曾經做過漸層淡出，但代價一路加碼：
+     加 backdrop-filter 讓透出的內容糊掉 → 連時間軸的線也被糊成一片透出來，線忽粗忽細；
+     在線的位置補底色遮罩 → 展開時那塊「沒有內容透出來」的色帶特別明顯；
+     把淡出區縮短 → 又接近硬切。最後決定不做漸層。
      黏住的範圍由外層的 .day 決定，捲到下一天時瀏覽器自己把它推走。 */
   position:sticky; top:59px; z-index:9;
   margin:22px -16px 0 -46px; padding:8px 16px 14px 46px; scroll-margin-top:58px;
-  background:linear-gradient(to bottom, var(--bg) 0, var(--bg) 93%, transparent 100%);
+  background:var(--bg);
 
   font-size:36px; line-height:1.15; color:var(--day); font-weight:700;
   letter-spacing:.02em; font-variant-numeric:tabular-nums;
@@ -1633,7 +1634,22 @@ window.__nodeLink=(function(){
     keepView(decorate);
   }
 
+  // 解鎖後在副標後面標出這份網頁是什麼時候更新的，方便確認手機上看到的是不是最新版。
+  // 時間取自伺服器給這個檔案的 Last-Modified（也就是部署時間），不用自己維護版本號。
+  function stamp(){
+    var sub=document.querySelector('.sub');
+    if(!sub || sub.querySelector('.last-upd')) return;
+    var d=new Date(document.lastModified);
+    if(isNaN(d)) return;
+    var z=function(n){ return String(n).padStart(2,'0'); };
+    var t=d.getFullYear()+'/'+z(d.getMonth()+1)+'/'+z(d.getDate())+' '
+         +z(d.getHours())+':'+z(d.getMinutes())+':'+z(d.getSeconds());
+    var ZW='\u200b';                                   // 擋 iOS 的「加入行事曆」偵測
+    sub.appendChild(el('span','last-upd','（最近更新: '+t.replace(/([:\/])/g, ZW+'$1'+ZW)+'）'));
+  }
+
   window.__tripEditUI=function(){
+    stamp();
     if(fab) return;
     fab=el('button','ed-fab','✏️');
     fab.title='編輯行程';
