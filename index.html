@@ -140,6 +140,8 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
 .when .dow{color:var(--muted); font-weight:400; margin-left:5px}
 /* 結束時間平常不佔版面，進編輯模式才顯示出來好對照 */
 .when-end{display:none}
+/* 班機誤點、時刻被往後挪過：在後面補上原本的表定時間 */
+.when-was{margin-left:8px; font-size:12.5px; color:var(--muted); font-weight:400; letter-spacing:0}
 body.editing .when-end{display:inline; color:var(--muted); font-weight:400}
 .ev h2{font-size:16.5px; margin:1px 0 7px}
 .ev h2.meal{color:var(--meal)}
@@ -589,6 +591,48 @@ window.__nodeLink=(function(){
     return t ? {t:t, e:w.getAttribute('data-e')||null} : null;
   };
 
+  // 班機誤點時把節點的時刻往後挪：開始與結束一起挪，長度不變
+  // （例如抵達桃園後留給出關的那一小時，挪完還是一小時）。
+  // 表定時刻留在 data-t0／data-e0，每次都從它重算，所以反覆呼叫不會越挪越遠；
+  // min 傳 0 就是還原成表定。節點被重畫過要再呼叫一次（重畫會還原成表定時刻）。
+  // 註：誤點超過午夜（例如 23:30 挪到隔天 00:40）時刻會繞回來，但節點還是掛在原本那一天，
+  //     scan() 會把它算成當天的凌晨。要誤點五小時以上才會遇到，先不處理。
+  window.__tripShift=function(id, min){
+    var ev=document.querySelector('.tl .ev[data-id="'+id+'"]');
+    var w=ev && ev.querySelector('.when');
+    if(!w) return false;
+    if(!w.hasAttribute('data-t0')){
+      w.setAttribute('data-t0', w.getAttribute('data-t')||'');
+      if(w.getAttribute('data-e')) w.setAttribute('data-e0', w.getAttribute('data-e'));
+    }
+    var t0=w.getAttribute('data-t0'), e0=w.getAttribute('data-e0');
+    if(!t0) return false;
+    var t=addMin(t0, min), e=e0 ? addMin(e0, min) : null;
+    w.setAttribute('data-t', t);
+    if(e) w.setAttribute('data-e', e);
+    w.textContent='';
+    w.appendChild(document.createTextNode(noDetect(t)));
+    if(e){
+      var sp=document.createElement('span');
+      sp.className='when-end';
+      sp.textContent=' ~ '+noDetect(e);
+      w.appendChild(sp);
+    }
+    if(min){
+      var was=document.createElement('span');
+      was.className='when-was';
+      was.textContent='表定 '+noDetect(t0);
+      w.appendChild(was);
+    }
+    if(window.__tripTick) window.__tripTick(new Date());   // 目前行程、旅程結束都要跟著重算
+    return true;
+  };
+  function addMin(hm, min){
+    var p=String(hm).split(':'), v=(+p[0])*60+(+p[1])+(min||0);
+    v=((v%1440)+1440)%1440;
+    return String(Math.floor(v/60)).padStart(2,'0')+':'+String(v%60).padStart(2,'0');
+  }
+
   function render(){
     var tl=document.querySelector('.tl');
     tl.textContent='';
@@ -932,6 +976,27 @@ window.__nodeLink=(function(){
     if(td) addMorning(td);
   }
   window.__flightMorning=setMorning;   // 供測試模擬早班誤點用
+
+  // ── 誤點就把行程上的時刻往後挪 ──
+  // 四個航班節點各有自己的即時來源，誤點幾分鐘，節點的開始與結束就一起往後挪幾分鐘。
+  // 只挪誤點（提早不挪：機場 API 的實際時間在起飛前是預估值，會前後跳）。
+  var SHIFT={};        // {節點 id: 目前挪了幾分鐘}
+  function setShift(id, min){
+    min=(typeof min==='number' && min>0) ? Math.round(min) : 0;
+    if(SHIFT[id]===min) return;
+    SHIFT[id]=min;
+    if(window.__tripShift) window.__tripShift(id, min);
+  }
+  // 節點被重畫（雲端修改、解鎖私人行程）後時刻會還原成表定，把挪過的再套一次
+  function reshift(){
+    Object.keys(SHIFT).forEach(function(id){
+      if(SHIFT[id] && window.__tripShift) window.__tripShift(id, SHIFT[id]);
+    });
+  }
+  function shiftOn(p, id){
+    p.then(function(min){ setShift(id, min); }, function(){});
+  }
+  window.__flightShift=setShift;   // 供測試模擬誤點用
   function addMorning(td){
     var old=td.querySelector('.fl-morning');
     if(old) old.parentNode.removeChild(old);
@@ -978,12 +1043,15 @@ window.__nodeLink=(function(){
     var quiet=(t>DEP_DAY);
     var m802d=fetchFlight(t+'_D_JX802','fl-dep',true,quiet);
     var m802a=fetchNarita('arr',t+'-JX0802','fl-dep-nrt',true,quiet);
-    jobs.push(m802d, m802a);
+    var r803d=fetchNarita('dep',t+'-JX0803','fl-ret-nrt',false);
+    var r803a=fetchFlight(t+'_A_JX803','fl-ret',false);
+    jobs.push(m802d, m802a, r803d, r803a);
     if(!quiet) jobs.push(fetchSecurity(), fetchImm());   // 機場擁擠度只有去程那天用得上
     if(Promise.allSettled) Promise.allSettled([m802d, m802a]).then(function(r){
       setMorning(r[0].value, r[1].value);   // 查不到的那邊是 undefined，setMorning 當沒誤點
     });
-    jobs.push(fetchFlight(t+'_A_JX803','fl-ret',false), fetchNarita('dep',t+'-JX0803','fl-ret-nrt',false));
+    // 桃園起飛、成田落地、成田起飛、桃園落地：各自對應行程上的那一個節點
+    shiftOn(m802d,'n001'); shiftOn(m802a,'n003'); shiftOn(r803d,'n055'); shiftOn(r803a,'n056');
     Promise.allSettled ? Promise.allSettled(jobs).then(done) : Promise.all(jobs).then(done, fail);
     function done(rs){
       var fails = rs && rs.filter ? rs.filter(function(x){return x.status==='rejected';}).length : 0;
@@ -1010,6 +1078,7 @@ window.__nodeLink=(function(){
   if(flTl && window.MutationObserver)
     new MutationObserver(function(){
       applyCache(timer ? '上次更新 {t}' : '資料停留在 {t}（行程已結束，不再更新）');
+      reshift();
     })
       .observe(flTl, {childList:true});
 })();
