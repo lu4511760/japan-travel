@@ -103,7 +103,7 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
      下緣不要硬切一刀：漸層淡出，透出來的部分再模糊掉。 */
   position:sticky; top:59px; z-index:9;
   margin:22px -16px 0 -46px; padding:8px 16px 14px 46px; scroll-margin-top:58px;
-  background:linear-gradient(to bottom, var(--bg) 0, var(--bg) 20%, transparent 100%);
+  background:linear-gradient(to bottom, var(--bg) 0, var(--bg) 10%, transparent 100%);
   -webkit-backdrop-filter:blur(7px); backdrop-filter:blur(7px);
   font-size:36px; line-height:1.15; color:var(--day); font-weight:700;
   letter-spacing:.02em; font-variant-numeric:tabular-nums;
@@ -1958,12 +1958,15 @@ if('serviceWorker' in navigator){
     ticking=false;
     var i, h;
     for(i=0;i<heads.length;i++) heads[i].style.transform='';   // 先還原，量到的才是黏住的真實位置
-    for(i=0;i<heads.length-1;i++){
+    // 由後往前算：前一個要讓的位置得看後一個「推完之後」在哪，
+    // 不然連著兩個都在讓位時，前面那個會算少、間距被壓掉一截
+    for(i=heads.length-2;i>=0;i--){
       h=heads[i];
       if(!h.offsetParent) continue;                            // 行程結束的畫面整條時間軸是隱藏的
       var hr=h.getBoundingClientRect();
       if(hr.top>TOP+0.5) continue;                             // 還沒黏住，不用管
-      var over=(TOP+hr.height)-heads[i+1].getBoundingClientRect().top;
+      var nx=heads[i+1], gap=parseFloat(getComputedStyle(nx).marginTop)||0;
+      var over=(TOP+hr.height+gap)-nx.getBoundingClientRect().top;
       if(over>0) h.style.transform='translateY('+(-over)+'px)';
     }
   }
