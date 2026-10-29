@@ -125,10 +125,14 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
 }
 .day-head.collapsed .day-sub::after{content:"▸"}
 .day.collapsed > :not(.day-head){display:none !important}
-/* 時間軸的線要連著穿過標題，不然黏住時上下看起來是斷開的兩段 */
+/* 時間軸的線要連著穿過標題，不然黏住時上下看起來是斷開的兩段。
+   左右各留一段底色的邊：背後那條線會被 backdrop-filter 糊成一片，
+   從漸層透出來疊在這條清晰的線旁邊，線看起來就忽粗忽細。 */
 .day-head::after{
-  content:""; position:absolute; left:25px; top:0; bottom:0;
-  width:2px; background:var(--rail);
+  content:""; position:absolute; left:15px; top:0; bottom:0;
+  width:22px; box-sizing:border-box;
+  border-left:10px solid var(--bg); border-right:10px solid var(--bg);
+  background:var(--rail);
 }
 .day-head::before{
   content:""; position:absolute; left:20px; top:18px; z-index:1;   /* 壓在線上面 */
