@@ -100,11 +100,13 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
   /* 往下捲時黏在日期列底下，才知道現在看的是第幾天。
      用負 margin ＋ 等量 padding 把背景往左右撐滿（文字位置不變），
      否則節點圓點會從標題兩側穿過去（它們在 .tl 的 padding 裡）。
-     下緣不要硬切一刀：漸層淡出，透出來的部分再模糊掉。 */
+     下緣不要硬切一刀，用漸層淡出。
+     （本來還加了 backdrop-filter 把透出來的部分模糊掉，但那個模糊在手機上每一格都要重算，
+     捲動掉幀、標題被推的時候會抖，所以拿掉。） */
   position:sticky; top:59px; z-index:9;
   margin:22px -16px 0 -46px; padding:8px 16px 14px 46px; scroll-margin-top:58px;
-  background:linear-gradient(to bottom, var(--bg) 0, var(--bg) 10%, transparent 100%);
-  -webkit-backdrop-filter:blur(7px); backdrop-filter:blur(7px);
+  background:linear-gradient(to bottom, var(--bg) 0, var(--bg) 80%, transparent 100%);
+  will-change:transform;
   font-size:36px; line-height:1.15; color:var(--day); font-weight:700;
   letter-spacing:.02em; font-variant-numeric:tabular-nums;
 }
