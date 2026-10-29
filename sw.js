@@ -22,6 +22,7 @@ const PRECACHE = [
   'Manriki Spice Ramen Akihabara Menu ZH.webp',
   'iiyama-express2025.webp',
   'めし処 ぶたや Menu ZH.webp',
+  '仁王門屋 Menu ZH.webp',
   '姫豚丼＆カレー 姫軒 Menu ZH.webp',
   '拉麵 潮 Menu ZH.webp',
   '日本退稅新制.webp',
