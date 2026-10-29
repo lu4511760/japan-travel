@@ -20,6 +20,7 @@ const PRECACHE = [
   'apple-touch-icon.png',
   'Madarao Map & Guide.webp',
   'Manriki Spice Ramen Akihabara Menu ZH.webp',
+  'ZIGZAG Menu.webp',
   'iiyama-express2025.webp',
   'めし処 ぶたや Menu ZH.webp',
   '仁王門屋 Menu ZH.webp',
