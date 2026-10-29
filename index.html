@@ -103,7 +103,7 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
      下緣不要硬切一刀：漸層淡出，透出來的部分再模糊掉。 */
   position:sticky; top:59px; z-index:9;
   margin:22px -16px 0 -46px; padding:8px 16px 22px 46px; scroll-margin-top:58px;
-  background:linear-gradient(to bottom, var(--bg) 0, var(--bg) 62%, transparent 100%);
+  background:linear-gradient(to bottom, var(--bg) 0, var(--bg) 50%, transparent 100%);
   -webkit-backdrop-filter:blur(7px); backdrop-filter:blur(7px);
   font-size:36px; line-height:1.15; color:var(--day); font-weight:700;
   letter-spacing:.02em; font-variant-numeric:tabular-nums;
@@ -1916,12 +1916,23 @@ if('serviceWorker' in navigator){
 
 // 日期列：用程式捲動，網址就不會留下 #d0116 這種後綴
 (function(){
+  // 每日標題是 sticky 的。往回點一個已經捲過去的日期時，那個標題正黏在畫面頂端，
+  // scrollIntoView 會認為它「已經在視窗裡而且貼著上緣」，於是幾乎不捲——看起來就是點了沒反應。
+  // （offsetTop 也一樣，sticky 的位移會算進去。）捲之前先把它拆成一般元素，
+  // 讓瀏覽器看到它在文件流裡的真實位置，算完目標再還原，中間不會重繪。
+  window.__tripScrollToDay=function(el){
+    var p=el.style.position;
+    el.style.transform='';          // 可能正被下一天往上推，那個位移也要先拿掉（捲完會自己重算）
+    el.style.position='static';
+    el.scrollIntoView({behavior:'smooth', block:'start'});
+    el.style.position=p;
+  };
   document.addEventListener('click', function(e){
     var a = e.target.closest && e.target.closest('#daynav a[href^="#"]');
     if(!a) return;
     e.preventDefault();
     var t = document.querySelector(a.getAttribute('href'));
-    if(t) t.scrollIntoView({behavior:'smooth', block:'start'});
+    if(t) window.__tripScrollToDay(t);
   });
   // 有人用帶錨點的舊網址進來（或網址被外部改成 #d0116）：
   // 讓瀏覽器自己捲過去之後，把網址清乾淨
@@ -1931,6 +1942,36 @@ if('serviceWorker' in navigator){
   }
   setTimeout(cleanDayHash, 300);
   window.addEventListener('hashchange', function(){ setTimeout(cleanDayHash, 300); });
+})();
+
+// 黏住的每日標題被下一天頂到時要讓位，不然兩個會疊在一起，上面那個只剩半截
+(function(){
+  var TOP=59;                      // 跟 CSS 的 .day-head{top:59px} 對齊
+  var heads=[];
+  function refresh(){ heads=[].slice.call(document.querySelectorAll('.tl > .day-head')); }
+  refresh();
+  var tl=document.querySelector('.tl');
+  if(tl && window.MutationObserver) new MutationObserver(refresh).observe(tl, {childList:true});
+
+  var ticking=false;
+  function run(){
+    ticking=false;
+    var i, h;
+    for(i=0;i<heads.length;i++) heads[i].style.transform='';   // 先還原，量到的才是黏住的真實位置
+    for(i=0;i<heads.length-1;i++){
+      h=heads[i];
+      if(!h.offsetParent) continue;                            // 行程結束的畫面整條時間軸是隱藏的
+      var hr=h.getBoundingClientRect();
+      if(hr.top>TOP+0.5) continue;                             // 還沒黏住，不用管
+      var over=(TOP+hr.height)-heads[i+1].getBoundingClientRect().top;
+      if(over>0) h.style.transform='translateY('+(-over)+'px)';
+    }
+  }
+  function onScroll(){ if(!ticking){ ticking=true; requestAnimationFrame(run); } }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
+  document.addEventListener('click', onScroll);                // 收合、展開之後高度會變
+  onScroll();
 })();
 
 // 旅途當天自動標示今天的日期，並捲動到當日行程
@@ -1949,7 +1990,10 @@ if('serviceWorker' in navigator){
     setTimeout(toFront, 400);   // 字型載入後位置可能位移，再校一次
     var target=document.querySelector(link.getAttribute('href'));
     if(target && !window.__nodeLink)
-      setTimeout(function(){ target.scrollIntoView({behavior:'smooth',block:'start'}); },300);
+      setTimeout(function(){
+        if(window.__tripScrollToDay) window.__tripScrollToDay(target);
+        else target.scrollIntoView({behavior:'smooth',block:'start'});
+      },300);
   }
 })();
 </script>
