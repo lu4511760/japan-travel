@@ -1951,30 +1951,55 @@ if('serviceWorker' in navigator){
   function refresh(){ heads=[].slice.call(document.querySelectorAll('.tl > .day-head')); }
   refresh();
   var tl=document.querySelector('.tl');
-  if(tl && window.MutationObserver) new MutationObserver(refresh).observe(tl, {childList:true});
+  if(tl && window.MutationObserver)
+    new MutationObserver(function(){ refresh(); measure(); }).observe(tl, {childList:true});
+
+  // 位置先量好存起來，捲動時只做算術。
+  // 之前是每一格都「清掉 transform → 重新量 → 再設回去」，那等於每格強迫重排一次，
+  // 量到的值又帶小數，標題被推的時候會抖。
+  var box=[];                      // 每個標題在文件裡的位置、高度，以及它自己的上間距
+  function measure(){
+    box=heads.map(function(h){
+      var t=h.style.transform, p=h.style.position;
+      h.style.transform=''; h.style.position='static';         // 先拆掉 sticky 才量得到文件流位置
+      var r=h.getBoundingClientRect();
+      var o={top:Math.round(r.top+window.pageYOffset), h:Math.round(r.height),
+             gap:Math.round(parseFloat(getComputedStyle(h).marginTop)||0),
+             on:r.height>0};
+      h.style.position=p; h.style.transform=t;
+      return o;
+    });
+    run();
+  }
 
   var ticking=false;
   function run(){
     ticking=false;
-    var i, h;
-    for(i=0;i<heads.length;i++) heads[i].style.transform='';   // 先還原，量到的才是黏住的真實位置
-    // 由後往前算：前一個要讓的位置得看後一個「推完之後」在哪，
-    // 不然連著兩個都在讓位時，前面那個會算少、間距被壓掉一截
-    for(i=heads.length-2;i>=0;i--){
-      h=heads[i];
-      if(!h.offsetParent) continue;                            // 行程結束的畫面整條時間軸是隱藏的
-      var hr=h.getBoundingClientRect();
-      if(hr.top>TOP+0.5) continue;                             // 還沒黏住，不用管
-      var nx=heads[i+1], gap=parseFloat(getComputedStyle(nx).marginTop)||0;
-      var over=(TOP+hr.height+gap)-nx.getBoundingClientRect().top;
-      if(over>0) h.style.transform='translateY('+(-over)+'px)';
+    if(!box.length) return;
+    var y=window.pageYOffset, i, want=[];
+    // 由後往前：前一個能待的位置，取決於後一個「被推完之後」在哪
+    for(i=heads.length-1;i>=0;i--){
+      var b=box[i];
+      if(!b || !b.on){ want[i]=1e9; continue; }
+      var natural=Math.max(TOP, b.top-y);                      // CSS sticky 算出來的位置
+      var stuck=natural, nb=box[i+1];
+      // 只有「正黏在頂端」的那個需要讓位；還在自己位置上的不要碰，
+      // 不然量到的 1px 誤差會讓它們跟著微微位移，看起來就是在抖
+      if(natural<=TOP+0.5 && nb && nb.on && want[i+1]<1e9){
+        var limit=want[i+1]-nb.gap-b.h;                        // 被下一個頂到的上限
+        if(limit<stuck) stuck=limit;
+      }
+      want[i]=stuck;
+      var shift=Math.round(stuck-natural);                     // 0 或負數；取整數，免得半個像素在抖
+      heads[i].style.transform = shift<0 ? 'translateY('+shift+'px)' : '';
     }
   }
   function onScroll(){ if(!ticking){ ticking=true; requestAnimationFrame(run); } }
   window.addEventListener('scroll', onScroll, {passive:true});
-  window.addEventListener('resize', onScroll);
-  document.addEventListener('click', onScroll);                // 收合、展開之後高度會變
-  onScroll();
+  window.addEventListener('resize', measure);
+  document.addEventListener('click', function(){ setTimeout(measure, 0); });   // 收合、展開之後高度會變
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+  measure();
 })();
 
 // 旅途當天自動標示今天的日期，並捲動到當日行程
