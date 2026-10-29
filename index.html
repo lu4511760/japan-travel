@@ -276,6 +276,8 @@ body.ended .ed-fab{display:none !important}
 .fl-table td:first-child{color:var(--muted); width:7em; font-size:13px}
 .fl-table td[data-f]{font-weight:600; font-variant-numeric:tabular-nums}
 .fl-table td.fl-hot{color:var(--accent)}
+/* 早班機誤點的提醒，接在回程「實際起飛」後面 */
+.fl-table .fl-morning{margin-left:6px; font-size:12.5px; font-weight:500; color:var(--muted)}
 
 /* ── 雪場直播影像（響應式 16:9） ── */
 .live-cam{width:100%; aspect-ratio:16/9; border:0; border-radius:8px; margin-top:2px; background:#000}
@@ -769,6 +771,7 @@ window.__nodeLink=(function(){
     td.classList.toggle('fl-hot', !!hot && !!val && String(val).trim()!=='' && val!=='-');
     if(window.__tripNoDetectIn) window.__tripNoDetectIn(td);
     remember(td, tbl, key);
+    if(tbl==='fl-ret-nrt' && key==='rtime') addMorning(td);   // 這格被重寫就把早班誤點接回去
   }
 
   // 多行顯示（每個查驗處/安檢站一行），用 DOM 組避免字串injection
@@ -787,7 +790,10 @@ window.__nodeLink=(function(){
     remember(td, tbl, key);
   }
 
-  function fetchFlight(id, tbl, isDep){
+  // quiet=true 時只取值、不碰畫面（1/16 過後的 JX802 就是這樣查的）
+  // 回傳值是這班的誤點分鐘數（實際 - 表定），取不到時回 null
+  function fetchFlight(id, tbl, isDep, quiet){
+    var put=quiet ? function(){} : setCell;
     return fetch(API,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -795,19 +801,20 @@ window.__nodeLink=(function(){
     }).then(function(r){return r.json();}).then(function(j){
       var f=j.a_flight||{};
       // 機場 API 僅提供近日航班，太早查會回「查無此航班」
-      if(!j.a_flight && j.statusCode){ setCell(tbl,'st','尚無資料（接近當天才會公布）'); return; }
+      if(!j.a_flight && j.statusCode){ put(tbl,'st','尚無資料（接近當天才會公布）'); return null; }
       // 狀態可能在 CurrentStatus 或 Memo（例如「取消」在 Memo），兩者都有就合併顯示
       var st=[(f.CurrentStatus||'').trim(), (f.Memo||'').trim()].filter(Boolean).join('・');
-      setCell(tbl,'st', st, true);
-      setCell(tbl,'gate', f.Gate, true);
-      setCell(tbl,'otime', f.OTime ? f.OTime.slice(0,5) : '');
-      setCell(tbl,'rtime', f.RTime ? f.RTime.slice(0,5) : '', true);
+      put(tbl,'st', st, true);
+      put(tbl,'gate', f.Gate, true);
+      put(tbl,'otime', f.OTime ? f.OTime.slice(0,5) : '');
+      put(tbl,'rtime', f.RTime ? f.RTime.slice(0,5) : '', true);
       if(isDep){
-        setCell(tbl,'checkin', f.CheckIn ? f.CheckIn+' 號櫃台' : '', true);
+        put(tbl,'checkin', f.CheckIn ? f.CheckIn+' 號櫃台' : '', true);
       }else{
         // 抵達航班的行李轉盤，桃園 API 放在 StopCode 欄位
-        setCell(tbl,'belt', f.StopCode, true);
+        put(tbl,'belt', f.StopCode, true);
       }
+      return late(f.OTime, f.RTime);
     });
   }
 
@@ -841,22 +848,26 @@ window.__nodeLink=(function(){
     remember(td, tbl, key);
   }
 
-  function fetchNarita(type, id, tbl, isArr){
-    if(!NARITA_PROXY){ setCell(tbl,'st','（成田代理未設定）'); return Promise.resolve(); }
+  // quiet 同 fetchFlight；回傳值是誤點分鐘數（異動後 - 表定），沒異動就是 0
+  function fetchNarita(type, id, tbl, isArr, quiet){
+    var put=quiet ? function(){} : setCell;
+    var putPoi=quiet ? function(){} : setCellPoi;
+    var putLines=quiet ? function(){} : setCellLines;
+    if(!NARITA_PROXY){ put(tbl,'st','（成田代理未設定）'); return Promise.resolve(null); }
     return fetch(NARITA_PROXY+'?type='+type+'&id='+id)
       .then(function(r){return r.json();}).then(function(j){
         var f=j.flight;
-        if(!f){ setCell(tbl,'st','尚無資料（接近當天才會公布）'); return; }
-        setCell(tbl,'st', f.status && f.status.status, true);
-        setCell(tbl,'otime', f.scheduledTime, false);
+        if(!f){ put(tbl,'st','尚無資料（接近當天才會公布）'); return null; }
+        put(tbl,'st', f.status && f.status.status, true);
+        put(tbl,'otime', f.scheduledTime, false);
         // 成田有異動時會給 changeScheduledTime（官網上表定時間會被劃掉，顯示這個）；
         // 沒有異動就照表定時間顯示，一律用橘色（跟桃園的實際時間一致）
-        setCell(tbl,'rtime', f.changeScheduledTime || f.scheduledTime, true);
-        setCellPoi(tbl,'gate', f.gates, true);
+        put(tbl,'rtime', f.changeScheduledTime || f.scheduledTime, true);
+        putPoi(tbl,'gate', f.gates, true);
         if(!isArr){
           var ci=f.checkInCounterOrArrivalLobby||{};
           var cnt=(ci.changeNameOfCheckInOrArrival && ci.changeNameOfCheckInOrArrival.length) ? ci.changeNameOfCheckInOrArrival : ci.nameOfCheckInOrArrival;
-          setCellPoi(tbl,'checkin', cnt, true);
+          putPoi(tbl,'checkin', cnt, true);
         }
         // 出發安檢擁擠度（入境審查改用專頁 API，見 fetchImm）：每個安檢站一行，關閉中也照實顯示
         if(!isArr){
@@ -866,8 +877,9 @@ window.__nodeLink=(function(){
             var nm=(s.locationName||'').replace('國際航班','').replace(/\s+/g,' ').trim();
             return c ? nm+'：'+c : null;
           });
-          setCellLines(tbl,'sec', secLines, /40|60/.test(secLines.join('')));
+          putLines(tbl,'sec', secLines, /40|60/.test(secLines.join('')));
         }
+        return late(f.scheduledTime, f.changeScheduledTime || f.scheduledTime);
       });
   }
 
@@ -890,6 +902,47 @@ window.__nodeLink=(function(){
       var s=j.hits.hits[0]._source;
       setCell('fl-dep','security', '約 '+s.averageSecurityWaitTime+' 分鐘', s.averageSecurityWaitTime>=15);
     });
+  }
+
+  // ── 早班機誤點 ──
+  // JX802（早上桃園→成田）跟 JX803（傍晚成田→桃園）是同一架飛機，飛來再飛回去，
+  // 早上晚到，晚上通常就跟著晚飛。所以整趟都照常查 JX802（1/16 過後只是不畫到畫面上），
+  // 把誤點接在回程成田「實際起飛」那一格後面，先有個心理準備。
+  var MORNING=null;        // {min:33, kind:'出發'} 或 null（沒誤點／不到門檻）
+  var MORNING_MIN=10;      // 差這麼多分鐘以內不用提
+  // 「HH:MM」或「HH:MM:SS」差幾分鐘；跨午夜（表定 23:50 實際 00:10）折回來算
+  function late(sched, real){
+    var a=mins(sched), b=mins(real);
+    if(a===null || b===null) return null;
+    var d=b-a;
+    if(d>720) d-=1440; else if(d<-720) d+=1440;
+    return d;
+  }
+  function mins(t){
+    var m=/^(\d{1,2}):(\d{2})/.exec(String(t||''));
+    return m ? (+m[1])*60+(+m[2]) : null;
+  }
+  // 起飛慢與抵達慢取大的那個，不管 JX803 自己有沒有慢都顯示
+  function setMorning(dep, arr){
+    var d=(typeof dep==='number') ? dep : -1;
+    var a=(typeof arr==='number') ? arr : -1;
+    var best=(d>=a) ? {min:d, kind:'出發'} : {min:a, kind:'抵達'};
+    MORNING=(best.min>=MORNING_MIN) ? best : null;
+    var td=document.querySelector('#fl-ret-nrt td[data-f="rtime"]');
+    if(td) addMorning(td);
+  }
+  window.__flightMorning=setMorning;   // 供測試模擬早班誤點用
+  function addMorning(td){
+    var old=td.querySelector('.fl-morning');
+    if(old) old.parentNode.removeChild(old);
+    if(MORNING){
+      var sp=document.createElement('span');
+      sp.className='fl-morning';
+      sp.textContent='早上飛機晚'+MORNING.min+'分鐘'+MORNING.kind;
+      td.appendChild(sp);
+      if(window.__tripNoDetectIn) window.__tripNoDetectIn(td);
+    }
+    remember(td, 'fl-ret-nrt', 'rtime');   // 連提醒一起存進快取
   }
 
   function setUpdated(text, isErr){
@@ -919,10 +972,15 @@ window.__nodeLink=(function(){
     var td=t.slice(0,4)+'-'+t.slice(4,6)+'-'+t.slice(6,8);
     var lm=document.getElementById('limousine-link'); if(lm) lm.href='https://www.limousinebus.co.jp/zh-tw/timetable/detail/Narita-Ikebukuro/?dir=2&d='+td;
     var jobs=[];
-    if(t<=DEP_DAY){   // 去程（桃園出發 + 成田抵達）
-      jobs.push(fetchFlight(t+'_D_JX802','fl-dep',true), fetchSecurity(),
-                fetchNarita('arr',t+'-JX0802','fl-dep-nrt',true), fetchImm());
-    }
+    // 早班 JX802 整趟都查：1/16 當天畫到去程那兩張表，之後只是拿來算誤點（quiet）
+    var quiet=(t>DEP_DAY);
+    var m802d=fetchFlight(t+'_D_JX802','fl-dep',true,quiet);
+    var m802a=fetchNarita('arr',t+'-JX0802','fl-dep-nrt',true,quiet);
+    jobs.push(m802d, m802a);
+    if(!quiet) jobs.push(fetchSecurity(), fetchImm());   // 機場擁擠度只有去程那天用得上
+    if(Promise.allSettled) Promise.allSettled([m802d, m802a]).then(function(r){
+      setMorning(r[0].value, r[1].value);   // 查不到的那邊是 undefined，setMorning 當沒誤點
+    });
     jobs.push(fetchFlight(t+'_A_JX803','fl-ret',false), fetchNarita('dep',t+'-JX0803','fl-ret-nrt',false));
     Promise.allSettled ? Promise.allSettled(jobs).then(done) : Promise.all(jobs).then(done, fail);
     function done(rs){
