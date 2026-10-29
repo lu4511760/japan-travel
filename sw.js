@@ -24,12 +24,12 @@ const PRECACHE = [
   'めし処 ぶたや Menu ZH.webp',
   '姫豚丼＆カレー 姫軒 Menu ZH.webp',
   '拉麵 潮 Menu ZH.webp',
+  '日本退稅新制.webp',
   '東池袋大勝軒 本店 Menu ZH.webp',
   '焼肉力丸 池袋東口店 Menu ZH.webp',
   '狐狸屋牛丼 Menu ZH.webp',
   '若葉拉麵 Menu ZH.webp',
   '蔵仕込みらーめん KURA Menu ZH.webp',
-  '退稅步驟.webp',
   '麦さと屋 Menu ZH.webp',
   '麵屋海神 Menu ZH.webp',
   '黑銀鮪屋 Menu ZH.webp'
