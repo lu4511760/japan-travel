@@ -67,6 +67,11 @@ nav a{
   font-variant-numeric:tabular-nums; line-height:1.28;
 }
 nav a .dn{display:block; font-size:11px; letter-spacing:.4px; opacity:.8}
+/* 財務紀錄沒有「Day N」那種副標，兩行都是一樣的字；行高縮一點，高度才跟其他日期一致 */
+#fin-nav{line-height:1.14}
+/* nav a 是 inline-block，會蓋掉 hidden 本身的 display:none，要自己補一條 */
+#fin-nav[hidden], #fin-sec[hidden]{display:none}
+#fin-nav .dn{font-size:14px; letter-spacing:.02em; opacity:1}
 nav a.today{color:#fff; background:var(--accent); border-color:var(--accent); font-weight:700}
 nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
 
@@ -421,12 +426,14 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
   display:flex; align-items:center; gap:10px; margin-top:3px;
   font-size:15px; font-weight:400; letter-spacing:.04em; color:var(--muted);
 }
-/* 副標右邊的開關：勾起來就把名字換成平常互相叫的稱呼 */
-.fin-alias{
+/* 副標右邊的開關：勾起來這一段才會公開給大家看（連上面的快選一起）。
+   自己（解鎖的裝置）不管有沒有勾都看得到，開關本身只有編輯模式才出現。 */
+.fin-show{
   margin-left:auto; display:flex; align-items:center; gap:4px;
   font-size:13px; letter-spacing:0; white-space:nowrap; cursor:pointer;
 }
-.fin-alias input{width:16px; height:16px; margin:0; accent-color:var(--fin)}
+.fin-show input{width:16px; height:16px; margin:0; accent-color:var(--fin)}
+body:not(.editing) .fin-show{display:none}
 .fin-head::after{content:""; position:absolute; left:25px; top:0; bottom:0; width:2px; background:var(--rail)}
 /* 方塊的位置跟每日標題那顆算法相同：對齊文字的視覺中心 */
 .fin-head::before{
@@ -574,7 +581,7 @@ body:not(.editing) .fin-settle, body:not(.editing) .fin-add{display:none}
 
   <!-- ── 財務紀錄：時間軸的最後一段（開頁後由 JS 接到 .tl 裡面） ── -->
   <section class="fin-sec" id="fin-sec" data-id="fin-sec">
-    <div class="fin-head" id="fin">財務紀錄<span class="fin-sub">親兄弟，明算帳，一塊錢，傷感情<label class="fin-alias"><input type="checkbox" id="fin-alias">暱稱</label></span></div>
+    <div class="fin-head" id="fin">財務紀錄<span class="fin-sub">親兄弟，明算帳，一塊錢，傷感情<label class="fin-show" title="勾起來才會公開給大家看"><input type="checkbox" id="fin-show">顯示</label></span></div>
     <div class="fin-card" id="fin-card"></div>
   </section>
 
@@ -1777,17 +1784,31 @@ window.__nodeLink=(function(){
   async function keepView(fn){
     // 財務紀錄不是行程節點（沒有 .ev），但人可能正在看它，所以一起列入定位的候選，
     // 否則在那裡按編輯會找不到基準點，畫面整個彈回最上面
-    var els=document.querySelectorAll('.tl .ev, .tl .fin-sec'), key=null, top=0;
+    var els=document.querySelectorAll('.tl .ev, .tl .fin-sec'), key=null, rel=0;
     for(var i=0;i<els.length;i++){
       var r=els[i].getBoundingClientRect();
       if(r.bottom<=0 || !els[i].dataset.id) continue;
-      if(key===null){ key=els[i].dataset.id; top=r.top; }
-      if(r.top>=0){ key=els[i].dataset.id; top=r.top; break; }
+      if(key===null){ key=els[i].dataset.id; rel=r.top; }
+      if(r.top>=0){ key=els[i].dataset.id; rel=r.top; break; }
     }
     await fn();
     if(!key) return;
-    var back=document.querySelector('.tl [data-id="'+key+'"]');
-    if(back) window.scrollBy({top:Math.round(back.getBoundingClientRect().top-top), behavior:'instant'});
+    // 一次就定位不一定夠：Safari 在手機上常常是版面還沒重算完就先捲，捲完才發現高度變了，
+    // 畫面因此彈到別的地方（最常見是整個跳回最上面）。所以改成算絕對位置，
+    // 並在下一幀與一小段時間後各校一次；期間把整頁的平滑捲動關掉，不然三次校正會互相打架。
+    var html=document.documentElement, saved=html.style.scrollBehavior;
+    html.style.scrollBehavior='auto';
+    function fix(){
+      var back=document.querySelector('.tl [data-id="'+key+'"]');
+      if(!back) return;
+      var y=Math.max(0, Math.round(window.scrollY + back.getBoundingClientRect().top - rel));
+      if(Math.abs(y-window.scrollY)>1) window.scrollTo(0, y);
+    }
+    fix();
+    requestAnimationFrame(function(){
+      fix();
+      setTimeout(function(){ fix(); html.style.scrollBehavior=saved; }, 150);
+    });
   }
 
   async function flush(){
@@ -2260,17 +2281,34 @@ if('serviceWorker' in navigator){
             '建中|佑瑾':{jpy:2400, twd:0}, '佑瑾|子軒':{jpy:0, twd:-1200}};
 
   var S=window.__trip;
+  // 時間軸每次重畫都會清空 .tl（textContent=''），裡面的東西連同財務紀錄一起被拔掉，
+  // 拔掉後就用 id 找不到了，所以開頁時先把那個區塊記下來，重畫完再接回最後面。
+  var SEC=document.getElementById('fin-sec');
   function data(){
     if(!S.pub) S.pub={edits:{}, added:[], removed:[]};
     if(!S.pub.fin) S.pub.fin=JSON.parse(JSON.stringify(DEMO));
     return S.pub.fin;
   }
 
-  // ── 要用本名還是稱呼：記在這台裝置 ──
-  var ALIAS_KEY='japan2027-fin-alias';
-  var aliasBox=document.getElementById('fin-alias');
-  try{ if(aliasBox) aliasBox.checked = localStorage.getItem(ALIAS_KEY)==='1'; }catch(e){}
-  function nm(p){ return (aliasBox && aliasBox.checked) ? (ALIAS[p]||p) : p; }
+  // 畫面一律顯示平常互相叫的稱呼；資料仍以本名當鍵，不受影響
+  function nm(p){ return ALIAS[p]||p; }
+
+  // ── 這一段要不要公開：勾了大家才看得到，自己解鎖的裝置一定看得到 ──
+  // 旗標放在 pub 底下跟著行程修改一起存雲端，後端不用改。
+  var showBox=document.getElementById('fin-show');
+  function applyShow(){
+    var on=!!(S.pub && S.pub.finShow), mine=!!S.unlocked;
+    if(showBox) showBox.checked=on;
+    if(SEC) SEC.hidden=!(on||mine);
+    var nav=document.getElementById('fin-nav');
+    if(nav) nav.hidden=!(on||mine);
+  }
+  if(showBox) showBox.addEventListener('change', function(){
+    if(!S.pub) S.pub={edits:{}, added:[], removed:[]};
+    S.pub.finShow=showBox.checked;
+    applyShow();
+    flush();
+  });
 
   // 一對人共用一筆紀錄，鍵一律照 PEOPLE 的順序排，才不會同一對存成兩筆
   function keyOf(a, b){
@@ -2315,11 +2353,8 @@ if('serviceWorker' in navigator){
       +PEOPLE.map(pane).join('')
       +'<div class="fin-add"><button type="button" id="fin-new">＋ 新增</button></div>';
     if(window.__tripOptsApply) window.__tripOptsApply();     // 把上次選到的人套回去
+    applyShow();
   }
-  if(aliasBox) aliasBox.addEventListener('change', function(){
-    try{ localStorage.setItem(ALIAS_KEY, aliasBox.checked?'1':'0'); }catch(e){}
-    draw();
-  });
 
   function toast(msg){
     var t=document.createElement('div');
@@ -2441,9 +2476,6 @@ if('serviceWorker' in navigator){
     if(e.target.id==='fin-new') openAdd();
   });
 
-  // 時間軸每次重畫都會清空 .tl（textContent=''），裡面的東西連同財務紀錄一起被拔掉，
-  // 拔掉後就用 id 找不到了，所以開頁時先把那個區塊記下來，重畫完再接回最後面。
-  var SEC=document.getElementById('fin-sec');
   function mount(){
     var tl=document.querySelector('.tl');
     if(tl && SEC && SEC.parentNode!==tl) tl.appendChild(SEC);
