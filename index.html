@@ -658,7 +658,9 @@ window.__nodeLink=(function(){
     }
     ev.innerHTML=h;
     noDetectIn(ev);            // 連標題裡的「10:10 起飛」也要擋掉 iOS 的偵測
-    ev.dataset.id=it.id;
+    // 沒有 id 就不要設：硬塞會變成 data-id="undefined"，
+    // 之後任何「用 data-id 找回這個節點」的程式都會找到別人（最早的那個）
+    if(it.id) ev.dataset.id=it.id; else ev.removeAttribute('data-id');
     if(it.nodeId) ev.id=it.nodeId;
   }
   window.__tripFill=fill;
@@ -1604,7 +1606,11 @@ window.__nodeLink=(function(){
       else window.__tripFill(el, merged);
     });
     (pub.added||[]).forEach(function(it){ insertItem(it, false); });
-    S.priv.forEach(function(it){ insertItem(it, true); });
+    // private.enc 裡的節點沒有 id 欄位，依序補一個固定的，同一份資料每次都一樣
+    S.priv.forEach(function(it, k){
+      if(!it.id) it.id='priv'+(k+1);
+      insertItem(it, true);
+    });
     if(window.__tripTick) window.__tripTick(new Date());
   }
   window.__tripRepaint=repaint;
@@ -1809,9 +1815,10 @@ window.__nodeLink=(function(){
     var els=document.querySelectorAll('.tl .ev, .tl .fin-sec'), key=null, rel=0;
     for(var i=0;i<els.length;i++){
       var r=els[i].getBoundingClientRect();
-      if(r.bottom<=0 || !els[i].dataset.id) continue;
-      if(key===null){ key=els[i].dataset.id; rel=r.top; }
-      if(r.top>=0){ key=els[i].dataset.id; rel=r.top; break; }
+      var id=els[i].dataset.id;
+      if(r.bottom<=0 || !id || id==='undefined') continue;    // 舊資料可能留著 data-id="undefined"
+      if(key===null){ key=id; rel=r.top; }
+      if(r.top>=0){ key=id; rel=r.top; break; }
     }
     await fn();
     if(!key){ html.style.scrollBehavior=saved0; return; }
