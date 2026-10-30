@@ -1315,9 +1315,10 @@ window.__nodeLink=(function(){
   // reveal=true 才會把收合起來的那天展開（手動按「目前行程」或用節點連結進來時）；
   // 自動置中不展開，否則使用者刻意收起來的天會被打開
   function centerCurrent(now, reveal){
-    // 編輯模式下一律不自動捲：人正在改東西，畫面自己跑掉最惱人。
+    // 編輯模式下、以及剛切換完的幾秒內，一律不自動捲：人正在改東西，畫面自己跑掉最惱人。
     // （行程還沒開始時這支會捲到第一個節點並置中，位置就在整頁最上面。）
-    if(document.body.classList.contains('editing')){
+    // 用時間鎖是因為光看 editing 擋不住「按下去前 0.2 秒就排好的那一次」。
+    if(document.body.classList.contains('editing') || Date.now() < (window.__tripHoldCenter||0)){
       window.__tripCenterBlocked=(window.__tripCenterBlocked||0)+1;
       return null;
     }
@@ -1705,6 +1706,9 @@ window.__nodeLink=(function(){
 // 編輯介面：只有解鎖後才會出現（由上面的 __tripEditUI 觸發）
 (function(){
   var S=window.__trip, editing=false, fab=null, bar=null;
+  // 記下最後一次捲動的時間：用來判斷按下按鈕的當下，畫面是不是還在被平滑捲動
+  var lastScrollAt=0;
+  window.addEventListener('scroll', function(){ lastScrollAt=Date.now(); }, {passive:true});
   var BLANK=String.fromCharCode(10,10);          // 多段內容的分隔（空白行）
   var SPLIT=new RegExp(String.fromCharCode(10)+String.fromCharCode(92)+'s*'+String.fromCharCode(10));
 
@@ -1793,6 +1797,15 @@ window.__nodeLink=(function(){
   async function keepView(fn){
     // 財務紀錄不是行程節點（沒有 .ev），但人可能正在看它，所以一起列入定位的候選，
     // 否則在那裡按編輯會找不到基準點，畫面整個彈回最上面
+    // 畫面可能正在被某支程式平滑捲動（例如自動置中排在按下按鈕前一瞬間）。
+    // 平滑捲動不會因為我們改 scroll-behavior 就停下來，得再下一次捲動指令才取代得掉；
+    // 不先停住它，等一下量到的位置就是「正在移動中」的位置，定位當然不準。
+    var html=document.documentElement, saved0=html.style.scrollBehavior;
+    html.style.scrollBehavior='auto';
+    window.scrollTo(0, window.scrollY);
+    window.__tripHoldCenter=Date.now()+3000;       // 這幾秒內不准自動置中
+    var moving=(Date.now()-lastScrollAt)<150;      // 剛剛還在捲＝進來時畫面正在被平滑捲動
+
     var els=document.querySelectorAll('.tl .ev, .tl .fin-sec'), key=null, rel=0;
     for(var i=0;i<els.length;i++){
       var r=els[i].getBoundingClientRect();
@@ -1801,12 +1814,11 @@ window.__nodeLink=(function(){
       if(r.top>=0){ key=els[i].dataset.id; rel=r.top; break; }
     }
     await fn();
-    if(!key) return;
+    if(!key){ html.style.scrollBehavior=saved0; return; }
     // 一次就定位不一定夠：Safari 在手機上常常是版面還沒重算完就先捲，捲完才發現高度變了，
     // 畫面因此彈到別的地方（最常見是整個跳回最上面）。所以改成算絕對位置，
-    // 並在下一幀與一小段時間後各校一次；期間把整頁的平滑捲動關掉，不然三次校正會互相打架。
-    var html=document.documentElement, saved=html.style.scrollBehavior;
-    html.style.scrollBehavior='auto';
+    // 並在之後幾個時間點各校一次；期間把整頁的平滑捲動關掉，不然幾次校正會互相打架。
+    var saved=saved0;
     function fix(){
       var back=document.querySelector('.tl [data-id="'+key+'"]');
       if(!back) return;
@@ -1819,26 +1831,33 @@ window.__nodeLink=(function(){
     setTimeout(fix, 0);
     setTimeout(function(){ fix(); html.style.scrollBehavior=saved; guard(); }, 150);
 
-    // 定位之後還有東西把畫面捲走（手機上遇過整頁彈回最上面），1.5 秒內逮到就拉回來。
-    // 只管大跳躍，使用者自己小幅捲動不干涉。
+    // 定位之後還有東西把畫面捲走（手機上遇過整頁彈回最上面），3 秒內逮到就拉回來。
+    // 使用者只要自己碰了畫面就立刻收手，免得跟人搶捲動。
     function guard(){
-      var t0=Date.now();
+      var t0=Date.now(), off0=null, done=false;
+      function release(){ done=true; }
+      ['touchstart','wheel','keydown','pointerdown'].forEach(function(ev){
+        window.addEventListener(ev, release, {once:true, passive:true});
+      });
       var id=setInterval(function(){
         var b=document.querySelector('.tl [data-id="'+key+'"]');
-        if(!b || Date.now()-t0>1500){ clearInterval(id); return; }
+        if(done || !b || Date.now()-t0>3000){ clearInterval(id); if(off0===null) note(lastNote); return; }
         var off=b.getBoundingClientRect().top-rel;
-        if(Math.abs(off)>400){
+        if(Math.abs(off)>150){
           window.scrollTo(0, Math.max(0, Math.round(window.scrollY+off)));
-          note('守衛拉回 '+Math.round(off));
-          clearInterval(id);
+          if(off0===null) off0=off;
+          note('守衛拉回 '+Math.round(off0)+(Math.abs(off)>150?'(+)':''));
         }
-      }, 100);
+      }, 80);
     }
-    note('key='+key+' rel='+Math.round(rel)+' y '+Math.round(y0)+'→'+Math.round(window.scrollY));
+    note('key='+key+' rel='+Math.round(rel)+' y '+Math.round(y0)+'→'+Math.round(window.scrollY)
+      +(moving?' [捲動中]':''));
   }
 
   // 編輯列底下那行小字：排這個「畫面自己跑掉」的問題用的，排掉之後可以整段拿掉
+  var lastNote='';
   function note(msg){
+    lastNote=msg;
     var box=bar && bar.querySelector('.ed-dbg');
     if(!box) return;
     box.textContent='🔧 '+msg
