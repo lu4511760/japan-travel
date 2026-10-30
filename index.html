@@ -19,14 +19,14 @@
 :root{
   --bg:#fcfbf7; --fg:#231f1a; --muted:#8a8379; --line:#e8e3d8;
   --rail:#d8d2c4; --accent:#b3541e; --accent-soft:#f9ece2; --link:#1667d9; --meal:#0e7a52; --day:#c2185b; --alert:#d32f2f; --priv:#7b4fb5;
-  --dot-bg:#fcfbf7; --card:#ffffff;
+  --dot-bg:#fcfbf7; --card:#ffffff; --fin:#1565c0;
   --shadow:0 1px 2px rgba(35,31,26,.06), 0 3px 10px rgba(35,31,26,.05);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#1a1814; --fg:#ece7de; --muted:#9c948a; --line:#332f28;
     --rail:#44403a; --accent:#e58a4e; --accent-soft:#33241a; --link:#7fb0ff; --meal:#5bd4a0; --day:#ff8fb3; --alert:#ff6b6b; --priv:#b388ff;
-    --dot-bg:#1a1814; --card:#232019;
+    --dot-bg:#1a1814; --card:#232019; --fin:#6fa8ff;
     --shadow:0 1px 3px rgba(0,0,0,.45);
   }
 }
@@ -406,6 +406,55 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
   padding:9px 18px; font-size:14px; color:#fff; background:rgba(20,20,20,.95);
   border-radius:20px; box-shadow:0 2px 10px rgba(0,0,0,.4);
 }
+/* ── 財務紀錄 ── */
+/* 標題跟每日標題同一套（一樣黏在日期列底下、一樣穿過時間軸的線），只換個顏色，
+   但不共用 .day-head：那個 class 被收合、灰化、掃時刻的程式認著，財務紀錄不該跟著跑。 */
+.fin-head{
+  position:sticky; top:59px; z-index:9;
+  margin:22px -16px 0 -46px; padding:8px 16px 14px 46px; scroll-margin-top:58px;
+  background:var(--bg);
+  font-size:36px; line-height:1.15; color:var(--fin); font-weight:700; letter-spacing:.02em;
+}
+.fin-head .fin-sub{
+  display:block; margin-top:3px;
+  font-size:15px; font-weight:400; letter-spacing:.04em; color:var(--muted);
+}
+.fin-head::after{content:""; position:absolute; left:25px; top:0; bottom:0; width:2px; background:var(--rail)}
+.fin-head::before{
+  content:""; position:absolute; left:20px; top:18px; z-index:1;
+  width:12px; height:12px; border-radius:3px; background:var(--fin);
+}
+.fin-card{position:relative; margin-bottom:24px}
+.fin-tb{width:100%; border-collapse:collapse; font-size:14.5px}
+.fin-tb th, .fin-tb td{padding:7px 4px; text-align:left; vertical-align:top; border-bottom:1px solid var(--line)}
+.fin-tb tr:last-child th, .fin-tb tr:last-child td{border-bottom:0}
+.fin-tb .fin-who{width:4.5em; font-weight:600}
+.fin-tb .fin-top{color:var(--fin); font-weight:700}
+/* 左上角那格畫一條斜線，表示「列是對方、欄是自己」 */
+.fin-tb .fin-corner{
+  background:linear-gradient(to top right, transparent calc(50% - .5px), var(--line) 50%, transparent calc(50% + .5px));
+}
+.fin-tb td{display:flex; justify-content:space-between; align-items:flex-start; gap:8px}
+.fin-amts span{display:block; font-variant-numeric:tabular-nums; font-weight:600}
+.fin-pay{color:var(--alert)}          /* 負：自己要給對方 */
+.fin-get{color:var(--meal)}           /* 正：對方要給自己 */
+.fin-clear{color:var(--meal); font-weight:600}
+.fin-none{color:var(--muted); font-size:13.5px}
+.fin-settle, .fin-add button{
+  font-size:13px; padding:3px 10px; cursor:pointer; white-space:nowrap;
+  color:var(--fg); background:var(--card); border:1px solid var(--line); border-radius:8px;
+}
+.fin-add{margin-top:10px}
+/* 結算與新增只有編輯模式（解鎖後）看得到，其他人只能看 */
+body:not(.editing) .fin-settle, body:not(.editing) .fin-add{display:none}
+/* 新增視窗裡的一筆：誰欠誰、哪種幣別、多少錢 */
+.fin-row{margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid var(--line)}
+.fin-line{display:flex; align-items:center; gap:8px; margin-top:6px}
+/* .ed-box 裡的 select／input 預設寬度是 100%，放進同一行會把金額框擠扁，這裡改成各自佔份量 */
+.fin-line select, .fin-line input{width:auto; min-width:0; margin-top:0}
+.fin-line select{flex:1 1 auto}
+.fin-line span{flex:0 0 auto; color:var(--muted); font-size:13px}
+.fin-line .fin-amt{flex:1 1 7em}
 .nrt-head{margin:12px 0 2px; font-size:13.5px; border-top:1px solid var(--line); padding-top:10px}
 </style>
 </head>
@@ -423,6 +472,7 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
     <a href="#d0121" draggable="false" data-d="2027-01-21"><span class="dn">Day 6</span>01/21</a>
     <a href="#d0122" draggable="false" data-d="2027-01-22"><span class="dn">Day 7</span>01/22</a>
     <a href="#d0123" draggable="false" data-d="2027-01-23"><span class="dn">Day 8</span>01/23</a>
+    <a href="#fin" draggable="false" id="fin-nav"><span class="dn">💰</span>財務紀錄</a>
   </nav>
 
   <!-- ── 行前清單（可收合） ── -->
@@ -508,6 +558,12 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
   </div>
 
   <div class="tl"></div>
+
+  <!-- ── 財務紀錄：時間軸的最後一段（開頁後由 JS 接到 .tl 裡面） ── -->
+  <section class="fin-sec" id="fin-sec">
+    <div class="fin-head" id="fin">財務紀錄<span class="fin-sub">親兄弟，明算帳，一塊錢，傷感情</span></div>
+    <div class="fin-card" id="fin-card"></div>
+  </section>
 
   <button type="button" class="fold-fab" id="fold-fab" title="展開／收合各天">全部<br>展開</button>
   <button type="button" class="now-fab" id="now-fab" title="回到目前行程">目前<br>行程</button>
@@ -1129,6 +1185,7 @@ window.__nodeLink=(function(){
     try{ localStorage.setItem(KEY, JSON.stringify(s)); }catch(err){}
   });
   apply();
+  window.__tripOptsApply=apply;      // 財務紀錄重畫表格後要再套一次
   // 解鎖私人行程或套用雲端修改會重畫節點，重畫後要重新套用選擇
   var tl=document.querySelector('.tl');
   if(tl && window.MutationObserver) new MutationObserver(apply).observe(tl, {childList:true});
@@ -2171,6 +2228,170 @@ if('serviceWorker' in navigator){
         else target.scrollIntoView({behavior:'smooth',block:'start'});
       },300);
   }
+})();
+
+// ── 財務紀錄 ──
+// 出門在外常常是「你先付（刷卡、一起付），我等一下給你現金」。這裡只記最後結果：
+// 誰還欠誰多少，不記過程；按下結算就歸零，之前的來往也不留。
+// 兩種幣別分開算、不換匯，忠實呈現。
+// 資料掛在雲端修改的 pub.fin 底下（明文，所有人都看得到），所以後端 Worker 不用改；
+// 「結算」與「新增」只有解鎖後進編輯模式才看得到（CSS 控制），其他人只能看。
+(function(){
+  var PEOPLE=['大哥','建中','佑瑾','子軒'];
+  var CURS=[{k:'jpy', sym:'¥', name:'日幣 ¥'}, {k:'twd', sym:'NT$', name:'新台幣 NT$'}];
+  // 試作用的假資料：雲端還沒有任何財務紀錄時先拿它來看畫面，之後整段刪掉即可
+  var DEMO={'大哥|建中':{jpy:-3000, twd:500}, '大哥|子軒':{jpy:0, twd:0},
+            '建中|佑瑾':{jpy:2400, twd:0}, '佑瑾|子軒':{jpy:0, twd:-1200}};
+
+  var S=window.__trip;
+  function data(){
+    if(!S.pub) S.pub={edits:{}, added:[], removed:[]};
+    if(!S.pub.fin) S.pub.fin=JSON.parse(JSON.stringify(DEMO));
+    return S.pub.fin;
+  }
+  // 一對人共用一筆紀錄，鍵一律照 PEOPLE 的順序排，才不會同一對存成兩筆
+  function keyOf(a, b){
+    return PEOPLE.indexOf(a)<PEOPLE.indexOf(b) ? a+'|'+b : b+'|'+a;
+  }
+  // 從 p 的角度看跟 q 的往來：正＝q 還要給 p，負＝p 還要給 q；null＝從來沒有往來
+  function net(p, q){
+    var v=data()[keyOf(p,q)];
+    if(!v) return null;
+    var s=PEOPLE.indexOf(p)<PEOPLE.indexOf(q) ? 1 : -1;
+    return {jpy:(v.jpy||0)*s, twd:(v.twd||0)*s};
+  }
+  function money(sym, n){ return sym+Math.abs(n).toLocaleString('en-US'); }
+
+  function cell(p, q){
+    var n=net(p,q);
+    if(!n) return '<span class="fin-none">目前無財務往來</span>';
+    if(!n.jpy && !n.twd) return '<span class="fin-clear">✓ 兩清</span>';
+    var amts=CURS.filter(function(c){ return n[c.k]; }).map(function(c){
+      var v=n[c.k];
+      return '<span class="'+(v<0?'fin-pay':'fin-get')+'">'+(v<0?'−':'+')+' '+money(c.sym,v)+'</span>';
+    }).join('');
+    return '<span class="fin-amts">'+amts+'</span>'
+      +'<button type="button" class="fin-settle" data-p="'+p+'" data-q="'+q+'">結算</button>';
+  }
+  function pane(p, i){
+    var rows=PEOPLE.filter(function(q){ return q!==p; }).map(function(q){
+      return '<tr><th class="fin-who">'+q+'</th><td>'+cell(p,q)+'</td></tr>';
+    }).join('');
+    return '<div class="opt-pane" data-opt="fin" data-opt-i="'+i+'"><div class="body">'
+      +'<table class="fin-tb"><tr><th class="fin-corner"></th><th class="fin-top">'+p+'</th></tr>'
+      +rows+'</table></div></div>';
+  }
+  function draw(){
+    var host=document.getElementById('fin-card');
+    if(!host) return;
+    host.innerHTML='<div class="opts" data-opt="fin">'
+      +PEOPLE.map(function(p,i){
+        return '<button type="button" class="opt-tab" data-opt-i="'+i+'">'+p+'</button>';
+      }).join('')+'</div>'
+      +PEOPLE.map(pane).join('')
+      +'<div class="fin-add"><button type="button" id="fin-new">＋ 新增</button></div>';
+    if(window.__tripOptsApply) window.__tripOptsApply();     // 把上次選到的人套回去
+  }
+
+  function toast(msg){
+    var t=document.createElement('div');
+    t.className='ed-toast'; t.textContent=msg;
+    document.body.appendChild(t);
+    setTimeout(function(){ t.remove(); }, 2600);
+  }
+  async function flush(){
+    draw();
+    if(!window.__tripSave) return;
+    var r=await window.__tripSave();
+    toast(r.ok ? '已儲存' : (r.reason||'儲存失敗'));
+  }
+
+  function settle(p, q){
+    if(!confirm('確定結算？')) return;
+    data()[keyOf(p,q)]={jpy:0, twd:0};      // 鍵留著：留著才知道是「兩清」而不是「沒往來」
+    flush();
+  }
+  function addOne(from, to, cur, amt){
+    var k=keyOf(from,to), d=data();
+    if(!d[k]) d[k]={jpy:0, twd:0};
+    d[k][cur]=(d[k][cur]||0) + amt*(k.split('|')[0]===to ? 1 : -1);   // 鍵的第一個人是要收的人就記正數
+  }
+
+  // ── 新增視窗：一次可以填好幾筆 ──
+  function rowHtml(){
+    var opts=function(list, sel){
+      return list.map(function(p){
+        return '<option'+(p===sel?' selected':'')+'>'+p+'</option>';
+      }).join('');
+    };
+    return '<div class="fin-row">'
+      +'<div class="fin-line"><select class="fin-from">'+opts(PEOPLE, PEOPLE[0])+'</select>'
+      +'<span>欠</span><select class="fin-to">'+opts(PEOPLE.slice(1), PEOPLE[1])+'</select></div>'
+      +'<div class="fin-line"><select class="fin-cur">'
+      +CURS.map(function(c){ return '<option value="'+c.k+'">'+c.name+'</option>'; }).join('')
+      +'</select><input class="fin-amt" type="number" inputmode="numeric" min="1" step="1" placeholder="金額"></div>'
+      +'</div>';
+  }
+  // 「欠誰」不能是自己，所以左邊換人時右邊的選單要跟著重排
+  function syncTo(row){
+    var from=row.querySelector('.fin-from').value, to=row.querySelector('.fin-to'), keep=to.value;
+    to.innerHTML=PEOPLE.filter(function(p){ return p!==from; }).map(function(p){
+      return '<option'+(p===keep?' selected':'')+'>'+p+'</option>';
+    }).join('');
+  }
+  function openAdd(){
+    var box=document.createElement('div');
+    box.className='ed-mask';
+    box.innerHTML='<div class="ed-box"><h3>新增財務紀錄</h3>'
+      +'<div id="fin-rows">'+rowHtml()+'</div>'
+      +'<div class="fin-add"><button type="button" id="fin-more">＋ 再新增一筆</button></div>'
+      +'<div class="ed-btns" style="margin-top:14px">'
+      +'<button type="button" id="fin-cancel">取消</button>'
+      +'<button type="button" id="fin-ok" class="pri">新增</button></div></div>';
+    document.body.appendChild(box);
+    var rows=box.querySelector('#fin-rows');
+    box.addEventListener('change', function(e){
+      if(e.target.classList.contains('fin-from')) syncTo(e.target.closest('.fin-row'));
+    });
+    box.querySelector('#fin-more').onclick=function(){
+      rows.insertAdjacentHTML('beforeend', rowHtml());
+      syncTo(rows.lastElementChild);
+    };
+    box.querySelector('#fin-cancel').onclick=function(){ box.remove(); };
+    box.querySelector('#fin-ok').onclick=function(){
+      var list=[], bad=false;
+      rows.querySelectorAll('.fin-row').forEach(function(r){
+        var amt=Math.round(+r.querySelector('.fin-amt').value);
+        if(!amt || amt<=0){ bad=true; return; }
+        list.push({from:r.querySelector('.fin-from').value, to:r.querySelector('.fin-to').value,
+                   cur:r.querySelector('.fin-cur').value, amt:amt});
+      });
+      if(bad || !list.length){ alert('每一筆都要填大於 0 的金額'); return; }
+      list.forEach(function(x){ addOne(x.from, x.to, x.cur, x.amt); });
+      box.remove();
+      flush();
+    };
+  }
+
+  document.addEventListener('click', function(e){
+    if(!e.target.closest) return;
+    var b=e.target.closest('.fin-settle');
+    if(b){ settle(b.getAttribute('data-p'), b.getAttribute('data-q')); return; }
+    if(e.target.id==='fin-new') openAdd();
+  });
+
+  // 時間軸每次重畫都會清空 .tl（textContent=''），裡面的東西連同財務紀錄一起被拔掉，
+  // 拔掉後就用 id 找不到了，所以開頁時先把那個區塊記下來，重畫完再接回最後面。
+  var SEC=document.getElementById('fin-sec');
+  function mount(){
+    var tl=document.querySelector('.tl');
+    if(tl && SEC && SEC.parentNode!==tl) tl.appendChild(SEC);
+    draw();
+  }
+  var base=window.__tripRender;
+  window.__tripRender=function(){ base(); mount(); };
+  mount();
+  window.__tripFinDraw=draw;        // 雲端資料載入後可以手動重畫（測試用）
 })();
 </script>
 </body>
