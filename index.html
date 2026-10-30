@@ -1535,6 +1535,7 @@ window.__nodeLink=(function(){
 (function(){
   var PW_KEY='japan2027-pw';
   var PENDING='japan2027-pending';          // 離線時暫存待上傳的修改
+  var CLOUD_KEY='japan2027-cloud';          // 上次讀到的雲端內容，沒網路時照它顯示
   var API='https://narita-proxy.4511760.workers.dev/data';
   var S={pw:null, token:null, priv:[], pub:{edits:{},added:[],removed:[]}, unlocked:false};
   window.__trip=S;
@@ -1614,10 +1615,17 @@ window.__nodeLink=(function(){
   window.__tripRepaint=repaint;
 
   // 讀取雲端上的修改（任何人都讀得到；私人部分仍是密文）
+  // 跨網域的東西 Service Worker 不會攔，離線時這支一定失敗，所以每次成功就在本機留一份。
+  // 沒有這份備份的話，到日本沒訊號時行程會退回 index.html 內嵌的版本，財務紀錄也會變空的。
   async function loadCloud(){
     var r=await fetch(API, {cache:'no-store'});
     if(!r.ok) throw new Error('data '+r.status);
-    return r.json();
+    var doc=await r.json();
+    try{ localStorage.setItem(CLOUD_KEY, JSON.stringify(doc)); }catch(e){}
+    return doc;
+  }
+  function cachedCloud(){
+    try{ return JSON.parse(localStorage.getItem(CLOUD_KEY)||'null'); }catch(e){ return null; }
   }
 
   async function unlock(pw){
@@ -1635,10 +1643,11 @@ window.__nodeLink=(function(){
       if(booted) location.reload();
       return;
     }
-    // 先套用雲端上的公開修改（朋友也看得到）
+    // 先套用雲端上的公開修改（朋友也看得到）；連不上就用上次存下來的那份
     var cloud=null;
-    try{ cloud=await loadCloud(); }catch(e){}
+    try{ cloud=await loadCloud(); }catch(e){ cloud=cachedCloud(); }
     if(cloud && cloud.pub) S.pub=cloud.pub;
+    lastPub=JSON.stringify((cloud&&cloud.pub)||null);
 
     if(booted){ repaint(); return; }
 
@@ -1684,6 +1693,8 @@ window.__nodeLink=(function(){
         body:JSON.stringify(payload)});
       if(!r.ok) throw new Error('HTTP '+r.status);
       try{ localStorage.removeItem(PENDING); }catch(e){}
+      lastPub=JSON.stringify(S.pub||null);
+      try{ localStorage.setItem(CLOUD_KEY, JSON.stringify(payload)); }catch(e){}
       return {ok:true};
     }catch(e){
       return {ok:false, reason:'沒網路，已存在手機，連線後會自動上傳'};
@@ -1702,6 +1713,55 @@ window.__nodeLink=(function(){
     }catch(e){}
   }
   window.addEventListener('online', function(){ if(S.token) flushPending(); });
+
+  // ── 自動同步 ──
+  // 別人改了行程（或財務紀錄），不必手動重整也看得到。
+  // 只在內容真的變了才重畫，否則畫面會沒事抖一下。
+  var lastPub=null;
+  async function sync(){
+    if(!booted) return;
+    if(document.body.classList.contains('editing')) return;       // 自己正在改，別來攪局
+    // 自己還有沒上傳的修改時先別同步，免得被雲端蓋掉；沒權限的裝置不會有合法的待上傳內容，不受此限
+    try{ if(S.token && localStorage.getItem(PENDING)) return; }catch(e){}
+    var cloud=null;
+    try{ cloud=await loadCloud(); }catch(e){ return; }             // 沒網路就算了，下次再說
+    var raw=JSON.stringify((cloud&&cloud.pub)||null);
+    if(raw===lastPub) return;
+    lastPub=raw;
+    if(cloud && cloud.pub) S.pub=cloud.pub;
+    // 私人行程也可能被另一台改過
+    if(cloud && cloud.priv && S.pw){
+      try{ var pd=await decryptBlob(cloud.priv, S.pw); if(Array.isArray(pd)) S.priv=pd; }catch(e){}
+    }
+    keepScroll(repaint);
+  }
+  // 重畫會把整條時間軸拆掉重建，捲動位置得自己記著還原，不然人就被丟到別的地方
+  function keepScroll(fn){
+    var els=document.querySelectorAll('.tl .ev, .tl .fin-sec'), key=null, rel=0;
+    for(var i=0;i<els.length;i++){
+      var r=els[i].getBoundingClientRect(), id=els[i].dataset.id;
+      if(r.bottom<=0 || !id || id==='undefined') continue;
+      if(key===null){ key=id; rel=r.top; }
+      if(r.top>=0){ key=id; rel=r.top; break; }
+    }
+    fn();
+    if(!key) return;
+    var back=document.querySelector('.tl [data-id="'+key+'"]');
+    if(!back) return;
+    var y=Math.max(0, Math.round(window.scrollY+back.getBoundingClientRect().top-rel));
+    if(Math.abs(y-window.scrollY)>1){
+      var html=document.documentElement, s0=html.style.scrollBehavior;
+      html.style.scrollBehavior='auto';
+      window.scrollTo(0, y);
+      html.style.scrollBehavior=s0;
+    }
+  }
+  window.__tripSync=sync;                 // 測試用：手動觸發一次同步
+  setInterval(sync, 120000);              // 兩分鐘一次
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) sync(); });
+  window.addEventListener('pageshow', sync);
+  window.addEventListener('focus', sync);
+  window.addEventListener('online', sync);
 
   boot();
   window.addEventListener('hashchange', boot);
