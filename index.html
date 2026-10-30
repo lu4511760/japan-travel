@@ -378,6 +378,8 @@ span.rsv{color:var(--meal)}
   padding:10px 76px 10px 16px; font-size:12.5px; line-height:1.5;
   color:#fff; background:rgba(20,20,20,.94);
 }
+/* 編輯列底下的小字：排「畫面自己跑掉」用的診斷，問題解決後連同 JS 一起拿掉 */
+.ed-dbg{display:block; margin-top:4px; font-size:11px; opacity:.7}
 .ed-tools{margin-top:6px; display:flex; gap:8px}
 .ed-tools button, .ed-add button{
   font-size:13px; padding:4px 10px; cursor:pointer;
@@ -1313,6 +1315,13 @@ window.__nodeLink=(function(){
   // reveal=true 才會把收合起來的那天展開（手動按「目前行程」或用節點連結進來時）；
   // 自動置中不展開，否則使用者刻意收起來的天會被打開
   function centerCurrent(now, reveal){
+    // 編輯模式下一律不自動捲：人正在改東西，畫面自己跑掉最惱人。
+    // （行程還沒開始時這支會捲到第一個節點並置中，位置就在整頁最上面。）
+    if(document.body.classList.contains('editing')){
+      window.__tripCenterBlocked=(window.__tripCenterBlocked||0)+1;
+      return null;
+    }
+    window.__tripCenterRan=(window.__tripCenterRan||0)+1;
     var sc=scan(now), target=sc.cur ? sc.cur.el : (sc.next ? sc.next.el : null);
     if(!target){                                        // 今天沒有任何行程：對齊今天的日期標題
       var today=dateStr(now);
@@ -1804,11 +1813,36 @@ window.__nodeLink=(function(){
       var y=Math.max(0, Math.round(window.scrollY + back.getBoundingClientRect().top - rel));
       if(Math.abs(y-window.scrollY)>1) window.scrollTo(0, y);
     }
+    var y0=window.scrollY;
     fix();
-    requestAnimationFrame(function(){
-      fix();
-      setTimeout(function(){ fix(); html.style.scrollBehavior=saved; }, 150);
-    });
+    // 不用 requestAnimationFrame：頁面不在前景時它根本不會跑，這幾次校正就全沒了
+    setTimeout(fix, 0);
+    setTimeout(function(){ fix(); html.style.scrollBehavior=saved; guard(); }, 150);
+
+    // 定位之後還有東西把畫面捲走（手機上遇過整頁彈回最上面），1.5 秒內逮到就拉回來。
+    // 只管大跳躍，使用者自己小幅捲動不干涉。
+    function guard(){
+      var t0=Date.now();
+      var id=setInterval(function(){
+        var b=document.querySelector('.tl [data-id="'+key+'"]');
+        if(!b || Date.now()-t0>1500){ clearInterval(id); return; }
+        var off=b.getBoundingClientRect().top-rel;
+        if(Math.abs(off)>400){
+          window.scrollTo(0, Math.max(0, Math.round(window.scrollY+off)));
+          note('守衛拉回 '+Math.round(off));
+          clearInterval(id);
+        }
+      }, 100);
+    }
+    note('key='+key+' rel='+Math.round(rel)+' y '+Math.round(y0)+'→'+Math.round(window.scrollY));
+  }
+
+  // 編輯列底下那行小字：排這個「畫面自己跑掉」的問題用的，排掉之後可以整段拿掉
+  function note(msg){
+    var box=bar && bar.querySelector('.ed-dbg');
+    if(!box) return;
+    box.textContent='🔧 '+msg
+      +'｜自動置中 跑'+(window.__tripCenterRan||0)+' 擋'+(window.__tripCenterBlocked||0);
   }
 
   async function flush(){
@@ -1924,7 +1958,8 @@ window.__nodeLink=(function(){
     fab.title='編輯行程';
     fab.onclick=toggle;
     document.body.appendChild(fab);
-    bar=el('div','ed-bar','編輯模式：可改時間與文字、新增或刪除節點。修改會同步到雲端，朋友也看得到（🔒 私人節點除外）。');
+    bar=el('div','ed-bar','編輯模式：可改時間與文字、新增或刪除節點。修改會同步到雲端，朋友也看得到（🔒 私人節點除外）。'
+      +'<span class="ed-dbg"></span>');
     bar.style.display='none';
     document.body.appendChild(bar);
   };
