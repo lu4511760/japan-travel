@@ -132,8 +132,10 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
   content:""; position:absolute; left:25px; top:0; bottom:0;
   width:2px; background:var(--rail);
 }
+/* 方塊對齊標題文字的視覺中心：字高 36px、行高 1.15，
+   文字的墨水大約從基線上 0.86em 到基線下 0.11em，中心落在 31px，方塊高 12px，所以 top = 31 − 6。 */
 .day-head::before{
-  content:""; position:absolute; left:20px; top:18px; z-index:1;   /* 壓在線上面 */
+  content:""; position:absolute; left:20px; top:25px; z-index:1;   /* 壓在線上面 */
   width:12px; height:12px; border-radius:3px; background:var(--day);
 }
 .when{font-size:18px; color:var(--accent); font-weight:700; letter-spacing:.05em; font-variant-numeric:tabular-nums}
@@ -420,9 +422,7 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
   font-size:15px; font-weight:400; letter-spacing:.04em; color:var(--muted);
 }
 .fin-head::after{content:""; position:absolute; left:25px; top:0; bottom:0; width:2px; background:var(--rail)}
-/* 方塊對齊「財務紀錄」這四個字的視覺中心（字高 36px、行高 1.15，
-   漢字實際的墨水從基線上 0.86em 到基線下 0.11em，中心落在 31px 左右）。
-   每日標題那顆沿用舊位置，不要跟著動。 */
+/* 方塊的位置跟每日標題那顆算法相同：對齊文字的視覺中心 */
 .fin-head::before{
   content:""; position:absolute; left:20px; top:25px; z-index:1;
   width:12px; height:12px; border-radius:3px; background:var(--fin);
