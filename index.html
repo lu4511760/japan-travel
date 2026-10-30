@@ -2381,9 +2381,6 @@ if('serviceWorker' in navigator){
     '隨時隨地結清欠款，甚至當下直接結算，留下乾淨紀錄',
     '行前立規矩，旅途一身輕'
   ];
-  // 試作用的假資料：雲端還沒有任何財務紀錄時先拿它來看畫面，之後整段刪掉即可
-  var DEMO={'大哥|建中':{jpy:-3000, twd:500}, '大哥|子軒':{jpy:0, twd:0},
-            '建中|佑瑾':{jpy:2400, twd:0}, '佑瑾|子軒':{jpy:0, twd:-1200}};
 
   var S=window.__trip;
   // 時間軸每次重畫都會清空 .tl（textContent=''），裡面的東西連同財務紀錄一起被拔掉，
@@ -2391,7 +2388,7 @@ if('serviceWorker' in navigator){
   var SEC=document.getElementById('fin-sec');
   function data(){
     if(!S.pub) S.pub={edits:{}, added:[], removed:[]};
-    if(!S.pub.fin) S.pub.fin=JSON.parse(JSON.stringify(DEMO));
+    if(!S.pub.fin) S.pub.fin={};      // 還沒有任何紀錄＝大家都沒有往來
     return S.pub.fin;
   }
 
