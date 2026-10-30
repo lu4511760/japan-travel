@@ -418,9 +418,15 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
   font-size:36px; line-height:1.15; color:var(--fin); font-weight:700; letter-spacing:.02em;
 }
 .fin-head .fin-sub{
-  display:block; margin-top:3px;
+  display:flex; align-items:center; gap:10px; margin-top:3px;
   font-size:15px; font-weight:400; letter-spacing:.04em; color:var(--muted);
 }
+/* 副標右邊的開關：勾起來就把名字換成平常互相叫的稱呼 */
+.fin-alias{
+  margin-left:auto; display:flex; align-items:center; gap:4px;
+  font-size:13px; letter-spacing:0; white-space:nowrap; cursor:pointer;
+}
+.fin-alias input{width:16px; height:16px; margin:0; accent-color:var(--fin)}
 .fin-head::after{content:""; position:absolute; left:25px; top:0; bottom:0; width:2px; background:var(--rail)}
 /* 方塊的位置跟每日標題那顆算法相同：對齊文字的視覺中心 */
 .fin-head::before{
@@ -428,21 +434,20 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
   width:12px; height:12px; border-radius:3px; background:var(--fin);
 }
 .fin-card{position:relative; margin-bottom:24px}
-.fin-tb{width:100%; border-collapse:collapse; font-size:14.5px}
-.fin-tb th, .fin-tb td{padding:7px 4px; text-align:left; vertical-align:top; border-bottom:1px solid var(--line)}
-.fin-tb tr:last-child th, .fin-tb tr:last-child td{border-bottom:0}
-.fin-tb .fin-who{width:4.5em; font-weight:600}
-.fin-tb .fin-top{color:var(--fin); font-weight:700}
-/* 左上角那格畫一條斜線，表示「列是對方、欄是自己」 */
-.fin-tb .fin-corner{
-  background:linear-gradient(to top right, transparent calc(50% - .5px), var(--line) 50%, transparent calc(50% + .5px));
+/* 選到的人用財務紀錄的藍，跟這一區的標題同色（行程裡的擇一行程仍是橘色，不受影響） */
+.fin-card .opt-tab.on{background:var(--fin); border-color:var(--fin)}
+/* 一個人一列，整列就是一句話：還誰多少、誰欠自己多少 */
+.fin-item{
+  display:flex; justify-content:space-between; align-items:flex-start; gap:8px;
+  padding:8px 2px; font-size:14.5px;
 }
-.fin-tb td{display:flex; justify-content:space-between; align-items:flex-start; gap:8px}
-.fin-amts span{display:block; font-variant-numeric:tabular-nums; font-weight:600}
-.fin-pay{color:var(--alert)}          /* 負：自己要給對方 */
-.fin-get{color:var(--meal)}           /* 正：對方要給自己 */
+.fin-item + .fin-item{border-top:1px solid var(--line)}
+.fin-desc{font-variant-numeric:tabular-nums}
+.fin-pay{color:var(--alert); font-weight:600}     /* 自己還要給對方的 */
+.fin-get{color:var(--meal); font-weight:600}      /* 對方還要給自己的 */
 .fin-clear{color:var(--meal); font-weight:600}
 .fin-none{color:var(--muted); font-size:13.5px}
+.fin-sep{color:var(--muted); font-weight:400}
 .fin-settle, .fin-add button{
   font-size:13px; padding:3px 10px; cursor:pointer; white-space:nowrap;
   color:var(--fg); background:var(--card); border:1px solid var(--line); border-radius:8px;
@@ -458,6 +463,11 @@ body:not(.editing) .fin-settle, body:not(.editing) .fin-add{display:none}
 .fin-line select{flex:1 1 auto}
 .fin-line span{flex:0 0 auto; color:var(--muted); font-size:13px}
 .fin-line .fin-amt{flex:1 1 7em}
+/* 第一筆不給刪，後面每一筆右上角都有一個 ✕ */
+.fin-del{
+  flex:0 0 auto; width:28px; height:28px; padding:0; cursor:pointer; font-size:15px; line-height:1;
+  color:var(--muted); background:transparent; border:1px solid var(--line); border-radius:8px;
+}
 .nrt-head{margin:12px 0 2px; font-size:13.5px; border-top:1px solid var(--line); padding-top:10px}
 </style>
 </head>
@@ -475,7 +485,7 @@ body:not(.editing) .fin-settle, body:not(.editing) .fin-add{display:none}
     <a href="#d0121" draggable="false" data-d="2027-01-21"><span class="dn">Day 6</span>01/21</a>
     <a href="#d0122" draggable="false" data-d="2027-01-22"><span class="dn">Day 7</span>01/22</a>
     <a href="#d0123" draggable="false" data-d="2027-01-23"><span class="dn">Day 8</span>01/23</a>
-    <a href="#fin" draggable="false" id="fin-nav"><span class="dn">💰</span>財務紀錄</a>
+    <a href="#fin" draggable="false" id="fin-nav"><span class="dn">財務</span>紀錄</a>
   </nav>
 
   <!-- ── 行前清單（可收合） ── -->
@@ -563,8 +573,8 @@ body:not(.editing) .fin-settle, body:not(.editing) .fin-add{display:none}
   <div class="tl"></div>
 
   <!-- ── 財務紀錄：時間軸的最後一段（開頁後由 JS 接到 .tl 裡面） ── -->
-  <section class="fin-sec" id="fin-sec">
-    <div class="fin-head" id="fin">財務紀錄<span class="fin-sub">親兄弟，明算帳，一塊錢，傷感情</span></div>
+  <section class="fin-sec" id="fin-sec" data-id="fin-sec">
+    <div class="fin-head" id="fin">財務紀錄<span class="fin-sub">親兄弟，明算帳，一塊錢，傷感情<label class="fin-alias"><input type="checkbox" id="fin-alias">暱稱</label></span></div>
     <div class="fin-card" id="fin-card"></div>
   </section>
 
@@ -1765,7 +1775,9 @@ window.__nodeLink=(function(){
 
   // 進出編輯模式、儲存後都會重建或插入元素，這裡記住畫面上第一個可見節點，做完再捲回原位
   async function keepView(fn){
-    var els=document.querySelectorAll('.tl .ev'), key=null, top=0;
+    // 財務紀錄不是行程節點（沒有 .ev），但人可能正在看它，所以一起列入定位的候選，
+    // 否則在那裡按編輯會找不到基準點，畫面整個彈回最上面
+    var els=document.querySelectorAll('.tl .ev, .tl .fin-sec'), key=null, top=0;
     for(var i=0;i<els.length;i++){
       var r=els[i].getBoundingClientRect();
       if(r.bottom<=0 || !els[i].dataset.id) continue;
@@ -2241,6 +2253,7 @@ if('serviceWorker' in navigator){
 // 「結算」與「新增」只有解鎖後進編輯模式才看得到（CSS 控制），其他人只能看。
 (function(){
   var PEOPLE=['大哥','建中','佑瑾','子軒'];
+  var ALIAS={'大哥':'Yison', '佑瑾':'Youjin', '子軒':'章魚'};      // 平常互相叫的稱呼
   var CURS=[{k:'jpy', sym:'¥', name:'日幣 ¥'}, {k:'twd', sym:'NT$', name:'新台幣 NT$'}];
   // 試作用的假資料：雲端還沒有任何財務紀錄時先拿它來看畫面，之後整段刪掉即可
   var DEMO={'大哥|建中':{jpy:-3000, twd:500}, '大哥|子軒':{jpy:0, twd:0},
@@ -2252,6 +2265,13 @@ if('serviceWorker' in navigator){
     if(!S.pub.fin) S.pub.fin=JSON.parse(JSON.stringify(DEMO));
     return S.pub.fin;
   }
+
+  // ── 要用本名還是稱呼：記在這台裝置 ──
+  var ALIAS_KEY='japan2027-fin-alias';
+  var aliasBox=document.getElementById('fin-alias');
+  try{ if(aliasBox) aliasBox.checked = localStorage.getItem(ALIAS_KEY)==='1'; }catch(e){}
+  function nm(p){ return (aliasBox && aliasBox.checked) ? (ALIAS[p]||p) : p; }
+
   // 一對人共用一筆紀錄，鍵一律照 PEOPLE 的順序排，才不會同一對存成兩筆
   function keyOf(a, b){
     return PEOPLE.indexOf(a)<PEOPLE.indexOf(b) ? a+'|'+b : b+'|'+a;
@@ -2265,36 +2285,41 @@ if('serviceWorker' in navigator){
   }
   function money(sym, n){ return sym+Math.abs(n).toLocaleString('en-US'); }
 
-  function cell(p, q){
-    var n=net(p,q);
-    if(!n) return '<span class="fin-none">目前無財務往來</span>';
-    if(!n.jpy && !n.twd) return '<span class="fin-clear">✓ 兩清</span>';
-    var amts=CURS.filter(function(c){ return n[c.k]; }).map(function(c){
+  // 一列就是一句話：「還建中 ¥3,000，建中欠 NT$500」／「目前與 Youjin 無財務往來」／「章魚 ✓ 兩清」
+  function desc(p, q){
+    var n=net(p,q), Q=nm(q);
+    if(!n) return '<span class="fin-none">目前與'+Q+'無財務往來</span>';
+    if(!n.jpy && !n.twd) return '<span class="fin-clear">'+Q+' ✓ 兩清</span>';
+    return CURS.filter(function(c){ return n[c.k]; }).map(function(c){      // 日幣在前、台幣在後
       var v=n[c.k];
-      return '<span class="'+(v<0?'fin-pay':'fin-get')+'">'+(v<0?'−':'+')+' '+money(c.sym,v)+'</span>';
-    }).join('');
-    return '<span class="fin-amts">'+amts+'</span>'
-      +'<button type="button" class="fin-settle" data-p="'+p+'" data-q="'+q+'">結算</button>';
+      return v<0 ? '<span class="fin-pay">還'+Q+' '+money(c.sym,v)+'</span>'
+                 : '<span class="fin-get">'+Q+'欠 '+money(c.sym,v)+'</span>';
+    }).join('<span class="fin-sep">，</span>');
   }
   function pane(p, i){
     var rows=PEOPLE.filter(function(q){ return q!==p; }).map(function(q){
-      return '<tr><th class="fin-who">'+q+'</th><td>'+cell(p,q)+'</td></tr>';
+      var n=net(p,q), owing=!!(n && (n.jpy || n.twd));
+      return '<div class="fin-item"><span class="fin-desc">'+desc(p,q)+'</span>'
+        +(owing ? '<button type="button" class="fin-settle" data-p="'+p+'" data-q="'+q+'">結算</button>' : '')
+        +'</div>';
     }).join('');
-    return '<div class="opt-pane" data-opt="fin" data-opt-i="'+i+'"><div class="body">'
-      +'<table class="fin-tb"><tr><th class="fin-corner"></th><th class="fin-top">'+p+'</th></tr>'
-      +rows+'</table></div></div>';
+    return '<div class="opt-pane" data-opt="fin" data-opt-i="'+i+'"><div class="body">'+rows+'</div></div>';
   }
   function draw(){
     var host=document.getElementById('fin-card');
     if(!host) return;
     host.innerHTML='<div class="opts" data-opt="fin">'
       +PEOPLE.map(function(p,i){
-        return '<button type="button" class="opt-tab" data-opt-i="'+i+'">'+p+'</button>';
+        return '<button type="button" class="opt-tab" data-opt-i="'+i+'">'+nm(p)+'</button>';
       }).join('')+'</div>'
       +PEOPLE.map(pane).join('')
       +'<div class="fin-add"><button type="button" id="fin-new">＋ 新增</button></div>';
     if(window.__tripOptsApply) window.__tripOptsApply();     // 把上次選到的人套回去
   }
+  if(aliasBox) aliasBox.addEventListener('change', function(){
+    try{ localStorage.setItem(ALIAS_KEY, aliasBox.checked?'1':'0'); }catch(e){}
+    draw();
+  });
 
   function toast(msg){
     var t=document.createElement('div');
@@ -2321,44 +2346,76 @@ if('serviceWorker' in navigator){
   }
 
   // ── 新增視窗：一次可以填好幾筆 ──
-  function rowHtml(){
-    var opts=function(list, sel){
-      return list.map(function(p){
-        return '<option'+(p===sel?' selected':'')+'>'+p+'</option>';
-      }).join('');
-    };
+  function opts(list, sel){
+    return list.map(function(p){
+      return '<option value="'+p+'"'+(p===sel?' selected':'')+'>'+nm(p)+'</option>';
+    }).join('');
+  }
+  function pairsIn(box){
+    return Array.prototype.map.call(box.querySelectorAll('.fin-row'), function(r){
+      return {from:r.querySelector('.fin-from').value, to:r.querySelector('.fin-to').value};
+    });
+  }
+  // 下一組還沒出現在視窗裡的「誰欠誰」：先沿用上一筆的債權人，他的債務人都列完了才換下一位
+  function nextPair(list){
+    var last=list[list.length-1];
+    var tos=last ? [last.to].concat(PEOPLE.filter(function(p){ return p!==last.to; })) : PEOPLE.slice();
+    for(var i=0;i<tos.length;i++){
+      for(var j=0;j<PEOPLE.length;j++){
+        var to=tos[i], from=PEOPLE[j];
+        if(from===to) continue;
+        var dup=list.some(function(u){ return u.from===from && u.to===to; });
+        if(!dup) return {from:from, to:to};
+      }
+    }
+    return null;                      // 所有組合都列完了
+  }
+  function rowHtml(pair, canDel){
     return '<div class="fin-row">'
-      +'<div class="fin-line"><select class="fin-from">'+opts(PEOPLE, PEOPLE[0])+'</select>'
-      +'<span>欠</span><select class="fin-to">'+opts(PEOPLE.slice(1), PEOPLE[1])+'</select></div>'
+      +'<div class="fin-line"><select class="fin-from">'+opts(PEOPLE, pair.from)+'</select>'
+      +'<span>欠</span><select class="fin-to">'
+      + opts(PEOPLE.filter(function(p){ return p!==pair.from; }), pair.to)+'</select>'
+      +(canDel ? '<button type="button" class="fin-del" title="刪掉這一筆">✕</button>' : '')
+      +'</div>'
       +'<div class="fin-line"><select class="fin-cur">'
-      +CURS.map(function(c){ return '<option value="'+c.k+'">'+c.name+'</option>'; }).join('')
+      + CURS.map(function(c){ return '<option value="'+c.k+'">'+c.name+'</option>'; }).join('')
       +'</select><input class="fin-amt" type="number" inputmode="numeric" min="1" step="1" placeholder="金額"></div>'
       +'</div>';
   }
   // 「欠誰」不能是自己，所以左邊換人時右邊的選單要跟著重排
   function syncTo(row){
     var from=row.querySelector('.fin-from').value, to=row.querySelector('.fin-to'), keep=to.value;
-    to.innerHTML=PEOPLE.filter(function(p){ return p!==from; }).map(function(p){
-      return '<option'+(p===keep?' selected':'')+'>'+p+'</option>';
-    }).join('');
+    to.innerHTML=opts(PEOPLE.filter(function(p){ return p!==from; }), keep);
   }
   function openAdd(){
     var box=document.createElement('div');
     box.className='ed-mask';
     box.innerHTML='<div class="ed-box"><h3>新增財務紀錄</h3>'
-      +'<div id="fin-rows">'+rowHtml()+'</div>'
+      +'<div id="fin-rows">'+rowHtml({from:PEOPLE[0], to:PEOPLE[1]}, false)+'</div>'
       +'<div class="fin-add"><button type="button" id="fin-more">＋ 再新增一筆</button></div>'
       +'<div class="ed-btns" style="margin-top:14px">'
       +'<button type="button" id="fin-cancel">取消</button>'
       +'<button type="button" id="fin-ok" class="pri">新增</button></div></div>';
     document.body.appendChild(box);
-    var rows=box.querySelector('#fin-rows');
+    var rows=box.querySelector('#fin-rows'), more=box.querySelector('#fin-more');
+    // 組合全列完了就沒什麼好再加的，把按鈕收起來
+    function refresh(){ more.style.display = nextPair(pairsIn(box)) ? '' : 'none'; }
+
     box.addEventListener('change', function(e){
       if(e.target.classList.contains('fin-from')) syncTo(e.target.closest('.fin-row'));
+      refresh();
     });
-    box.querySelector('#fin-more').onclick=function(){
-      rows.insertAdjacentHTML('beforeend', rowHtml());
-      syncTo(rows.lastElementChild);
+    box.addEventListener('click', function(e){
+      var d=e.target.closest && e.target.closest('.fin-del');
+      if(!d) return;
+      d.closest('.fin-row').remove();
+      refresh();
+    });
+    more.onclick=function(){
+      var p=nextPair(pairsIn(box));
+      if(!p) return;
+      rows.insertAdjacentHTML('beforeend', rowHtml(p, true));
+      refresh();
     };
     box.querySelector('#fin-cancel').onclick=function(){ box.remove(); };
     box.querySelector('#fin-ok').onclick=function(){
@@ -2374,6 +2431,7 @@ if('serviceWorker' in navigator){
       box.remove();
       flush();
     };
+    refresh();
   }
 
   document.addEventListener('click', function(e){
