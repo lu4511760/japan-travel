@@ -180,6 +180,10 @@ details.block summary{
   border-radius:10px; box-shadow:var(--shadow);
 }
 details.block[open] summary{border-radius:10px 10px 0 0}
+/* 行前清單的標題跟每日標題同一套：往下捲時黏在日期列底下，
+   知道現在看的還是清單；捲完清單就讓第 1 天的標題接手黏住。
+   z-index 與 .day-head 同階，兩者相遇時 DOM 在後面的每日標題蓋在上面，看起來就是被推走。 */
+#checklist > summary{position:sticky; top:59px; z-index:9}
 details.block.past{opacity:.45; filter:grayscale(1)}
 details.block .info{border-top:0; border-radius:0 0 10px 10px; box-shadow:var(--shadow)}
 .info{background:var(--card); border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow); padding:4px 14px; font-size:14.5px}
