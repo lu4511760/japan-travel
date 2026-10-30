@@ -2372,7 +2372,7 @@ if('serviceWorker' in navigator){
 // 「結算」與「新增」只有解鎖後進編輯模式才看得到（CSS 控制），其他人只能看。
 (function(){
   var PEOPLE=['大哥','建中','佑瑾','子軒'];
-  var ALIAS={'大哥':'Yison', '佑瑾':'Youjin', '子軒':'章魚'};      // 平常互相叫的稱呼
+  var ALIAS={'佑瑾':'Youjin', '子軒':'章魚'};      // 平常互相叫的稱呼（大哥、建中就用本名）
   var CURS=[{k:'jpy', sym:'¥', name:'日幣 ¥'}, {k:'twd', sym:'NT$', name:'新台幣 NT$'}];
   var RULES=[
     '自己有借錢的需求，別人有拒絕的權利',
@@ -2522,10 +2522,12 @@ if('serviceWorker' in navigator){
     return null;                      // 所有組合都列完了
   }
   function rowHtml(pair, canDel){
-    // 左邊是借出去的人（之後要收錢），右邊是拿到錢的人；存進資料時仍是「from 欠 to」
+    // 左邊出錢、右邊拿錢，錢從左流向右。借出與還錢共用同一個方向：
+    // 「A 借 B 500」是 B 欠 A 多 500，「A 還 B 500」是 A 欠 B 少 500，對淨額的影響一模一樣。
+    // 存進資料時仍是「from 欠 to」
     return '<div class="fin-row">'
       +'<div class="fin-line"><select class="fin-to">'+opts(PEOPLE, pair.to)+'</select>'
-      +'<span>借給</span><select class="fin-from">'
+      +'<span>借(還)</span><select class="fin-from">'
       + opts(PEOPLE.filter(function(p){ return p!==pair.to; }), pair.from)+'</select>'
       +(canDel ? '<button type="button" class="fin-del" title="刪掉這一筆">✕</button>' : '')
       +'</div>'
@@ -2534,7 +2536,7 @@ if('serviceWorker' in navigator){
       +'</select><input class="fin-amt" type="number" inputmode="numeric" min="1" step="1" placeholder="金額"></div>'
       +'</div>';
   }
-  // 不能借給自己，所以左邊換人時右邊的選單要跟著重排
+  // 錢不會流向自己，所以左邊換人時右邊的選單要跟著重排
   function syncRow(row){
     var to=row.querySelector('.fin-to').value, from=row.querySelector('.fin-from'), keep=from.value;
     from.innerHTML=opts(PEOPLE.filter(function(p){ return p!==to; }), keep);
