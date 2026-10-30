@@ -378,8 +378,6 @@ span.rsv{color:var(--meal)}
   padding:10px 76px 10px 16px; font-size:12.5px; line-height:1.5;
   color:#fff; background:rgba(20,20,20,.94);
 }
-/* 編輯列底下的小字：排「畫面自己跑掉」用的診斷，問題解決後連同 JS 一起拿掉 */
-.ed-dbg{display:block; margin-top:4px; font-size:11px; opacity:.7}
 .ed-tools{margin-top:6px; display:flex; gap:8px}
 .ed-tools button, .ed-add button{
   font-size:13px; padding:4px 10px; cursor:pointer;
@@ -462,6 +460,10 @@ body:not(.editing) .fin-show{display:none}
   color:var(--fg); background:var(--card); border:1px solid var(--line); border-radius:8px;
 }
 .fin-add{margin-top:10px}
+/* 表格底下的幾句話：先講好規矩，帳才好算 */
+.fin-rules{margin:14px 0 0; padding:0 0 0 18px; list-style:disc}
+.fin-rules li{margin:4px 0; font-size:12.5px; line-height:1.6; color:var(--muted)}
+.fin-rules li:last-child{color:var(--fin); font-weight:600}
 /* 結算與新增只有編輯模式（解鎖後）看得到，其他人只能看 */
 body:not(.editing) .fin-settle, body:not(.editing) .fin-add{display:none}
 /* 新增視窗裡的一筆：誰欠誰、哪種幣別、多少錢 */
@@ -1320,11 +1322,7 @@ window.__nodeLink=(function(){
     // 編輯模式下、以及剛切換完的幾秒內，一律不自動捲：人正在改東西，畫面自己跑掉最惱人。
     // （行程還沒開始時這支會捲到第一個節點並置中，位置就在整頁最上面。）
     // 用時間鎖是因為光看 editing 擋不住「按下去前 0.2 秒就排好的那一次」。
-    if(document.body.classList.contains('editing') || Date.now() < (window.__tripHoldCenter||0)){
-      window.__tripCenterBlocked=(window.__tripCenterBlocked||0)+1;
-      return null;
-    }
-    window.__tripCenterRan=(window.__tripCenterRan||0)+1;
+    if(document.body.classList.contains('editing') || Date.now() < (window.__tripHoldCenter||0)) return null;
     var sc=scan(now), target=sc.cur ? sc.cur.el : (sc.next ? sc.next.el : null);
     if(!target){                                        // 今天沒有任何行程：對齊今天的日期標題
       var today=dateStr(now);
@@ -1712,9 +1710,6 @@ window.__nodeLink=(function(){
 // 編輯介面：只有解鎖後才會出現（由上面的 __tripEditUI 觸發）
 (function(){
   var S=window.__trip, editing=false, fab=null, bar=null;
-  // 記下最後一次捲動的時間：用來判斷按下按鈕的當下，畫面是不是還在被平滑捲動
-  var lastScrollAt=0;
-  window.addEventListener('scroll', function(){ lastScrollAt=Date.now(); }, {passive:true});
   var BLANK=String.fromCharCode(10,10);          // 多段內容的分隔（空白行）
   var SPLIT=new RegExp(String.fromCharCode(10)+String.fromCharCode(92)+'s*'+String.fromCharCode(10));
 
@@ -1810,7 +1805,6 @@ window.__nodeLink=(function(){
     html.style.scrollBehavior='auto';
     window.scrollTo(0, window.scrollY);
     window.__tripHoldCenter=Date.now()+3000;       // 這幾秒內不准自動置中
-    var moving=(Date.now()-lastScrollAt)<150;      // 剛剛還在捲＝進來時畫面正在被平滑捲動
 
     var els=document.querySelectorAll('.tl .ev, .tl .fin-sec'), key=null, rel=0;
     for(var i=0;i<els.length;i++){
@@ -1832,7 +1826,6 @@ window.__nodeLink=(function(){
       var y=Math.max(0, Math.round(window.scrollY + back.getBoundingClientRect().top - rel));
       if(Math.abs(y-window.scrollY)>1) window.scrollTo(0, y);
     }
-    var y0=window.scrollY;
     fix();
     // 不用 requestAnimationFrame：頁面不在前景時它根本不會跑，這幾次校正就全沒了
     setTimeout(fix, 0);
@@ -1841,35 +1834,20 @@ window.__nodeLink=(function(){
     // 定位之後還有東西把畫面捲走（手機上遇過整頁彈回最上面），3 秒內逮到就拉回來。
     // 使用者只要自己碰了畫面就立刻收手，免得跟人搶捲動。
     function guard(){
-      var t0=Date.now(), off0=null, done=false;
+      var t0=Date.now(), done=false;
       function release(){ done=true; }
       ['touchstart','wheel','keydown','pointerdown'].forEach(function(ev){
         window.addEventListener(ev, release, {once:true, passive:true});
       });
       var id=setInterval(function(){
         var b=document.querySelector('.tl [data-id="'+key+'"]');
-        if(done || !b || Date.now()-t0>3000){ clearInterval(id); if(off0===null) note(lastNote); return; }
+        if(done || !b || Date.now()-t0>3000){ clearInterval(id); return; }
         var off=b.getBoundingClientRect().top-rel;
-        if(Math.abs(off)>150){
-          window.scrollTo(0, Math.max(0, Math.round(window.scrollY+off)));
-          if(off0===null) off0=off;
-          note('守衛拉回 '+Math.round(off0)+(Math.abs(off)>150?'(+)':''));
-        }
+        if(Math.abs(off)>150) window.scrollTo(0, Math.max(0, Math.round(window.scrollY+off)));
       }, 80);
     }
-    note('key='+key+' rel='+Math.round(rel)+' y '+Math.round(y0)+'→'+Math.round(window.scrollY)
-      +(moving?' [捲動中]':''));
   }
 
-  // 編輯列底下那行小字：排這個「畫面自己跑掉」的問題用的，排掉之後可以整段拿掉
-  var lastNote='';
-  function note(msg){
-    lastNote=msg;
-    var box=bar && bar.querySelector('.ed-dbg');
-    if(!box) return;
-    box.textContent='🔧 '+msg
-      +'｜自動置中 跑'+(window.__tripCenterRan||0)+' 擋'+(window.__tripCenterBlocked||0);
-  }
 
   async function flush(){
     var r;
@@ -1984,8 +1962,7 @@ window.__nodeLink=(function(){
     fab.title='編輯行程';
     fab.onclick=toggle;
     document.body.appendChild(fab);
-    bar=el('div','ed-bar','編輯模式：可改時間與文字、新增或刪除節點。修改會同步到雲端，朋友也看得到（🔒 私人節點除外）。'
-      +'<span class="ed-dbg"></span>');
+    bar=el('div','ed-bar','編輯模式：可改時間與文字、新增或刪除節點。修改會同步到雲端，朋友也看得到（🔒 私人節點除外）。');
     bar.style.display='none';
     document.body.appendChild(bar);
   };
@@ -2337,6 +2314,13 @@ if('serviceWorker' in navigator){
   var PEOPLE=['大哥','建中','佑瑾','子軒'];
   var ALIAS={'大哥':'Yison', '佑瑾':'Youjin', '子軒':'章魚'};      // 平常互相叫的稱呼
   var CURS=[{k:'jpy', sym:'¥', name:'日幣 ¥'}, {k:'twd', sym:'NT$', name:'新台幣 NT$'}];
+  var RULES=[
+    '自己有借錢的需求，別人有拒絕的權利',
+    '建議紀錄精確金額，抹零、取整、換幣別等還款行為，皆需雙方合意',
+    '不紀錄欠款事項及來往紀錄，僅提供最後計算結果，亦不提供追討服務',
+    '隨時隨地結清欠款，甚至當下直接結算，留下乾淨紀錄',
+    '行前立規矩，旅途一身輕'
+  ];
   // 試作用的假資料：雲端還沒有任何財務紀錄時先拿它來看畫面，之後整段刪掉即可
   var DEMO={'大哥|建中':{jpy:-3000, twd:500}, '大哥|子軒':{jpy:0, twd:0},
             '建中|佑瑾':{jpy:2400, twd:0}, '佑瑾|子軒':{jpy:0, twd:-1200}};
@@ -2412,7 +2396,8 @@ if('serviceWorker' in navigator){
         return '<button type="button" class="opt-tab" data-opt-i="'+i+'">'+nm(p)+'</button>';
       }).join('')+'</div>'
       +PEOPLE.map(pane).join('')
-      +'<div class="fin-add"><button type="button" id="fin-new">＋ 新增</button></div>';
+      +'<div class="fin-add"><button type="button" id="fin-new">＋ 新增</button></div>'
+      +'<ul class="fin-rules">'+RULES.map(function(x){ return '<li>'+x+'</li>'; }).join('')+'</ul>';
     if(window.__tripOptsApply) window.__tripOptsApply();     // 把上次選到的人套回去
     applyShow();
   }
