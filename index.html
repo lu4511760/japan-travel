@@ -2492,6 +2492,16 @@ if('serviceWorker' in navigator){
       return '<option value="'+p+'"'+(p===sel?' selected':'')+'>'+nm(p)+'</option>';
     }).join('');
   }
+  // 表格上正看著誰，新增時就預設由他借出
+  function picked(){
+    var t=document.querySelector('.fin-card .opt-tab.on');
+    var i=t ? +t.getAttribute('data-opt-i') : 0;
+    return PEOPLE[i] || PEOPLE[0];
+  }
+  function firstPair(){
+    var me=picked();
+    return {to:me, from:PEOPLE.filter(function(p){ return p!==me; })[0]};
+  }
   function pairsIn(box){
     return Array.prototype.map.call(box.querySelectorAll('.fin-row'), function(r){
       return {from:r.querySelector('.fin-from').value, to:r.querySelector('.fin-to').value};
@@ -2512,10 +2522,11 @@ if('serviceWorker' in navigator){
     return null;                      // 所有組合都列完了
   }
   function rowHtml(pair, canDel){
+    // 左邊是借出去的人（之後要收錢），右邊是拿到錢的人；存進資料時仍是「from 欠 to」
     return '<div class="fin-row">'
-      +'<div class="fin-line"><select class="fin-from">'+opts(PEOPLE, pair.from)+'</select>'
-      +'<span>欠</span><select class="fin-to">'
-      + opts(PEOPLE.filter(function(p){ return p!==pair.from; }), pair.to)+'</select>'
+      +'<div class="fin-line"><select class="fin-to">'+opts(PEOPLE, pair.to)+'</select>'
+      +'<span>借給</span><select class="fin-from">'
+      + opts(PEOPLE.filter(function(p){ return p!==pair.to; }), pair.from)+'</select>'
       +(canDel ? '<button type="button" class="fin-del" title="刪掉這一筆">✕</button>' : '')
       +'</div>'
       +'<div class="fin-line"><select class="fin-cur">'
@@ -2523,16 +2534,16 @@ if('serviceWorker' in navigator){
       +'</select><input class="fin-amt" type="number" inputmode="numeric" min="1" step="1" placeholder="金額"></div>'
       +'</div>';
   }
-  // 「欠誰」不能是自己，所以左邊換人時右邊的選單要跟著重排
-  function syncTo(row){
-    var from=row.querySelector('.fin-from').value, to=row.querySelector('.fin-to'), keep=to.value;
-    to.innerHTML=opts(PEOPLE.filter(function(p){ return p!==from; }), keep);
+  // 不能借給自己，所以左邊換人時右邊的選單要跟著重排
+  function syncRow(row){
+    var to=row.querySelector('.fin-to').value, from=row.querySelector('.fin-from'), keep=from.value;
+    from.innerHTML=opts(PEOPLE.filter(function(p){ return p!==to; }), keep);
   }
   function openAdd(){
     var box=document.createElement('div');
     box.className='ed-mask';
     box.innerHTML='<div class="ed-box"><h3>新增財務紀錄</h3>'
-      +'<div id="fin-rows">'+rowHtml({from:PEOPLE[0], to:PEOPLE[1]}, false)+'</div>'
+      +'<div id="fin-rows">'+rowHtml(firstPair(), false)+'</div>'
       +'<div class="fin-add"><button type="button" id="fin-more">＋ 再新增一筆</button></div>'
       +'<div class="ed-btns" style="margin-top:14px">'
       +'<button type="button" id="fin-cancel">取消</button>'
@@ -2543,7 +2554,7 @@ if('serviceWorker' in navigator){
     function refresh(){ more.style.display = nextPair(pairsIn(box)) ? '' : 'none'; }
 
     box.addEventListener('change', function(e){
-      if(e.target.classList.contains('fin-from')) syncTo(e.target.closest('.fin-row'));
+      if(e.target.classList.contains('fin-to')) syncRow(e.target.closest('.fin-row'));
       refresh();
     });
     box.addEventListener('click', function(e){
