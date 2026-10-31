@@ -421,16 +421,14 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
   margin:22px -16px 0 -46px; padding:8px 16px 14px 46px; scroll-margin-top:58px;
   background:var(--bg);
   font-size:36px; line-height:1.15; color:var(--fin); font-weight:700; letter-spacing:.02em;
-}
-.fin-head .fin-sub{
-  display:flex; align-items:center; gap:10px; margin-top:3px;
-  font-size:15px; font-weight:400; letter-spacing:.04em; color:var(--muted);
+  display:flex; align-items:center;          /* 開關跟標題同一行 */
 }
 /* 副標右邊的開關：勾起來這一段才會公開給大家看（連上面的快選一起）。
    自己（解鎖的裝置）不管有沒有勾都看得到，開關本身只有編輯模式才出現。 */
 .fin-show{
   margin-left:auto; display:flex; align-items:center; gap:4px;
-  font-size:13px; letter-spacing:0; white-space:nowrap; cursor:pointer;
+  font-size:13px; font-weight:400; letter-spacing:0; white-space:nowrap;
+  color:var(--muted); cursor:pointer;
 }
 .fin-show input{width:16px; height:16px; margin:0; accent-color:var(--fin)}
 body:not(.editing) .fin-show{display:none}
@@ -584,7 +582,7 @@ body:not(.editing) .fin-settle, body:not(.editing) .fin-add{display:none}
 
   <!-- ── 財務紀錄：時間軸的最後一段（開頁後由 JS 接到 .tl 裡面） ── -->
   <section class="fin-sec" id="fin-sec" data-id="fin-sec">
-    <div class="fin-head" id="fin">財務紀錄<span class="fin-sub"><label class="fin-show" title="勾起來才會公開給大家看"><input type="checkbox" id="fin-show">顯示</label></span></div>
+    <div class="fin-head" id="fin">財務紀錄<label class="fin-show" title="勾起來才會公開給大家看"><input type="checkbox" id="fin-show">顯示</label></div>
     <div class="fin-card" id="fin-card"></div>
   </section>
 
