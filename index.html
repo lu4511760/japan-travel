@@ -68,17 +68,14 @@ nav a{
 }
 nav a .dn{display:block; font-size:11px; letter-spacing:.4px; opacity:.8}
 /* 財務紀錄沒有「Day N」那種副標，兩行都是一樣的字；行高縮一點，高度才跟其他日期一致 */
-#fin-nav{line-height:1.14}
-/* 公開之後就把它釘在日期列最右邊，日期左右滑動時它不動，隨時點得到。
-   還沒公開時不釘（那時只有自己看得到，釘著反而一直擋住日期）。
-   ::before 在按鈕底下鋪一塊底色，否則滑過來的日期會從縫隙透出來；
-   左緣做一小段漸層，日期滑到這裡是淡出而不是硬生生被切掉。 */
-#fin-nav.pinned{position:sticky; right:0; z-index:2}
-#fin-nav.pinned::before{
-  content:""; position:absolute; z-index:-1;
-  top:-9px; bottom:-9px; left:-14px; right:-15px;
-  background:linear-gradient(to right, transparent, var(--bg) 14px);
-}
+/* 釘在日期列最右邊，日期左右滑動時它不動，隨時點得到 */
+#fin-nav{line-height:1.14; position:sticky; right:0; z-index:2}
+/* 兩側各鋪一塊底色擋住滑過來的日期，否則它們會從縫隙透出來。
+   遮罩只蓋按鈕「外面」（右緣接 100%、左緣接 100%），不然會把按鈕自己的邊框也蓋掉。
+   左邊做漸層，日期滑到這裡是淡出而不是硬生生被切掉。 */
+#fin-nav::before, #fin-nav::after{content:""; position:absolute; top:-9px; bottom:-9px}
+#fin-nav::before{right:100%; width:26px; background:linear-gradient(to right, transparent, var(--bg))}
+#fin-nav::after{left:100%; width:16px; background:var(--bg)}
 /* nav a 是 inline-block，會蓋掉 hidden 本身的 display:none，要自己補一條 */
 #fin-nav[hidden], #fin-sec[hidden]{display:none}
 #fin-nav .dn{font-size:14px; letter-spacing:.02em; opacity:1}
@@ -2407,10 +2404,7 @@ if('serviceWorker' in navigator){
     if(showBox) showBox.checked=on;
     if(SEC) SEC.hidden=!(on||mine);
     var nav=document.getElementById('fin-nav');
-    if(nav){
-      nav.hidden=!(on||mine);
-      nav.classList.toggle('pinned', on);     // 公開了才釘在最右邊
-    }
+    if(nav) nav.hidden=!(on||mine);
   }
   if(showBox) showBox.addEventListener('change', function(){
     if(!S.pub) S.pub={edits:{}, added:[], removed:[]};
