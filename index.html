@@ -463,7 +463,6 @@ body:not(.editing) .fin-show{display:none}
 /* 表格底下的幾句話：先講好規矩，帳才好算 */
 .fin-rules{margin:14px 0 0; padding:0 0 0 18px; list-style:disc}
 .fin-rules li{margin:4px 0; font-size:12.5px; line-height:1.6; color:var(--muted)}
-.fin-rules li:last-child{color:var(--fin); font-weight:600}
 /* 結算與新增只有編輯模式（解鎖後）看得到，其他人只能看 */
 body:not(.editing) .fin-settle, body:not(.editing) .fin-add{display:none}
 /* 新增視窗裡的一筆：誰欠誰、哪種幣別、多少錢 */
@@ -585,7 +584,7 @@ body:not(.editing) .fin-settle, body:not(.editing) .fin-add{display:none}
 
   <!-- ── 財務紀錄：時間軸的最後一段（開頁後由 JS 接到 .tl 裡面） ── -->
   <section class="fin-sec" id="fin-sec" data-id="fin-sec">
-    <div class="fin-head" id="fin">財務紀錄<span class="fin-sub">親兄弟，明算帳，一塊錢，傷感情<label class="fin-show" title="勾起來才會公開給大家看"><input type="checkbox" id="fin-show">顯示</label></span></div>
+    <div class="fin-head" id="fin">財務紀錄<span class="fin-sub"><label class="fin-show" title="勾起來才會公開給大家看"><input type="checkbox" id="fin-show">顯示</label></span></div>
     <div class="fin-card" id="fin-card"></div>
   </section>
 
@@ -2375,11 +2374,8 @@ if('serviceWorker' in navigator){
   var ALIAS={'佑瑾':'Youjin', '子軒':'章魚'};      // 平常互相叫的稱呼（大哥、建中就用本名）
   var CURS=[{k:'jpy', sym:'¥', name:'日幣 ¥'}, {k:'twd', sym:'NT$', name:'新台幣 NT$'}];
   var RULES=[
-    '自己有借錢的需求，別人有拒絕的權利',
     '建議紀錄精確金額，抹零、取整、換幣別等還款行為，皆需雙方合意',
-    '不紀錄欠款事項及來往紀錄，僅提供最後計算結果',
-    '隨時隨地結清欠款，甚至當下直接結算，留下乾淨紀錄',
-    '行前立規矩，旅途一身輕'
+    '不紀錄欠款事項及來往紀錄，僅提供最後計算結果'
   ];
 
   var S=window.__trip;
