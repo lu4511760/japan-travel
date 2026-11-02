@@ -56,10 +56,16 @@ nav{
   position:sticky; top:0; z-index:10;
   background:var(--bg); border-bottom:1px solid var(--line);
   margin:0 -16px 24px; padding:8px 12px;
+  display:flex; align-items:center; overflow:hidden;
+}
+/* 會滑動的只有日期這一塊；財務紀錄站在它旁邊，日期滑到底也不會跑到它底下。
+   min-width:0 不能省，不然 flex 子元素會被內容撐開，根本不會出現捲軸。 */
+.nav-days{
+  flex:1 1 auto; min-width:0;
   overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch;
   scrollbar-width:none;
 }
-nav::-webkit-scrollbar{display:none}
+.nav-days::-webkit-scrollbar{display:none}
 nav a{
   display:inline-block; font-size:14px; text-decoration:none; text-align:center;
   color:var(--muted); background:var(--card); border:1px solid var(--line);
@@ -68,14 +74,8 @@ nav a{
 }
 nav a .dn{display:block; font-size:11px; letter-spacing:.4px; opacity:.8}
 /* 財務紀錄沒有「Day N」那種副標，兩行都是一樣的字；行高縮一點，高度才跟其他日期一致 */
-/* 釘在日期列最右邊，日期左右滑動時它不動，隨時點得到 */
-#fin-nav{line-height:1.14; position:sticky; right:0; z-index:2; color:var(--fin)}
-/* 兩側各鋪一塊底色擋住滑過來的日期，否則它們會從縫隙透出來。
-   遮罩只蓋按鈕「外面」（右緣接 100%、左緣接 100%），不然會把按鈕自己的邊框也蓋掉。
-   左邊做漸層，日期滑到這裡是淡出而不是硬生生被切掉。 */
-#fin-nav::before, #fin-nav::after{content:""; position:absolute; top:-9px; bottom:-9px}
-#fin-nav::before{right:100%; width:26px; background:linear-gradient(to right, transparent, var(--bg))}
-#fin-nav::after{left:100%; width:16px; background:var(--bg)}
+/* 站在日期區塊的外面，所以不必釘也不會被日期蓋到；沒顯示時日期就自己佔滿整條 */
+#fin-nav{line-height:1.14; flex:none; color:var(--fin)}
 /* nav a 是 inline-block，會蓋掉 hidden 本身的 display:none，要自己補一條 */
 #fin-nav[hidden], #fin-sec[hidden]{display:none}
 #fin-nav .dn{font-size:14px; letter-spacing:.02em; opacity:1}
@@ -498,6 +498,7 @@ body:not(.editing) .fin-settle, body:not(.editing) .fin-add{display:none}
   <p class="sub">2027/01/16 ~ 01/23・8 天 7 夜</p>
 
   <nav id="daynav">
+    <div class="nav-days">
     <a href="#d0116" draggable="false" data-d="2027-01-16"><span class="dn">Day 1</span>01/16</a>
     <a href="#d0117" draggable="false" data-d="2027-01-17"><span class="dn">Day 2</span>01/17</a>
     <a href="#d0118" draggable="false" data-d="2027-01-18"><span class="dn">Day 3</span>01/18</a>
@@ -506,6 +507,7 @@ body:not(.editing) .fin-settle, body:not(.editing) .fin-add{display:none}
     <a href="#d0121" draggable="false" data-d="2027-01-21"><span class="dn">Day 6</span>01/21</a>
     <a href="#d0122" draggable="false" data-d="2027-01-22"><span class="dn">Day 7</span>01/22</a>
     <a href="#d0123" draggable="false" data-d="2027-01-23"><span class="dn">Day 8</span>01/23</a>
+    </div>
     <a href="#fin" draggable="false" id="fin-nav"><span class="dn">財務</span>紀錄</a>
   </nav>
 
