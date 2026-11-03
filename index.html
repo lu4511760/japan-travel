@@ -1752,6 +1752,7 @@ window.__nodeLink=(function(){
       if(!r.ok) throw new Error('HTTP '+r.status);
       try{ localStorage.removeItem(PENDING); }catch(e){}
       lastPub=JSON.stringify(S.pub||null);
+      lastPriv=(payload.priv&&payload.priv.ct)||null;      // 自己剛存的，下次同步別當成別人改的
       try{ localStorage.setItem(CLOUD_KEY, JSON.stringify(payload)); }catch(e){}
       return {ok:true};
     }catch(e){
@@ -1775,7 +1776,7 @@ window.__nodeLink=(function(){
   // ── 自動同步 ──
   // 別人改了行程（或財務紀錄），不必手動重整也看得到。
   // 只在內容真的變了才重畫，否則畫面會沒事抖一下。
-  var lastPub=null;
+  var lastPub=null, lastPriv=null;
   async function sync(){
     if(!booted) return;
     if(document.body.classList.contains('editing')) return;       // 自己正在改，別來攪局
@@ -1784,8 +1785,11 @@ window.__nodeLink=(function(){
     var cloud=null;
     try{ cloud=await loadCloud(); }catch(e){ return; }             // 沒網路就算了，下次再說
     var raw=JSON.stringify((cloud&&cloud.pub)||null);
-    if(raw===lastPub) return;
-    lastPub=raw;
+    // 私人節點的修改只會動到密文，pub 原封不動；只比 pub 的話，
+    // 另一台改的私人行程（例如把結束時間改掉）這台永遠等不到。沒密碼的裝置看不到私人節點，不必理會。
+    var rawPriv=(S.pw&&cloud&&cloud.priv&&cloud.priv.ct)||null;
+    if(raw===lastPub && rawPriv===lastPriv) return;
+    lastPub=raw; lastPriv=rawPriv;
     if(cloud && cloud.pub) S.pub=cloud.pub;
     // 私人行程也可能被另一台改過
     if(cloud && cloud.priv && S.pw){
