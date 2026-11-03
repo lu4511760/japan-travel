@@ -371,6 +371,14 @@ span.rsv{color:var(--meal)}
 .ev.past::before{border-color:var(--rail)}
 /* 雪場資訊不是時間事件，不顯示軸點 */
 #ski-info::before{display:none}
+/* 雪場資訊內容很長，做成點標題就收合，跟行前清單一樣；預設是收起來的 */
+#ski-info > h2{cursor:pointer; user-select:none; -webkit-user-select:none}
+#ski-info > h2::after{
+  content:"▾"; display:inline-block; margin-left:6px;
+  font-size:12px; opacity:.6; transition:transform .15s;
+}
+#ski-info.folded > h2::after{transform:rotate(-90deg)}
+#ski-info.folded > .body{display:none}
 /* 私人行程節點：軸點換色並在時刻後加鎖頭，一眼分得出朋友看不到的部分 */
 .ev.private::before{border-color:var(--priv)}
 /* 過去的私人節點同樣要灰：權重需高於 .ev.private::before，否則紫色會蓋掉灰色 */
@@ -1226,6 +1234,31 @@ window.__nodeLink=(function(){
   apply();
   window.__tripOptsApply=apply;      // 財務紀錄重畫表格後要再套一次
   // 解鎖私人行程或套用雲端修改會重畫節點，重畫後要重新套用選擇
+  var tl=document.querySelector('.tl');
+  if(tl && window.MutationObserver) new MutationObserver(apply).observe(tl, {childList:true});
+})();
+
+// ── 雪場資訊收合 ──
+// 這張卡內容很長（地圖、餐廳、纜車、雪具租借…），攤開會把第 2 天整個壓在下面，
+// 所以點標題就能收起來。預設收合，開關只記在這台裝置（localStorage），不上雲端。
+(function(){
+  var KEY='japan2027-ski-fold';
+  function folded(){
+    try{ var v=localStorage.getItem(KEY); return v===null ? true : v==='1'; }catch(e){ return true; }
+  }
+  function apply(){
+    var card=document.getElementById('ski-info');
+    if(card) card.classList.toggle('folded', folded());
+  }
+  document.addEventListener('click', function(e){
+    var h=e.target.closest && e.target.closest('#ski-info > h2');
+    if(!h) return;
+    var card=h.parentNode, next=!card.classList.contains('folded');
+    card.classList.toggle('folded', next);
+    try{ localStorage.setItem(KEY, next?'1':'0'); }catch(err){}
+  });
+  apply();
+  // 雪場資訊卡會隨日期搬家，重畫節點後要再套一次
   var tl=document.querySelector('.tl');
   if(tl && window.MutationObserver) new MutationObserver(apply).observe(tl, {childList:true});
 })();
