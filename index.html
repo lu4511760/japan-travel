@@ -157,6 +157,15 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
 /* 班機誤點、時刻被往後挪過：在後面補上原本的表定時間 */
 .when-was{margin-left:8px; font-size:12.5px; color:var(--muted); font-weight:400; letter-spacing:0}
 body.editing .when-end{display:inline; color:var(--muted); font-weight:400}
+/* 「結束行程」：只長在正在進行的那個節點上，而且只有編輯模式看得到。
+   用 CSS 控制顯示，按鈕本身每個節點都先放好，這樣每分鐘換人進行中時不必重畫按鈕。 */
+.ed-end{display:none}
+body.editing .ev.now .ed-end{
+  display:inline-block; margin-left:10px; vertical-align:2px;
+  font-family:inherit; font-size:12px; font-weight:700; letter-spacing:0; line-height:1.7;
+  color:var(--accent); background:var(--card);
+  border:1px solid var(--accent); border-radius:999px; padding:0 10px; cursor:pointer;
+}
 .ev h2{font-size:16.5px; margin:1px 0 7px}
 .ev h2.meal{color:var(--meal)}
 .ev h2.alert{color:var(--alert)}
@@ -1410,6 +1419,9 @@ window.__nodeLink=(function(){
       else past = now >= x.stop;
       x.el.classList.toggle('past', !!past);
     });
+    // 標出正在進行的那一個：編輯模式的「結束行程」按鈕靠這個 class 決定長在哪
+    document.querySelectorAll('.tl .ev.now').forEach(function(e){ e.classList.remove('now'); });
+    if(sc.cur) sc.cur.el.classList.add('now');
   }
 
   // 餐廳訂位連結：日期自動代入最近的週三（當天就是週三則取下週三）
@@ -1984,9 +1996,28 @@ window.__nodeLink=(function(){
     await flush();
   }
 
+  // 「結束行程」：把這個節點的結束時間改成現在，代表它到此為止
+  async function endNow(id){
+    var d=dataOf(id);
+    if(!d){ toast('找不到這個節點'); return; }
+    var n=new Date();
+    var hhmm=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+    var start=d.it.time||'';
+    // 跨午夜的節點（23:50 開始、00:10 結束）本來就合法，只擋同一天往回填的情形
+    if(start && hhmm<start && start<'12:00'){ toast('現在時間比開始時間還早'); return; }
+    if(!confirm('把「'+(d.it.title||'這個行程').replace(/<[^>]*>/g,'')+'」的結束時間改成 '+hhmm+'？')) return;
+    if(d.where==='priv' || d.where==='added'){
+      d.it.end=hhmm;                                  // 這兩種拿到的就是原物件，直接改
+    }else{
+      S.pub.edits=S.pub.edits||{};
+      S.pub.edits[id]=Object.assign({}, d.it, {end:hhmm});   // d.it 已經是基礎資料＋先前的修改
+    }
+    await flush();
+  }
+
   // 編輯模式下，在每個節點與每天標題補上操作按鈕
   function decorate(){
-    document.querySelectorAll('.ed-tools, .ed-add, .rsv-chk').forEach(function(e){ e.remove(); });
+    document.querySelectorAll('.ed-tools, .ed-add, .rsv-chk, .ed-end').forEach(function(e){ e.remove(); });
     document.body.classList.toggle('editing', editing);
     if(!editing) return;
     document.querySelectorAll('.tl .ev').forEach(function(ev){
@@ -2000,6 +2031,13 @@ window.__nodeLink=(function(){
         else removeNode(id);
       };
       ev.appendChild(tools);
+      // 時刻那一行的尾巴放「結束行程」，平常藏著，輪到它進行中才現身
+      var when=ev.querySelector('.when');
+      if(when){
+        var endBtn=el('button','ed-end','結束行程');
+        endBtn.onclick=function(){ endNow(id); };
+        when.appendChild(endBtn);
+      }
       // 需預約的節點，標題旁多一個預約狀態勾選框
       var rsv=ev.querySelector('a.rsv, span.rsv');
       if(rsv){
