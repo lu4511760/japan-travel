@@ -1780,8 +1780,15 @@ window.__nodeLink=(function(){
   async function sync(){
     if(!booted) return;
     if(document.body.classList.contains('editing')) return;       // 自己正在改，別來攪局
-    // 自己還有沒上傳的修改時先別同步，免得被雲端蓋掉；沒權限的裝置不會有合法的待上傳內容，不受此限
-    try{ if(S.token && localStorage.getItem(PENDING)) return; }catch(e){}
+    // 自己還有沒上傳的修改時先別同步，免得被雲端蓋掉；沒權限的裝置不會有合法的待上傳內容，不受此限。
+    // 但光是等著不行：手機訊號差時存檔會失敗、修改就留在本機，而補送只在開啟網頁和重新連上網時才跑，
+    // 於是這台從此不再自動更新。所以每一輪都先試著把自己的補送上去，送掉了就能照常同步。
+    try{
+      if(S.token && localStorage.getItem(PENDING)){
+        await flushPending();
+        if(localStorage.getItem(PENDING)) return;                 // 還是送不上去，這次就算了
+      }
+    }catch(e){}
     var cloud=null;
     try{ cloud=await loadCloud(); }catch(e){ return; }             // 沒網路就算了，下次再說
     var raw=JSON.stringify((cloud&&cloud.pub)||null);
@@ -2087,6 +2094,9 @@ window.__nodeLink=(function(){
     fab.classList.toggle('on', editing);
     bar.style.display=editing?'block':'none';
     keepView(decorate);
+    // 編輯模式中不同步（免得改到一半被雲端蓋掉），離開時補一次，不必乾等下一輪。
+    // 等 keepView 把捲動位置校正完再動，不然兩邊會搶著捲畫面
+    if(!editing && window.__tripSync) setTimeout(window.__tripSync, 3200);
   }
 
   // 解鎖後在副標後面標出這份網頁是什麼時候更新的，方便確認手機上看到的是不是最新版。
