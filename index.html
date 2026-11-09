@@ -2470,7 +2470,7 @@ if('serviceWorker' in navigator){
 // 「結算」與「新增」只有解鎖後進編輯模式才看得到（CSS 控制），其他人只能看。
 (function(){
   var PEOPLE=['大哥','Skywalker','Youjin','章魚哥'];
-  var ALIAS={};                                   // 要用暱稱顯示的人寫在這裡（本名:暱稱），目前四個人都用本名
+  var ALIAS={'Skywalker':'Skywalker', 'Youjin':'Youjin', '章魚哥':'章魚哥'};   // 平常互相叫的稱呼（大哥用本名）
   var CURS=[{k:'jpy', sym:'¥', name:'日幣 ¥'}, {k:'twd', sym:'NT$', name:'新台幣 NT$'}];
   var RULES=[
     '建議紀錄精確金額，抹零、取整、換幣別等還款行為，皆需雙方合意',
@@ -2520,7 +2520,7 @@ if('serviceWorker' in navigator){
   }
   function money(sym, n){ return sym+Math.abs(n).toLocaleString('en-US'); }
 
-  // 一列就是一句話：「還Skywalker ¥3,000，Skywalker欠 NT$500」／「目前與 Youjin 無財務往來」／「章魚哥 ✓ 兩清」
+  // 一列就是一句話：「還 Skywalker ¥3,000，Skywalker 欠 NT$500」／「目前與 Youjin 無財務往來」／「章魚哥 ✓ 兩清」
   function desc(p, q){
     var n=net(p,q), Q=nm(q);
     if(!n) return '<span class="fin-none">目前與'+Q+'無財務往來</span>';
