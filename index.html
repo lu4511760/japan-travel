@@ -2469,8 +2469,8 @@ if('serviceWorker' in navigator){
 // 資料掛在雲端修改的 pub.fin 底下（明文，所有人都看得到），所以後端 Worker 不用改；
 // 「結算」與「新增」只有解鎖後進編輯模式才看得到（CSS 控制），其他人只能看。
 (function(){
-  var PEOPLE=['大哥','Skywalker','Youjin','章魚哥'];
-  var ALIAS={'Skywalker':'Skywalker', 'Youjin':'Youjin', '章魚哥':'章魚哥'};   // 平常互相叫的稱呼（大哥用本名）
+  var PEOPLE=['大哥','Skywalker','Youjin','章魚哥'];   // 一律用互相叫的稱呼，本名不放上公開的網頁
+  var ALIAS={};                                   // 要再換顯示用的叫法就寫在這裡（名字:要顯示的字）
   var CURS=[{k:'jpy', sym:'¥', name:'日幣 ¥'}, {k:'twd', sym:'NT$', name:'新台幣 NT$'}];
   var RULES=[
     '建議紀錄精確金額，抹零、取整、換幣別等還款行為，皆需雙方合意',
