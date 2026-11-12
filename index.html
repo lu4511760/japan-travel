@@ -380,14 +380,21 @@ span.rsv{color:var(--meal)}
 .ev.past::before{border-color:var(--rail)}
 /* 雪場資訊不是時間事件，不顯示軸點 */
 #ski-info::before{display:none}
-/* 雪場資訊內容很長，做成點標題就收合，跟行前清單一樣；預設是收起來的 */
-#ski-info > h2{cursor:pointer; user-select:none; -webkit-user-select:none}
-#ski-info > h2::after{
+/* 雪場資訊內容很長，做成點標題就收合，跟行前清單一樣；預設是收起來的。
+   用原生的 details 而不是自己 display:none，收起來的字才找得到：
+   手機瀏覽器的「在頁面中尋找」搜到裡面的字會自動展開（雪場現場查資料很需要） */
+#ski-info summary{
+  cursor:pointer; user-select:none; -webkit-user-select:none;
+  list-style:none;                       /* 原生三角形不要，下面自己畫 */
+}
+#ski-info summary::-webkit-details-marker{display:none}   /* Safari 要另外關 */
+#ski-info summary h2{display:inline-block}
+#ski-info summary h2::after{
   content:"▾"; display:inline-block; margin-left:6px;
   font-size:12px; opacity:.6; transition:transform .15s;
+  transform:rotate(-90deg);
 }
-#ski-info.folded > h2::after{transform:rotate(-90deg)}
-#ski-info.folded > .body{display:none}
+#ski-info details[open] summary h2::after{transform:none}
 /* 私人行程節點：軸點換色並在時刻後加鎖頭，一眼分得出朋友看不到的部分 */
 .ev.private::before{border-color:var(--priv)}
 /* 過去的私人節點同樣要灰：權重需高於 .ev.private::before，否則紫色會蓋掉灰色 */
@@ -1255,17 +1262,28 @@ window.__nodeLink=(function(){
   function folded(){
     try{ var v=localStorage.getItem(KEY); return v===null ? true : v==='1'; }catch(e){ return true; }
   }
+  // 節點是照資料畫出來的（標題一個 h2、內容一個 .body），這裡把這兩塊搬進 details，
+  // 標題包成 summary。h2 留著不動，原本吃 `.ev h2` 的樣式照樣套得到。
   function apply(){
     var card=document.getElementById('ski-info');
-    if(card) card.classList.toggle('folded', folded());
+    if(!card) return;
+    var d=card.querySelector(':scope > details');
+    if(!d){
+      var h2=card.querySelector(':scope > h2');
+      if(!h2) return;
+      d=document.createElement('details');
+      var sum=document.createElement('summary');
+      h2.parentNode.insertBefore(d, h2);
+      sum.appendChild(h2);                                   // h2 搬進 summary
+      d.appendChild(sum);
+      // 只搬內容卡片：編輯模式加的按鈕也掛在這張卡上，掃進去就被收合藏起來了
+      card.querySelectorAll(':scope > .body').forEach(function(b){ d.appendChild(b); });
+      d.addEventListener('toggle', function(){
+        try{ localStorage.setItem(KEY, d.open?'0':'1'); }catch(e){}
+      });
+    }
+    d.open=!folded();
   }
-  document.addEventListener('click', function(e){
-    var h=e.target.closest && e.target.closest('#ski-info > h2');
-    if(!h) return;
-    var card=h.parentNode, next=!card.classList.contains('folded');
-    card.classList.toggle('folded', next);
-    try{ localStorage.setItem(KEY, next?'1':'0'); }catch(err){}
-  });
   apply();
   // 雪場資訊卡會隨日期搬家，重畫節點後要再套一次
   var tl=document.querySelector('.tl');
