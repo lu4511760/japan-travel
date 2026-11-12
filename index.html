@@ -32,6 +32,10 @@
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
+/* 系統開了「減少動態效果」就別平滑捲，直接到位（會暈的人用的） */
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+}
 body{
   margin:0; background:var(--bg); color:var(--fg);
   font:16px/1.6 -apple-system,"Noto Sans TC","Microsoft JhengHei",serif;
@@ -102,6 +106,13 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
 @keyframes evflash{
   0%,100%{background:transparent; box-shadow:none}
   50%{background:rgba(230,126,34,.16); box-shadow:0 0 0 6px rgba(230,126,34,.16)}
+}
+/* 開了「減少動態效果」就不要閃 5 下，改成慢慢亮一次再退掉。
+   閃是用來指出「就是這一則」的，整個拿掉人就找不到了，所以是放慢而不是關掉。 */
+@media (prefers-reduced-motion: reduce){
+  .flash,
+  #checklist.flash > summary,
+  #checklist.flash > .info{animation-duration:1.4s; animation-iteration-count:1}
 }
 .ev::before{
   content:""; position:absolute; left:-29px; top:5px;
@@ -395,6 +406,10 @@ span.rsv{color:var(--meal)}
   transform:rotate(-90deg);
 }
 #ski-info details[open] summary h2::after{transform:none}
+/* 箭頭的旋轉屬於位移類的動態，減少動態效果時直接換過去（顏色類的轉場不受影響，留著） */
+@media (prefers-reduced-motion: reduce){
+  #ski-info summary h2::after{transition:none}
+}
 /* 私人行程節點：軸點換色並在時刻後加鎖頭，一眼分得出朋友看不到的部分 */
 .ev.private::before{border-color:var(--priv)}
 /* 過去的私人節點同樣要灰：權重需高於 .ev.private::before，否則紫色會蓋掉灰色 */
@@ -649,6 +664,13 @@ body:not(.editing) .fin-settle, body:not(.editing) .fin-add{display:none}
 </div>
 
 <script>
+// 使用者在系統裡開了「減少動態效果」的話，程式自己捲動時就別再平滑滑過去。
+// CSS 的 scroll-behavior 管不到 scrollIntoView 帶的參數，所以這裡要自己判斷。
+window.__tripEase=function(){
+  try{ return matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'; }
+  catch(e){ return 'smooth'; }
+};
+
 // 節點連結（#n=…）在最一開始就記下來：之後網址若被改掉或被清掉，定位與閃爍仍然有效
 window.__nodeLink=(function(){
   var m=(location.hash||'').match(/^#n=([A-Za-z0-9_-]+)$/);
@@ -1412,7 +1434,7 @@ window.__nodeLink=(function(){
         if(p) target=p;
       }
     }
-    if(target) target.scrollIntoView({behavior:'smooth', block:'center'});
+    if(target) target.scrollIntoView({behavior:window.__tripEase(), block:'center'});
     return target;
   }
 
@@ -1502,7 +1524,7 @@ window.__nodeLink=(function(){
     var now=new Date(), target;
     if(dateStr(now) < DAY_DATES.d0116){       // 還沒出發，這時該看的是行前清單
       target=document.getElementById('checklist');
-      if(target) target.scrollIntoView({behavior:'smooth', block:'start'});   // 清單很長，要對齊開頭不是置中
+      if(target) target.scrollIntoView({behavior:window.__tripEase(), block:'start'});   // 清單很長，要對齊開頭不是置中
     }else{
       target=centerCurrent(now, true);
     }
@@ -2437,7 +2459,7 @@ if('serviceWorker' in navigator){
   window.__tripScrollToDay=function(el){
     var p=el.style.position;
     el.style.position='static';
-    el.scrollIntoView({behavior:'smooth', block:'start'});
+    el.scrollIntoView({behavior:window.__tripEase(), block:'start'});
     el.style.position=p;
   };
   document.addEventListener('click', function(e){
@@ -2475,7 +2497,7 @@ if('serviceWorker' in navigator){
     if(target && !window.__nodeLink)
       setTimeout(function(){
         if(window.__tripScrollToDay) window.__tripScrollToDay(target);
-        else target.scrollIntoView({behavior:'smooth',block:'start'});
+        else target.scrollIntoView({behavior:window.__tripEase(),block:'start'});
       },300);
   }
 })();
