@@ -141,8 +141,9 @@ async function handleSnow() {
     return m ? m[i].trim() : null;
   };
   // 表格列：<th>気温</th> <td><strong>7</strong>℃</td>
+  // 注意這裡是用字串組正則（欄位名是變數），字串裡的反斜線要寫兩個，寫一個會被 JS 吃掉。
   const cell = (label) =>
-    pick(new RegExp("<th>" + label + "</th>\s*<td>\s*(?:<strong>)?([^<]*)", "i"));
+    pick(new RegExp(label + "\\s*</th>\\s*<td[^>]*>\\s*(?:<strong>)?([^<]*)", "i"));
 
   const liftM = html.match(/class="cdLift"[\s\S]{0,200}?<strong>(\d+)<\/strong>\s*\/\s*(\d+)/i);
 
