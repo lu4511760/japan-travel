@@ -5,7 +5,9 @@
 //        GET /?type=arr&id=20270116-JX0802
 //        GET /?type=dep&id=20270123-JX0803
 //        GET /?type=imm                      ← 入境審查各查驗處等待時間
-//   2. 行程修改的雲端儲存 —— 讓手機在解鎖後可以改行程，存在 Workers KV
+//   2. 斑尾雪場即時雪況代理 —— tangram.jp 同樣不開放跨域，由這支代抓並解析官網那塊面板
+//        GET /snow                           ← 天氣、氣溫、雪質、積雪、纜車運行
+//   3. 行程修改的雲端儲存 —— 讓手機在解鎖後可以改行程，存在 Workers KV
 //        GET  /data                          ← 任何人都可讀（朋友才看得到你的更新）
 //        GET  /data?prev=1                   ← 上一版備份（寫入前自動留的，還原用）
 //        POST /data  + X-Edit-Token          ← 只有帶正確權杖才能寫
@@ -122,6 +124,40 @@ async function handleNarita(url) {
   return json({ flight: p.flight || null, flightSecurity: p.flightSecurity || [] });
 }
 
+// ── 斑尾雪場雪況代理 ───────────────────────────────────────
+// tangram.jp 的雪況是伺服器直接印在 HTML 裡的（沒有 JSON API），所以只能照著版型撈。
+// 官網改版就會撈不到，因此每個欄位各自判斷，撈不到的就回 null，前端顯示「—」，不會整塊掛掉。
+async function handleSnow() {
+  // cacheTtl 300 秒：官網那塊一天也才更新幾次，不需要每個人每次都去敲它
+  const resp = await fetch("https://www.tangram.jp/ski/", {
+    cf: { cacheTtl: 300, cacheEverything: true },
+    headers: { "User-Agent": "Mozilla/5.0 (travel-site personal use)" },
+  });
+  if (!resp.ok) return json({ error: "tangram " + resp.status }, 502);
+  const html = await resp.text();
+
+  const pick = (re, i = 1) => {
+    const m = html.match(re);
+    return m ? m[i].trim() : null;
+  };
+  // 表格列：<th>気温</th> <td><strong>7</strong>℃</td>
+  const cell = (label) =>
+    pick(new RegExp("<th>" + label + "</th>\s*<td>\s*(?:<strong>)?([^<]*)", "i"));
+
+  const liftM = html.match(/class="cdLift"[\s\S]{0,200}?<strong>(\d+)<\/strong>\s*\/\s*(\d+)/i);
+
+  return json({
+    // 官網自己標的更新時刻（日本時間），例如 "2026.03.29 18:57"
+    at: pick(/CONDITION_<span>([\d.]+\s+[\d:]+)\s*現在/),
+    // 天氣用圖示的 alt 取，比抓 <p> 穩（<p> 在那塊裡有好幾個）
+    weather: pick(/icon_weather_\w+\.png"\s+alt="([^"]+)"/),
+    temp: cell("気温"),      // 攝氏，字串（可能是負數）
+    quality: cell("雪質"),   // 日文雪質，前端自己對照成中文
+    depth: cell("積雪"),     // 公分
+    lift: liftM ? { open: Number(liftM[1]), total: Number(liftM[2]) } : null,
+  });
+}
+
 export default {
   async fetch(request, env) {
     // 瀏覽器寫入前會先送出 preflight
@@ -137,6 +173,7 @@ export default {
 
     const url = new URL(request.url);
     if (url.pathname === "/data") return handleData(request, env);
+    if (url.pathname === "/snow") return handleSnow();
     return handleNarita(url);
   },
 };
