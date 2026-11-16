@@ -7,7 +7,9 @@
 //        GET /?type=imm                      ← 入境審查各查驗處等待時間
 //   2. 斑尾雪場即時雪況代理 —— tangram.jp 同樣不開放跨域，由這支代抓並解析官網那塊面板
 //        GET /snow                           ← 天氣、氣溫、雪質、積雪、纜車運行
-//   3. 行程修改的雲端儲存 —— 讓手機在解鎖後可以改行程，存在 Workers KV
+//   3. 斑尾雪場直播代理 —— 官方會不定期重開直播、影片 ID 跟著變，由這支去查現在正在播的那兩支
+//        GET /live                           ← 野尻湖テラス、ホテルタングラム 的現役影片 ID
+//   4. 行程修改的雲端儲存 —— 讓手機在解鎖後可以改行程，存在 Workers KV
 //        GET  /data                          ← 任何人都可讀（朋友才看得到你的更新）
 //        GET  /data?prev=1                   ← 上一版備份（寫入前自動留的，還原用）
 //        POST /data  + X-Edit-Token          ← 只有帶正確權杖才能寫
@@ -159,6 +161,51 @@ async function handleSnow() {
   });
 }
 
+// ── 斑尾雪場直播代理 ───────────────────────────────────────
+// 官方（@TangramMadarao）會不定期把 24 小時直播重開，一重開影片 ID 就換、舊的嵌入畫面變黑。
+// 這支去頻道的直播清單抓現在正在播的那兩支，前端照它回的 ID 嵌入，就不必每次手改。
+//
+// 怎麼判斷「正在播」：清單頁同時列著已結束的場次，而且頁面上沒有可靠的直播標記。
+// 但 oEmbed 的回應分得很乾淨 —— 正在播的會回完整欄位（title、author_name、thumbnail_url…），
+// 已結束的只回 html/provider/type/version 這幾個。所以用「有沒有 title」來篩。
+// 這是觀察出來的行為、不是官方文件保證，所以查不到時一律回 null，
+// 前端會留著網頁裡原本寫死的那組 ID（也就是退回到人工維護的狀態），不會變成空白。
+async function handleLive() {
+  const resp = await fetch("https://www.youtube.com/@TangramMadarao/streams", {
+    cf: { cacheTtl: 1800, cacheEverything: true },   // 直播 ID 幾天才換一次，半小時問一次夠了
+    headers: { "User-Agent": "Mozilla/5.0 (travel-site personal use)" },
+  });
+  if (!resp.ok) return json({ error: "youtube " + resp.status }, 502);
+  const html = await resp.text();
+
+  // 清單頁裡同一支會出現很多次，去重；只看前幾支，避免頻道哪天影片變多時打太多次 oEmbed
+  const ids = [...new Set((html.match(/"videoId":"[\w-]{11}"/g) || []).map((m) => m.slice(11, -1)))].slice(0, 6);
+
+  const infos = await Promise.all(
+    ids.map(async (id) => {
+      try {
+        const r = await fetch(
+          "https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=" + id + "&format=json",
+          { cf: { cacheTtl: 1800, cacheEverything: true } }
+        );
+        if (!r.ok) return null;
+        const d = await r.json();
+        return d && d.title ? { id, title: d.title } : null;   // 沒有 title 就是已經不播了
+      } catch (e) {
+        return null;
+      }
+    })
+  );
+
+  const live = infos.filter(Boolean);
+  const pick = (kw) => live.find((v) => v.title.includes(kw)) || null;
+  return json({
+    nojiri: pick("野尻湖"),              // 野尻湖テラス LIVE
+    hotel: pick("ホテルタングラム"),      // ホテルタングラム LIVE
+    checked: ids.length,
+  });
+}
+
 export default {
   async fetch(request, env) {
     // 瀏覽器寫入前會先送出 preflight
@@ -175,6 +222,7 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === "/data") return handleData(request, env);
     if (url.pathname === "/snow") return handleSnow();
+    if (url.pathname === "/live") return handleLive();
     return handleNarita(url);
   },
 };
