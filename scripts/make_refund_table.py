@@ -32,7 +32,7 @@ PLATFORMS = [
 ]
 # 打勾格子底下要加的小字：(平台名稱, 列索引) → 文字。列索引對照 ROWS（3＝現金退稅）
 # JPrefund 要領現金，得在海關確認前就上網把退款方式選成「機場領現金」，之後不能改（jptaxrefund.com/blog/jprefund-guide）
-MARK_NOTES = {('JPrefund', 3): '（需先線上設定）'}
+MARK_NOTES = {('JPrefund', 3): '(需先線上設定)'}
 ROWS = ['主要配合商家', '設定方式', '信用卡退稅', '現金退稅', 'GLORY\nSelf Tax Refund', 'Cash Japan']
 
 S = 2                      # 整張放大倍率（手機點開放大仍清楚）
@@ -119,7 +119,7 @@ def draw_mark(box, v, note=None):
 
 
 # 標題
-d.text((PAD, (TITLE_H - f_title.size) / 2 - 4 * S), '日本退稅平台比較（2026/11 新制）', font=f_title, fill=C_HEAD)
+d.text((PAD, (TITLE_H - f_title.size) / 2 - 4 * S), '日本退稅平台比較(2026/11 新制)', font=f_title, fill=C_HEAD)
 
 # 表頭
 y = TITLE_H
@@ -154,7 +154,7 @@ for ci in range(len(PLATFORMS) + 1):
     d.line([x, TITLE_H, x, y], fill=C_GRID, width=S)
 
 # 註腳
-notes = ['綠字＝店家宣告免退稅手續費（機場領現金仍會扣）。？＝查不到官方資訊。現金支付日圓，會取整數，且會另扣手續費。']
+notes = ['綠字＝店家宣告免退稅手續費(機場領現金仍會扣)。？＝查不到官方資訊。現金支付日圓，會取整數，且會另扣手續費。']
 ny = y + 14 * S
 for n in notes:
     d.text((PAD, ny), n, font=f_note, fill=C_SUB)
