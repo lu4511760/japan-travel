@@ -1373,7 +1373,10 @@ window.__nodeLink=(function(){
 
 // 公路客運即時動態：節點內容裡放
 //   <div class="bus-live" data-key="196801" data-dep="05:40" data-stop="上車站名"></div>
-// 就會在那裡顯示「這班車目前走到哪」和「離上車站還有幾分」。
+// 就會在那裡顯示「車目前走到哪」和「離上車站還有幾分、幾站」。
+// 兩種模式：
+//   · 搭車那天、發車前 40 分到發車後 90 分（台灣時間）：只追要搭的那班（data-dep）
+//   · 其他任何時候：顯示下一班會到上車站的車（每天都看得到，可以平常就確認功能正常）
 //   data-key  公路客運動態頁 _ROUTES 裡的值（路線＋方向，6 位數字）
 //   data-dep  要搭的那班從起站發車的時刻（台灣時間）
 //   data-stop 上車站名，要跟官網站名一字不差
@@ -1383,10 +1386,10 @@ window.__nodeLink=(function(){
 // 官網資料沒有「這是哪一班」的欄位，只有各站「正開往這站的車牌＋還要幾分」，所以這樣認車：
 //   · 起站顯示「05:40發車」→ 還沒開
 //   · 開了以後，正開往上車站的那台就是這班（前一班早就過站了），認到就把車牌記住，之後只追這個車牌
-// 只在當天、發車前 40 分到發車後 90 分之間抓（台灣時間），其他時候不打 Worker。
+// 畫面開著才抓（每 20 秒；官網動態頁自己是 16 秒刷新一次，Worker 再快取 15 秒），背景不打。
 (function(){
   var API='https://narita-proxy.4511760.workers.dev/bus?key=';
-  var PRE=40, POST=90;              // 抓資料的時間窗（分）
+  var PRE=40, POST=90;              // 「只追要搭的那班」的時間窗（分），窗外顯示下一班
   var LAST={};                      // key → 最近一次的資料，節點重畫時拿來補畫
   var timer=null;
 
@@ -1451,28 +1454,41 @@ window.__nodeLink=(function(){
     var away = ni<=ti ? ti-ni : null;
     return {pos:pos+'（'+plate+'）', eta: ni>ti ? '已過站' : eta(stops[ti].ptime), plate:plate, away:away};
   }
+  // 平常模式：下一班會到上車站的車。上車站那列有車牌就是它；沒有就是還沒車開出來，看起站下一班幾點發車。
+  function analyzeNext(stops, stopName){
+    var ti=-1;
+    stops.forEach(function(s, i){ if(ti<0 && s.na===stopName) ti=i; });
+    if(ti<0) return {pos:'官網找不到「'+stopName+'」這站', eta:'—'};
+    var t=stops[ti], first=stops[0]||{ptime:''};
+    if(!t.car){
+      var pos = first.ptime.indexOf('發車')>=0 ? first.ptime.replace('發車',' 發車') : (first.ptime||'目前沒有車');
+      return {pos:pos, eta:eta(t.ptime)};
+    }
+    var r=analyze(stops, '', stopName, t.car);
+    return {pos:r.pos, eta:r.eta, away:r.away};
+  }
   window.__tripBusAnalyze=analyze;   // 測試用
+  window.__tripBusNext=analyzeNext;
 
   function nd(t){ return window.__tripNoDetect ? window.__tripNoDetect(t) : t; }
 
   function paint(el){
     var stopName=el.getAttribute('data-stop')||'上車站';
-    if(!inWindow(el)){
-      el.innerHTML='<p class="note">🚌 當天 '+nd(el.getAttribute('data-dep')||'')+' 發車前 '+PRE+' 分起顯示即時動態</p>';
-      el.setAttribute('data-painted','1');
-      return;
-    }
+    var trip=inWindow(el);            // true：只追要搭的那班；false：看下一班
     var d=LAST[el.getAttribute('data-key')];
     var pos='讀取中…', e='—', at='';
     if(d && d.err){ pos='動態暫時讀不到'; }
     else if(d){
-      var r=analyze(d.stops||[], el.getAttribute('data-dep'), stopName, getPlate(el));
-      if(r.plate) setPlate(el, r.plate);
+      var r;
+      if(trip){
+        r=analyze(d.stops||[], el.getAttribute('data-dep'), stopName, getPlate(el));
+        if(r.plate) setPlate(el, r.plate);
+      }else r=analyzeNext(d.stops||[], stopName);
       pos=r.pos; e=r.eta; at=d.time||'';
       if(r.away>0) e+='（距 '+r.away+' 站）';
       else if(r.away===0 && e.indexOf('進站')<0) e+='（下一站）';
     }
-    el.innerHTML='<p>🚌 目前位置：'+nd(pos)+'</p>'
+    el.innerHTML='<p>🚌 '+(trip?'目前位置':'下一班')+'：'+nd(pos)+'</p>'
       +'<p>⏱️ 到'+stopName+'：'+nd(e)+'</p>'
       +(at?'<p class="note">官網資料時間 '+nd(at)+'</p>':'');
     el.setAttribute('data-painted','1');
@@ -1481,12 +1497,9 @@ window.__nodeLink=(function(){
   function els(){ return Array.prototype.slice.call(document.querySelectorAll('.bus-live')); }
 
   function refresh(){
-    var list=els();
     var keys={};
-    list.forEach(function(el){ if(inWindow(el)) keys[el.getAttribute('data-key')]=1; });
-    var ks=Object.keys(keys);
-    if(!ks.length){ list.forEach(paint); return; }
-    ks.forEach(function(k){
+    els().forEach(function(el){ keys[el.getAttribute('data-key')]=1; });
+    Object.keys(keys).forEach(function(k){
       if(!/^\d{6}$/.test(k)) return;
       fetch(API+k, {cache:'no-store'}).then(function(r){
         if(!r.ok) throw 0;
@@ -1506,7 +1519,7 @@ window.__nodeLink=(function(){
   }
 
   refresh();
-  setInterval(tick, 20000);         // 官網大約 20～30 秒更新一次
+  setInterval(tick, 20000);         // 官網動態頁 16 秒刷新一次，20 秒問一次夠了
   document.addEventListener('visibilitychange', tick);
   // 私人行程解鎖、節點重畫後 .bus-live 是新的空元素，補畫一次（只畫還沒畫過的，避免自己觸發自己）
   var bsTl=document.querySelector('.tl');
