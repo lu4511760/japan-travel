@@ -25,7 +25,7 @@ PLATFORMS = [
     ('JPrefund', ['3COINS', 'Shimamura'], ['網站'], True, True, True, True),
     ('Global Blue', ['高島屋', '大丸松坂屋', '伊勢丹三越', '阪急阪神', '西武Sogo', 'Yodobashi', 'Sugi藥局'],
      ['App', '網站'], True, True, False, True),
-    ('PIE VAT', ['SHIBUYA109', '三井Outlet', 'LaLaport', 'mont-bell'], ['App', '網站'], True, False, False, False),
+    ('PIE VAT', ['SHIBUYA109', '三井Outlet', 'LaLaport', 'mont-bell'], ['App'], True, False, False, False),
     ('Ocean\nTax Refund', ['Yamada電機*', 'animate'], ['LINE', 'WeChat', '網站'], True, False, False, False),
     ('Planet', ['未公開'], ['網站'], True, True, True, False),
     ('IntaSect', ['未公開'], ['依收據'], None, True, True, False),
