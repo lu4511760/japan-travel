@@ -1,6 +1,6 @@
 // 日本行程網站的後端 Worker（Cloudflare）
 //
-// 兩個用途：
+// 用途：
 //   1. 成田機場航班資料代理 —— 成田官網不開放跨域（CORS），由這支代抓並只回傳需要的 JSON
 //        GET /?type=arr&id=20270116-JX0802
 //        GET /?type=dep&id=20270123-JX0803
@@ -9,7 +9,9 @@
 //        GET /snow                           ← 天氣、氣溫、雪質、積雪、纜車運行
 //   3. 斑尾雪場直播代理 —— 官方會不定期重開直播、影片 ID 跟著變，由這支去查現在正在播的那兩支
 //        GET /live                           ← 野尻湖テラス、ホテルタングラム 的現役影片 ID
-//   4. 行程修改的雲端儲存 —— 讓手機在解鎖後可以改行程，存在 Workers KV
+//   4. 公路客運即時動態代理 —— taiwanbus.tw 不開放跨域，由這支代抓某條路線某個方向的各站動態
+//        GET /bus?key=196801                 ← key 是 路線編號＋方向（6 位數字，見 handleBus 說明）
+//   5. 行程修改的雲端儲存 —— 讓手機在解鎖後可以改行程，存在 Workers KV
 //        GET  /data                          ← 任何人都可讀（朋友才看得到你的更新）
 //        GET  /data?prev=1                   ← 上一版備份（寫入前自動留的，還原用）
 //        POST /data  + X-Edit-Token          ← 只有帶正確權杖才能寫
@@ -206,6 +208,40 @@ async function handleLive() {
   });
 }
 
+// ── 公路客運即時動態代理 ─────────────────────────────────────
+// 公路客運的「動態資訊」頁（taiwanbus.tw/eBUSPage/Query/QueryResult.aspx?rno=…）背後
+// 是用 getRData.ashx?type=4&key=… 拿 JSON。key 是頁面裡 _ROUTES 的值：路線編號（含支線碼）＋方向，
+// 例如 rno=19680 的頁面 _ROUTES 是 '196801,196802'，01 是去程、02 是返程。
+// 這是從官網頁面原始碼看來的、不是公開 API，官網改版就可能失效；失效時前端會顯示讀不到。
+//
+// 回傳只留前端要的：各站（依行駛順序）站名、狀態文字（「8分」「進站中」「21:18」「05:40發車」…）、
+// 正開往該站的車牌（沒有就是空字串）。
+async function handleBus(url) {
+  const key = url.searchParams.get("key") || "";
+  if (!/^\d{6}$/.test(key)) return json({ error: "bad params" }, 400);   // 只接受 6 位數字，不當萬用代理
+
+  const resp = await fetch(
+    "https://www.taiwanbus.tw/eBUSPage/Query/ws/getRData.ashx?type=4&key=" + key,
+    {
+      cf: { cacheTtl: 15, cacheEverything: true },   // 官網大約 20～30 秒更新一次，15 秒內共用
+      headers: { "User-Agent": "Mozilla/5.0 (travel-site personal use)" },
+    }
+  );
+  if (!resp.ok) return json({ error: "taiwanbus " + resp.status }, 502);
+  let d;
+  try {
+    d = JSON.parse((await resp.text()).replace(/^﻿/, ""));
+  } catch (e) {
+    return json({ error: "parse fail" }, 502);
+  }
+  if (!d || !Array.isArray(d.data)) return json({ error: "parse fail" }, 502);
+
+  return json({
+    time: d.time || null,            // 官網資料時間（台灣時間 HH:MM:SS）
+    stops: d.data.map((r) => ({ na: r.na || "", ptime: r.ptime || "", car: r.car || "" })),
+  });
+}
+
 export default {
   async fetch(request, env) {
     // 瀏覽器寫入前會先送出 preflight
@@ -223,6 +259,7 @@ export default {
     if (url.pathname === "/data") return handleData(request, env);
     if (url.pathname === "/snow") return handleSnow();
     if (url.pathname === "/live") return handleLive();
+    if (url.pathname === "/bus") return handleBus(url);
     return handleNarita(url);
   },
 };

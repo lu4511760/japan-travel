@@ -1371,6 +1371,149 @@ window.__nodeLink=(function(){
     new MutationObserver(function(){ apply(LAST); }).observe(lvTl, {childList:true});
 })();
 
+// 公路客運即時動態：節點內容裡放
+//   <div class="bus-live" data-key="196801" data-dep="05:40" data-stop="上車站名"></div>
+// 就會在那裡顯示「這班車目前走到哪」和「離上車站還有幾分」。
+//   data-key  公路客運動態頁 _ROUTES 裡的值（路線＋方向，6 位數字）
+//   data-dep  要搭的那班從起站發車的時刻（台灣時間）
+//   data-stop 上車站名，要跟官網站名一字不差
+// 路線、班次、站名都寫在節點內容裡（私人行程是加密的），程式這裡只有通用邏輯。
+// 資料經 Worker 的 /bus 代抓（官網不開放跨域）。
+//
+// 官網資料沒有「這是哪一班」的欄位，只有各站「正開往這站的車牌＋還要幾分」，所以這樣認車：
+//   · 起站顯示「05:40發車」→ 還沒開
+//   · 開了以後，正開往上車站的那台就是這班（前一班早就過站了），認到就把車牌記住，之後只追這個車牌
+// 只在當天、發車前 40 分到發車後 90 分之間抓（台灣時間），其他時候不打 Worker。
+(function(){
+  var API='https://narita-proxy.4511760.workers.dev/bus?key=';
+  var PRE=40, POST=90;              // 抓資料的時間窗（分）
+  var LAST={};                      // key → 最近一次的資料，節點重畫時拿來補畫
+  var timer=null;
+
+  function tpeNow(){               // 台灣時間的「現在」：{date:'2027-01-16', min:345}
+    var d=new Date(Date.now()+8*3600000);
+    return {date:d.toISOString().slice(0,10), min:d.getUTCHours()*60+d.getUTCMinutes()};
+  }
+  function toMin(hm){ var p=String(hm||'').split(':'); return (+p[0])*60+(+p[1]); }
+
+  // 這個節點是哪一天：往前找日期標題（id 在 __tripDays 裡）
+  function dayOf(el){
+    var ev=el.closest('.ev'), n=ev;
+    var days=window.__tripDays||{};
+    while(n){
+      if(n.id && days[n.id]) return days[n.id];
+      n=n.previousElementSibling;
+    }
+    return null;
+  }
+
+  function inWindow(el){
+    if(window.__tripBusForce) return true;           // 測試用：在 console 設 true 就不管時間窗
+    var date=dayOf(el), now=tpeNow(), dep=toMin(el.getAttribute('data-dep'));
+    return date===now.date && now.min>=dep-PRE && now.min<=dep+POST;
+  }
+
+  function plateKey(el){
+    return 'japan2027-bus-'+(dayOf(el)||'')+'-'+el.getAttribute('data-key')+'-'+el.getAttribute('data-dep');
+  }
+  function getPlate(el){ try{ return localStorage.getItem(plateKey(el))||''; }catch(e){ return ''; } }
+  function setPlate(el, p){ try{ localStorage.setItem(plateKey(el), p); }catch(e){} }
+
+  // 狀態文字 → 好讀的樣子：「8分」→「約 8 分」、「21:18」→「表定 21:18」
+  function eta(pt){
+    if(/^\d+分$/.test(pt)) return '約 '+pt.replace('分',' 分');
+    if(/^\d{1,2}:\d{2}$/.test(pt)) return '表定 '+pt;
+    return pt||'—';
+  }
+
+  // 核心判斷：回傳 {pos, eta, plate}
+  function analyze(stops, dep, stopName, plate){
+    var ti=-1;
+    stops.forEach(function(s, i){ if(ti<0 && s.na===stopName) ti=i; });
+    if(ti<0) return {pos:'官網找不到「'+stopName+'」這站', eta:'—', plate:plate};
+    var first=stops[0]||{ptime:''};
+    if(!plate){
+      if(first.ptime.indexOf(dep+'發車')>=0){      // 還沒開
+        var t=stops[ti];
+        return {pos:'尚未發車（'+dep+' 發車）', eta: t.car ? '—' : eta(t.ptime), plate:''};
+      }
+      if(stops[ti].car) plate=stops[ti].car;        // 開了：正開往上車站的那台就是
+    }
+    if(!plate) return {pos:'還沒收到這班車的位置', eta:eta(stops[ti].ptime), plate:''};
+    var ni=-1;
+    stops.forEach(function(s, i){ if(ni<0 && s.car===plate) ni=i; });
+    if(ni<0) return {pos:'查不到車輛位置（'+plate+'）', eta:'—', plate:plate};
+    var s=stops[ni];
+    var pos = s.ptime==='進站中' ? '在 '+s.na : '即將到 '+s.na;
+    if(ni===0) pos='在起站 '+s.na;
+    return {pos:pos+'（'+plate+'）', eta: ni>ti ? '已過站' : eta(stops[ti].ptime), plate:plate};
+  }
+  window.__tripBusAnalyze=analyze;   // 測試用
+
+  function nd(t){ return window.__tripNoDetect ? window.__tripNoDetect(t) : t; }
+
+  function paint(el){
+    var stopName=el.getAttribute('data-stop')||'上車站';
+    if(!inWindow(el)){
+      el.innerHTML='<p class="note">🚌 當天 '+nd(el.getAttribute('data-dep')||'')+' 發車前 '+PRE+' 分起顯示即時動態</p>';
+      el.setAttribute('data-painted','1');
+      return;
+    }
+    var d=LAST[el.getAttribute('data-key')];
+    var pos='讀取中…', e='—', at='';
+    if(d && d.err){ pos='動態暫時讀不到'; }
+    else if(d){
+      var r=analyze(d.stops||[], el.getAttribute('data-dep'), stopName, getPlate(el));
+      if(r.plate) setPlate(el, r.plate);
+      pos=r.pos; e=r.eta; at=d.time||'';
+    }
+    el.innerHTML='<p>🚌 目前位置：'+nd(pos)+'</p>'
+      +'<p>⏱️ 到'+stopName+'：'+nd(e)+'</p>'
+      +(at?'<p class="note">官網資料時間 '+nd(at)+'</p>':'');
+    el.setAttribute('data-painted','1');
+  }
+
+  function els(){ return Array.prototype.slice.call(document.querySelectorAll('.bus-live')); }
+
+  function refresh(){
+    var list=els();
+    var keys={};
+    list.forEach(function(el){ if(inWindow(el)) keys[el.getAttribute('data-key')]=1; });
+    var ks=Object.keys(keys);
+    if(!ks.length){ list.forEach(paint); return; }
+    ks.forEach(function(k){
+      if(!/^\d{6}$/.test(k)) return;
+      fetch(API+k, {cache:'no-store'}).then(function(r){
+        if(!r.ok) throw 0;
+        return r.json();
+      }).then(function(d){
+        if(!d || d.error || !Array.isArray(d.stops)) throw 0;
+        LAST[k]=d;
+      })['catch'](function(){
+        LAST[k]={err:1};
+      }).then(function(){ els().forEach(paint); });
+    });
+  }
+
+  function tick(){
+    if(document.hidden) return;
+    refresh();
+  }
+
+  refresh();
+  setInterval(tick, 20000);         // 官網大約 20～30 秒更新一次
+  document.addEventListener('visibilitychange', tick);
+  // 私人行程解鎖、節點重畫後 .bus-live 是新的空元素，補畫一次（只畫還沒畫過的，避免自己觸發自己）
+  var bsTl=document.querySelector('.tl');
+  if(bsTl && window.MutationObserver)
+    new MutationObserver(function(){
+      var fresh=els().filter(function(el){ return !el.getAttribute('data-painted'); });
+      if(!fresh.length) return;
+      fresh.forEach(paint);
+      refresh();
+    }).observe(bsTl, {childList:true, subtree:true});
+})();
+
 // 擇一行程：點膠囊標籤切換內容，選擇記在 localStorage
 (function(){
   var KEY='japan2027-opts';
