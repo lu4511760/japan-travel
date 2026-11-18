@@ -1380,6 +1380,8 @@ window.__nodeLink=(function(){
 //   data-key  公路客運動態頁 _ROUTES 裡的值（路線＋方向，6 位數字）
 //   data-dep  要搭的那班從起站發車的時刻（台灣時間）
 //   data-stop 上車站名，要跟官網站名一字不差
+//   data-name （選填）第一行的標題，例如路線號；沒填顯示「下一班」
+//   data-url  （選填）官網動態頁網址，會接在「官網資料時間」後面
 // 路線、班次、站名都寫在節點內容裡（私人行程是加密的），程式這裡只有通用邏輯。
 // 資料經 Worker 的 /bus 代抓（官網不開放跨域）。
 //
@@ -1471,6 +1473,7 @@ window.__nodeLink=(function(){
   window.__tripBusNext=analyzeNext;
 
   function nd(t){ return window.__tripNoDetect ? window.__tripNoDetect(t) : t; }
+  function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
   function paint(el){
     var stopName=el.getAttribute('data-stop')||'上車站';
@@ -1488,9 +1491,13 @@ window.__nodeLink=(function(){
       if(r.away>0) e+='（距 '+r.away+' 站）';
       else if(r.away===0 && e.indexOf('進站')<0) e+='（下一站）';
     }
-    el.innerHTML='<p>🚌 '+(trip?'目前位置':'下一班')+'：'+nd(pos)+'</p>'
-      +'<p>⏱️ 到'+stopName+'：'+nd(e)+'</p>'
-      +(at?'<p class="note">官網資料時間 '+nd(at)+'</p>':'');
+    // 字級跟節點其他行（jr-row）一致；資料時間用跟「最後更新」一樣的灰小字
+    var name=el.getAttribute('data-name'), url=el.getAttribute('data-url')||'';
+    var label=(name?esc(name):'下一班')+(trip?'（'+esc(el.getAttribute('data-dep')||'')+' 班）':'');
+    var link=/^https:\/\//.test(url) ? '（<a href="'+esc(url)+'" target="_blank" rel="noopener">動態資訊</a>）' : '';
+    el.innerHTML='<p class="jr-row">🚌 '+label+'：'+nd(pos)+'</p>'
+      +'<p class="jr-row">⏱️ 到'+esc(stopName)+'：'+nd(e)+'</p>'
+      +((at||link)?'<p class="jr-row" style="color:var(--muted);font-size:13px">'+(at?'🕐 官網資料時間 '+nd(at):'')+link+'</p>':'');
     el.setAttribute('data-painted','1');
   }
 
