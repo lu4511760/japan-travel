@@ -167,6 +167,8 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
 .when-end{display:none}
 /* 班機誤點、時刻被往後挪過：在後面補上原本的表定時間 */
 .when-was{margin-left:8px; font-size:12.5px; color:var(--muted); font-weight:400; letter-spacing:0}
+/* 客運預計到達時間（.bus-arrive 標記補在時間後面），樣式同 .when-was */
+.bus-arrive-at{margin-left:8px; font-size:12.5px; color:var(--muted); font-weight:400; letter-spacing:0}
 body.editing .when-end{display:inline; color:var(--muted); font-weight:400}
 /* 「結束行程」：只長在正在進行的那個節點上，而且只有編輯模式看得到。
    用 CSS 控制顯示，按鈕本身每個節點都先放好，這樣每分鐘換人進行中時不必重畫按鈕。 */
@@ -1382,6 +1384,13 @@ window.__nodeLink=(function(){
 //   data-stop 上車站名，要跟官網站名一字不差
 //   data-name （選填）第一行的標題，例如路線號；沒填顯示「下一班」
 //   data-url  （選填）官網動態頁網址，會接在「官網資料時間」後面
+// 預計到達時間：在下車那則的內容裡放
+//   <span class="bus-arrive" data-key="196801" data-stop="下車站名"></span>
+// 就會在那則的時間後面補上灰小字「預計 HH:MM 到達」（追的車跟同 key 的 .bus-live 同一台）。
+//   · 下車站那列正是這台車 → 官網資料時間＋還要幾分
+//   · 不是（前一班還沒到下車站，那列顯示的是前一班）→ 這台車最遠一站的分鐘數＋表定兩站之間的分鐘數
+//   · 還沒發車 → 起站發車時刻＋表定起站到下車站的分鐘數
+//   表定分鐘數從官網沒車那幾列的「HH:MM」學來，記在 localStorage（每台裝置第一次看到就記住）。
 // 路線、班次、站名都寫在節點內容裡（私人行程是加密的），程式這裡只有通用邏輯。
 // 資料經 Worker 的 /bus 代抓（官網不開放跨域）。
 //
@@ -1393,6 +1402,7 @@ window.__nodeLink=(function(){
   var API='https://narita-proxy.4511760.workers.dev/bus?key=';
   var PRE=40, POST=90;              // 「只追要搭的那班」的時間窗（分），窗外顯示下一班
   var LAST={};                      // key → 最近一次的資料，節點重畫時拿來補畫
+  var CUR={};                       // key → .bus-live 目前追的車牌（預計到達用同一台）
   var timer=null;
 
   function tpeNow(){               // 台灣時間的「現在」：{date:'2027-01-16', min:345}
@@ -1467,7 +1477,7 @@ window.__nodeLink=(function(){
       return {pos:pos, eta:eta(t.ptime)};
     }
     var r=analyze(stops, '', stopName, t.car);
-    return {pos:r.pos, eta:r.eta, away:r.away};
+    return {pos:r.pos, eta:r.eta, away:r.away, plate:t.car};
   }
   window.__tripBusAnalyze=analyze;   // 測試用
   window.__tripBusNext=analyzeNext;
@@ -1487,6 +1497,7 @@ window.__nodeLink=(function(){
         r=analyze(d.stops||[], el.getAttribute('data-dep'), stopName, getPlate(el));
         if(r.plate) setPlate(el, r.plate);
       }else r=analyzeNext(d.stops||[], stopName);
+      CUR[el.getAttribute('data-key')]=r.plate||'';
       pos=r.pos; e=r.eta; at=d.time||'';
       if(r.away>0) e+='（距 '+r.away+' 站）';
       else if(r.away===0 && e.indexOf('進站')<0) e+='（下一站）';
@@ -1501,11 +1512,77 @@ window.__nodeLink=(function(){
     el.setAttribute('data-painted','1');
   }
 
+
+  // ── 預計到達時間 ──
+  function schedKey(k){ return 'japan2027-bus-sched-'+k; }
+  // 沒車的列顯示的是「還沒發車那班」的表定時刻，減掉起站發車時刻就是表定分鐘數
+  function learnSched(k, stops){
+    var m=/^(\d{1,2}:\d{2})發車$/.exec((stops[0]||{}).ptime||'');
+    if(!m) return;
+    var dep=toMin(m[1]), off={};
+    try{ off=JSON.parse(localStorage.getItem(schedKey(k))||'{}')||{}; }catch(e){}
+    off[stops[0].na]=0;
+    stops.forEach(function(s){
+      if(!s.car && /^\d{1,2}:\d{2}$/.test(s.ptime)) off[s.na]=(toMin(s.ptime)-dep+1440)%1440;
+    });
+    try{ localStorage.setItem(schedKey(k), JSON.stringify(off)); }catch(e){}
+  }
+  function getSched(k){ try{ return JSON.parse(localStorage.getItem(schedKey(k))||'{}')||{}; }catch(e){ return {}; } }
+  // 「8分」「1時6分」「進站中」「即將進站」→ 分鐘數；看不懂回 null
+  function ptMin(pt){
+    var m;
+    if((m=/^(\d+)分$/.exec(pt))) return +m[1];
+    if((m=/^(\d+)時(\d+)分$/.exec(pt))) return (+m[1])*60+(+m[2]);
+    if(pt==='進站中') return 0;
+    if(pt==='即將進站') return 1;
+    return null;
+  }
+  function hm(min){ min=((min%1440)+1440)%1440; return String(Math.floor(min/60)).padStart(2,'0')+':'+String(min%60).padStart(2,'0'); }
+  // 回傳到達的「分鐘（一天中的第幾分）」，算不出來回 null
+  function arriveMin(d, k, stopName, plate){
+    var stops=d.stops||[], ti=-1;
+    stops.forEach(function(s, i){ if(ti<0 && s.na===stopName) ti=i; });
+    if(ti<0) return null;
+    var off=getSched(k), t=stops[ti];
+    var base=d.time ? toMin(d.time) : tpeNow().min;   // 分鐘數是相對官網資料時間
+    if(plate){
+      if(t.car===plate){ var n=ptMin(t.ptime); return n===null ? null : base+n; }
+      for(var L=ti-1; L>=0; L--){                     // 這台車最遠還看得到的那站
+        if(stops[L].car!==plate) continue;
+        var nl=ptMin(stops[L].ptime);
+        if(nl===null || off[stops[L].na]===undefined || off[stopName]===undefined) return null;
+        return base+nl+off[stopName]-off[stops[L].na];
+      }
+      return null;                                    // 已經過站了
+    }
+    var m=/^(\d{1,2}:\d{2})發車$/.exec((stops[0]||{}).ptime||'');
+    if(m && off[stopName]!==undefined) return toMin(m[1])+off[stopName];
+    if(!t.car && /^\d{1,2}:\d{2}$/.test(t.ptime)) return toMin(t.ptime);
+    return null;
+  }
+  function arrives(){ return Array.prototype.slice.call(document.querySelectorAll('.bus-arrive')); }
+  function paintArrive(mk){
+    var ev=mk.closest('.ev'), w=ev && ev.querySelector('.when');
+    if(!w) return;
+    var k=mk.getAttribute('data-key'), d=LAST[k], txt='';
+    if(d && !d.err){
+      var a=arriveMin(d, k, mk.getAttribute('data-stop')||'', CUR[k]||'');
+      if(a!==null) txt='預計 '+hm(a)+' 到達';
+    }
+    var sp=w.querySelector('.bus-arrive-at');
+    if(!txt){ if(sp) sp.remove(); return; }
+    if(!sp){ sp=document.createElement('span'); sp.className='bus-arrive-at'; w.appendChild(sp); }
+    var v=window.__tripNoDetect ? window.__tripNoDetect(txt) : txt;
+    if(sp.textContent!==v) sp.textContent=v;
+  }
+  function paintAll(){ els().forEach(paint); arrives().forEach(paintArrive); }
+  window.__tripBusArrive=arriveMin;  // 測試用
+
   function els(){ return Array.prototype.slice.call(document.querySelectorAll('.bus-live')); }
 
   function refresh(){
     var keys={};
-    els().forEach(function(el){ keys[el.getAttribute('data-key')]=1; });
+    els().concat(arrives()).forEach(function(el){ keys[el.getAttribute('data-key')]=1; });
     Object.keys(keys).forEach(function(k){
       if(!/^\d{6}$/.test(k)) return;
       fetch(API+k, {cache:'no-store'}).then(function(r){
@@ -1514,9 +1591,10 @@ window.__nodeLink=(function(){
       }).then(function(d){
         if(!d || d.error || !Array.isArray(d.stops)) throw 0;
         LAST[k]=d;
+        learnSched(k, d.stops);
       })['catch'](function(){
         LAST[k]={err:1};
-      }).then(function(){ els().forEach(paint); });
+      }).then(paintAll);
     });
   }
 
@@ -1533,8 +1611,11 @@ window.__nodeLink=(function(){
   if(bsTl && window.MutationObserver)
     new MutationObserver(function(){
       var fresh=els().filter(function(el){ return !el.getAttribute('data-painted'); });
-      if(!fresh.length) return;
+      var lost=arrives().filter(function(mk){ return !mk.getAttribute('data-painted'); });
+      if(!fresh.length && !lost.length) return;
+      lost.forEach(function(mk){ mk.setAttribute('data-painted','1'); });
       fresh.forEach(paint);
+      paintAll();
       refresh();
     }).observe(bsTl, {childList:true, subtree:true});
 })();
