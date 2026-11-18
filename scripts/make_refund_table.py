@@ -154,7 +154,7 @@ for ci in range(len(PLATFORMS) + 1):
     d.line([x, TITLE_H, x, y], fill=C_GRID, width=S)
 
 # 註腳
-notes = ['綠字＝店家宣告免退稅手續費（機場領現金仍會扣）。？＝查不到官方資訊。現金只付日圓，會取整數。']
+notes = ['綠字＝店家宣告免退稅手續費（機場領現金仍會扣）。？＝查不到官方資訊。現金支付日圓，會取整數，且會另扣手續費。']
 ny = y + 14 * S
 for n in notes:
     d.text((PAD, ny), n, font=f_note, fill=C_SUB)
