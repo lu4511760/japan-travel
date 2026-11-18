@@ -1446,7 +1446,9 @@ window.__nodeLink=(function(){
     var s=stops[ni];
     var pos = s.ptime==='進站中' ? '在 '+s.na : '即將到 '+s.na;
     if(ni===0) pos='在起站 '+s.na;
-    return {pos:pos+'（'+plate+'）', eta: ni>ti ? '已過站' : eta(stops[ti].ptime), plate:plate};
+    // 距幾站：車子正要到（或停在）第 ni 站，到上車站還要再過幾站；下一站就是上車站時是 0
+    var away = ni<=ti ? ti-ni : null;
+    return {pos:pos+'（'+plate+'）', eta: ni>ti ? '已過站' : eta(stops[ti].ptime), plate:plate, away:away};
   }
   window.__tripBusAnalyze=analyze;   // 測試用
 
@@ -1466,6 +1468,8 @@ window.__nodeLink=(function(){
       var r=analyze(d.stops||[], el.getAttribute('data-dep'), stopName, getPlate(el));
       if(r.plate) setPlate(el, r.plate);
       pos=r.pos; e=r.eta; at=d.time||'';
+      if(r.away>0) e+='（距 '+r.away+' 站）';
+      else if(r.away===0 && e.indexOf('進站')<0) e+='（下一站）';
     }
     el.innerHTML='<p>🚌 目前位置：'+nd(pos)+'</p>'
       +'<p>⏱️ 到'+stopName+'：'+nd(e)+'</p>'
