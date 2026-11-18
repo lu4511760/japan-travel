@@ -168,7 +168,7 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
 /* 班機誤點、時刻被往後挪過：在後面補上原本的表定時間 */
 .when-was{margin-left:8px; font-size:12.5px; color:var(--muted); font-weight:400; letter-spacing:0}
 /* 客運預計到達時間（.bus-arrive 標記補在時間後面），樣式同 .when-was */
-.bus-arrive-at{margin-left:8px; font-size:12.5px; color:var(--muted); font-weight:400; letter-spacing:0}
+.bus-arrive-at, .bus-dep-at{margin-left:8px; font-size:12.5px; color:var(--muted); font-weight:400; letter-spacing:0}
 body.editing .when-end{display:inline; color:var(--muted); font-weight:400}
 /* 「結束行程」：只長在正在進行的那個節點上，而且只有編輯模式看得到。
    用 CSS 控制顯示，按鈕本身每個節點都先放好，這樣每分鐘換人進行中時不必重畫按鈕。 */
@@ -1391,6 +1391,11 @@ window.__nodeLink=(function(){
 //   · 不是（前一班還沒到下車站，那列顯示的是前一班）→ 這台車最遠一站的分鐘數＋表定兩站之間的分鐘數
 //   · 還沒發車 → 起站發車時刻＋表定起站到下車站的分鐘數
 //   表定分鐘數從官網沒車那幾列的「HH:MM」學來，記在 localStorage（每台裝置第一次看到就記住）。
+// 表定發車時間：在上車那則的內容裡放
+//   <span class="bus-dep" data-key="196802" data-stop="上車站名"></span>
+// 就會在那則的時間後面補上灰小字「表定 HH:MM 發車」（上車站是起站時；不是起站則顯示到站時間）。
+//   那則的當天、時間前 40 分到後 120 分內，看到起站的「下一班」換了，就認定剛開走的那台是要搭的
+//   （路上最靠近起站的那台），記住車牌；同 key 的 .bus-arrive 之後就追這台，發車字樣也停在那班。
 // 路線、班次、站名都寫在節點內容裡（私人行程是加密的），程式這裡只有通用邏輯。
 // 資料經 Worker 的 /bus 代抓（官網不開放跨域）。
 //
@@ -1561,28 +1566,69 @@ window.__nodeLink=(function(){
     return null;
   }
   function arrives(){ return Array.prototype.slice.call(document.querySelectorAll('.bus-arrive')); }
-  function paintArrive(mk){
+  function deps(){ return Array.prototype.slice.call(document.querySelectorAll('.bus-dep')); }
+  // 把灰小字放到標記所在那則的時間後面（txt 空的就拿掉）
+  function setWhen(mk, cls, txt){
     var ev=mk.closest('.ev'), w=ev && ev.querySelector('.when');
     if(!w) return;
+    var sp=w.querySelector('.'+cls);
+    if(!txt){ if(sp) sp.remove(); return; }
+    if(!sp){ sp=document.createElement('span'); sp.className=cls; w.appendChild(sp); }
+    var v=window.__tripNoDetect ? window.__tripNoDetect(txt) : txt;
+    if(sp.textContent!==v) sp.textContent=v;
+  }
+  function paintArrive(mk){
     var k=mk.getAttribute('data-key'), d=LAST[k], txt='';
     if(d && !d.err){
       var a=arriveMin(d, k, mk.getAttribute('data-stop')||'', CUR[k]||'');
       if(a!==null) txt='預計 '+hm(a)+' 到達';
     }
-    var sp=w.querySelector('.bus-arrive-at');
-    if(!txt){ if(sp) sp.remove(); return; }
-    if(!sp){ sp=document.createElement('span'); sp.className='bus-arrive-at'; w.appendChild(sp); }
-    var v=window.__tripNoDetect ? window.__tripNoDetect(txt) : txt;
-    if(sp.textContent!==v) sp.textContent=v;
+    setWhen(mk, 'bus-arrive-at', txt);
   }
-  function paintAll(){ els().forEach(paint); arrives().forEach(paintArrive); }
+  function lsGet(k){ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch(e){ return null; } }
+  function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+  function paintDep(mk){
+    var k=mk.getAttribute('data-key'), d=LAST[k], txt='';
+    if(d && !d.err){
+      var stops=d.stops||[], stopName=mk.getAttribute('data-stop')||'', bi=-1;
+      stops.forEach(function(s, i){ if(bi<0 && s.na===stopName) bi=i; });
+      var m=/^(\d{1,2}:\d{2})發車$/.exec((stops[0]||{}).ptime||''), next=m ? m[1] : '';
+      // 當天時間窗內：起站的下一班換了 → 剛開走的那台就是要搭的，記住
+      var ev=mk.closest('.ev'), w=ev && ev.querySelector('.when');
+      var day=dayOf(mk), now=tpeNow(), t=toMin(w ? w.getAttribute('data-t') : '');
+      var win=window.__tripBusForce || (day===now.date && now.min>=t-40 && now.min<=t+120);
+      var lk='japan2027-bus-lock-'+(day||'')+'-'+k, lastK='japan2027-bus-last-'+(day||'')+'-'+k;
+      var lock=win ? lsGet(lk) : null;
+      if(win && !(lock && lock.plate)){
+        var last=lsGet(lastK);
+        if(last && last!==next){
+          var car=''; stops.forEach(function(s){ if(!car && s.car) car=s.car; });
+          if(car){ lock={dep:last, plate:car}; lsSet(lk, lock); }
+        }
+        if(!(lock && lock.plate) && next) lsSet(lastK, next);
+      }
+      // 沒鎖車時清掉之前留下的車牌（同 key 有 .bus-live 時由它決定，不動）
+      if(!els().some(function(el){ return el.getAttribute('data-key')===k; })) delete CUR[k];
+      if(lock && lock.plate){
+        if(stops.some(function(s){ return s.car===lock.plate; })) CUR[k]=lock.plate;
+        txt='表定 '+lock.dep+' 發車';
+      }else if(bi===0){
+        if(next) txt='表定 '+next+' 發車';
+      }else if(bi>0){
+        var r=stops[bi];
+        txt = /^\d{1,2}:\d{2}$/.test(r.ptime) ? '表定 '+r.ptime+' 到站' : (r.car ? eta(r.ptime)+' 到站' : '');
+      }
+    }
+    setWhen(mk, 'bus-dep-at', txt);
+  }
+  function paintAll(){ els().forEach(paint); deps().forEach(paintDep); arrives().forEach(paintArrive); }
   window.__tripBusArrive=arriveMin;  // 測試用
 
   function els(){ return Array.prototype.slice.call(document.querySelectorAll('.bus-live')); }
 
   function refresh(){
     var keys={};
-    els().concat(arrives()).forEach(function(el){ keys[el.getAttribute('data-key')]=1; });
+    els().concat(arrives(), deps()).forEach(function(el){ keys[el.getAttribute('data-key')]=1; });
     Object.keys(keys).forEach(function(k){
       if(!/^\d{6}$/.test(k)) return;
       fetch(API+k, {cache:'no-store'}).then(function(r){
@@ -1611,7 +1657,7 @@ window.__nodeLink=(function(){
   if(bsTl && window.MutationObserver)
     new MutationObserver(function(){
       var fresh=els().filter(function(el){ return !el.getAttribute('data-painted'); });
-      var lost=arrives().filter(function(mk){ return !mk.getAttribute('data-painted'); });
+      var lost=arrives().concat(deps()).filter(function(mk){ return !mk.getAttribute('data-painted'); });
       if(!fresh.length && !lost.length) return;
       lost.forEach(function(mk){ mk.setAttribute('data-painted','1'); });
       fresh.forEach(paint);
