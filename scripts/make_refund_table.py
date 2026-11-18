@@ -30,6 +30,9 @@ PLATFORMS = [
     ('Planet', ['未公開'], ['網站'], True, True, True, False),
     ('IntaSect', ['未公開'], ['依收據'], None, True, True, False),
 ]
+# 打勾格子底下要加的小字：(平台名稱, 列索引) → 文字。列索引對照 ROWS（3＝現金退稅）
+# JPrefund 要領現金，得在海關確認前就上網把退款方式選成「機場領現金」，之後不能改（jptaxrefund.com/blog/jprefund-guide）
+MARK_NOTES = {('JPrefund', 3): '（需先線上設定）'}
 ROWS = ['主要配合商家', '設定方式', '信用卡退稅', '現金退稅', 'GLORY\nSelf Tax Refund', 'Cash Japan']
 
 S = 2                      # 整張放大倍率（手機點開放大仍清楚）
@@ -55,6 +58,7 @@ f_tx = ImageFont.truetype(FONT, 20 * S)
 f_b = ImageFont.truetype(FONT_B, 20 * S)
 f_title = ImageFont.truetype(FONT_B, 30 * S)
 f_note = ImageFont.truetype(FONT, 16 * S)
+f_mark_note = ImageFont.truetype(FONT, 14 * S)
 
 
 def lines_of(r, ci):
@@ -76,7 +80,7 @@ def row_height(r):
 
 TITLE_H = 70 * S
 HEADER_H = 2 * LINE_H + 2 * PAD
-NOTE_H = 80 * S
+NOTE_H = 56 * S
 W = HEAD_W + COL_W * len(PLATFORMS)
 H = TITLE_H + HEADER_H + sum(row_height(r) for r in range(len(ROWS))) + NOTE_H
 
@@ -98,9 +102,13 @@ def center_text(box, text, font, fill):
         y += LINE_H
 
 
-def draw_mark(box, v):
+def draw_mark(box, v, note=None):
     cx, cy = (box[0] + box[2]) / 2, (box[1] + box[3]) / 2
     r = 15 * S
+    if note:                      # 有小字就把記號往上移，小字放下面
+        cy -= 11 * S
+        w = d.textlength(note, font=f_mark_note)
+        d.text((cx - w / 2, cy + r + 4 * S), note, font=f_mark_note, fill=C_UNK)
     if v is True:
         d.line([(cx - r, cy), (cx - r / 3, cy + r * 0.7), (cx + r, cy - r * 0.7)], fill=C_YES, width=5 * S, joint='curve')
     elif v is False:
@@ -134,7 +142,7 @@ for r, name in enumerate(ROWS):
         box = (x, y, x + COL_W, y + h)
         ls = lines_of(r, ci)
         if ls is None:
-            draw_mark(box, p[r + 1])
+            draw_mark(box, p[r + 1], MARK_NOTES.get((p[0], r)))
         else:
             col = C_SUB if ls == ['未公開'] or ls == ['依收據'] else C_TX
             center_text(box, '\n'.join(ls), f_tx, col)
@@ -146,8 +154,7 @@ for ci in range(len(PLATFORMS) + 1):
     d.line([x, TITLE_H, x, y], fill=C_GRID, width=S)
 
 # 註腳
-notes = ['成田：GLORY 在安檢前（T1 中央大樓 4F、T2 本館 3F），Cash Japan 在安檢後（T1/T2/T3 3F）。現金只付日圓，會扣手續費。',
-         '綠字＝店家宣告免退稅手續費（機場領現金仍會扣）。？＝查不到官方資訊。各店用哪家以收據上的 QR code／網址為準。']
+notes = ['綠字＝店家宣告免退稅手續費（機場領現金仍會扣）。？＝查不到官方資訊。現金只付日圓，會取整數。']
 ny = y + 14 * S
 for n in notes:
     d.text((PAD, ny), n, font=f_note, fill=C_SUB)
