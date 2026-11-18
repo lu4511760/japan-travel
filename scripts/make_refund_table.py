@@ -16,15 +16,17 @@ FONT = 'C:/Windows/Fonts/msjh.ttc'
 FONT_B = 'C:/Windows/Fonts/msjhbd.ttc'
 
 # 打勾欄位：True=有、False=沒有、None=查不到（畫問號）
+# 商家名稱結尾加 * ＝已宣告免退稅手續費（畫成綠字，* 不會印出來）；機場領現金的手續費另計
 PLATFORMS = [
     # 名稱, 主要配合商家, 設定方式, 信用卡, 現金, GLORY, Cash Japan
-    ('J-TaxRefund', ['UNIQLO', 'GU', 'MUJI', '松本清', 'Cocokara', '大國藥妝', 'Sundrug', '鶴羽藥妝'],
+    ('J-TaxRefund', ['唐吉訶德*', 'Bic Camera*', 'UNIQLO', 'GU', 'MUJI', '松本清', 'Cocokara',
+                     '大國藥妝*', 'Sundrug*', '鶴羽藥妝*'],
      ['網站'], True, True, True, True),
     ('JPrefund', ['3COINS', 'Shimamura'], ['網站'], True, True, True, True),
     ('Global Blue', ['高島屋', '大丸松坂屋', '伊勢丹三越', '阪急阪神', '西武Sogo', 'Yodobashi', 'Sugi藥局'],
      ['App', '網站'], True, True, False, True),
     ('PIE VAT', ['SHIBUYA109', '三井Outlet', 'LaLaport', 'mont-bell'], ['App', '網站'], True, False, False, False),
-    ('Ocean\nTax Refund', ['Yamada電機', 'animate'], ['LINE', 'WeChat', '網站'], True, False, False, False),
+    ('Ocean\nTax Refund', ['Yamada電機*', 'animate'], ['LINE', 'WeChat', '網站'], True, False, False, False),
     ('Planet', ['未公開'], ['網站'], True, True, True, False),
     ('IntaSect', ['未公開'], ['依收據'], None, True, True, False),
 ]
@@ -47,6 +49,7 @@ C_SUB = (120, 120, 120)
 C_YES = (34, 150, 70)
 C_NO = (200, 200, 200)
 C_UNK = (220, 150, 30)
+C_FREE = (34, 150, 70)        # 免手續費的商家
 
 f_tx = ImageFont.truetype(FONT, 20 * S)
 f_b = ImageFont.truetype(FONT_B, 20 * S)
@@ -87,8 +90,11 @@ def center_text(box, text, font, fill):
     total = len(ls) * LINE_H
     y = (y0 + y1 - total) / 2
     for ln in ls:
+        col = fill
+        if ln.endswith('*'):          # 免手續費的商家畫綠字
+            ln, col = ln[:-1], C_FREE
         w = d.textlength(ln, font=font)
-        d.text(((x0 + x1 - w) / 2, y + (LINE_H - font.size) / 2 - 2 * S), ln, font=font, fill=fill)
+        d.text(((x0 + x1 - w) / 2, y + (LINE_H - font.size) / 2 - 2 * S), ln, font=font, fill=col)
         y += LINE_H
 
 
@@ -141,7 +147,7 @@ for ci in range(len(PLATFORMS) + 1):
 
 # 註腳
 notes = ['成田：GLORY 在安檢前（T1 中央大樓 4F、T2 本館 3F），Cash Japan 在安檢後（T1/T2/T3 3F）。現金只付日圓，會扣手續費。',
-         '？＝查不到官方資訊。各店用哪家以收據上的 QR code／網址為準，Bic Camera、唐吉訶德尚未官方公布。']
+         '綠字＝店家宣告免退稅手續費（機場領現金仍會扣）。？＝查不到官方資訊。各店用哪家以收據上的 QR code／網址為準。']
 ny = y + 14 * S
 for n in notes:
     d.text((PAD, ny), n, font=f_note, fill=C_SUB)

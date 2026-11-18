@@ -6,7 +6,7 @@
 //
 // 這支檔案由 scripts/build_sw.py 產生，不要直接改；新增圖片後重跑它。
 
-const CACHE = 'japan2027-v1';
+const CACHE = 'japan2027-v2';
 
 // 安裝時就先抓好的檔案（第一次開頁、有網路時完成）
 const PRECACHE = [
