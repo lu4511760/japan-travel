@@ -8,7 +8,7 @@ import glob
 import io
 import os
 
-CACHE_VERSION = 'japan2027-v4'
+CACHE_VERSION = 'japan2027-v5'
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 CORE = ['./', 'index.html', 'private.enc', 'manifest.webmanifest',
@@ -33,7 +33,9 @@ self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE)
       // 單一檔案失敗不要讓整批安裝失敗
-      .then((c) => Promise.allSettled(PRECACHE.map((u) => c.add(u))))
+      // cache:'reload'：繞過瀏覽器自己的 HTTP 快取（GitHub Pages 給 10 分鐘），
+      // 不然換了同檔名的圖片、升了版，存進新快取的可能還是 10 分鐘內抓過的舊圖
+      .then((c) => Promise.allSettled(PRECACHE.map((u) => c.add(new Request(u, { cache: 'reload' })))))
       .then(() => self.skipWaiting())
   );
 });

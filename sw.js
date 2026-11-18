@@ -6,7 +6,7 @@
 //
 // 這支檔案由 scripts/build_sw.py 產生，不要直接改；新增圖片後重跑它。
 
-const CACHE = 'japan2027-v4';
+const CACHE = 'japan2027-v5';
 
 // 安裝時就先抓好的檔案（第一次開頁、有網路時完成）
 const PRECACHE = [
@@ -43,7 +43,9 @@ self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE)
       // 單一檔案失敗不要讓整批安裝失敗
-      .then((c) => Promise.allSettled(PRECACHE.map((u) => c.add(u))))
+      // cache:'reload'：繞過瀏覽器自己的 HTTP 快取（GitHub Pages 給 10 分鐘），
+      // 不然換了同檔名的圖片、升了版，存進新快取的可能還是 10 分鐘內抓過的舊圖
+      .then((c) => Promise.allSettled(PRECACHE.map((u) => c.add(new Request(u, { cache: 'reload' })))))
       .then(() => self.skipWaiting())
   );
 });
