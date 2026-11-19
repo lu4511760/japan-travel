@@ -54,7 +54,7 @@ PLATFORMS = [
      ['App'], True, False, False, False),
     ('Ocean\nTax Refund', ['Yamada電機*|0%', 'animate|2.1%', 'ADASTRIA|2~2.5%'], ['LINE', 'WeChat', '網站'], True, False, False, False),
     ('Planet', ['AEON Mall|1.5%', '沖繩商場|2.5%'], ['網站'], True, True, True, False),
-    ('IntaSect', ['未公開'], ['依收據'], None, True, True, False),
+    ('IntaSect', ['未公開'], ['依收據'], True, True, True, False),
 ]
 # 打勾格子底下要加的小字：(平台名稱, 列索引) → (文字, 顏色)。列索引對照 ROWS（2＝信用卡、3＝現金退稅）
 # JPrefund 要領現金，得在海關確認前就上網把退款方式選成「機場領現金」，之後不能改（jptaxrefund.com/blog/jprefund-guide）
@@ -316,7 +316,7 @@ d.rectangle([HEAD_W, TITLE_H, W, TITLE_H + 3 * S], fill=C_HEAD)
 d.rectangle([HEAD_W, TITLE_H + HEADER_H - 3 * S, W, TITLE_H + HEADER_H], fill=C_HEAD)
 
 # 註腳
-notes = ['店家後面括號＝店家的退稅手續費(以未稅價計，¥＝每筆定額)；綠字＝店家宣告免手續費。？＝查不到官方資訊。',
+notes = ['店家後面括號＝店家的退稅手續費(以未稅價計，¥＝每筆定額)；綠字＝店家宣告免手續費。',
          '機場領現金另扣機台手續費(見左欄)，店家免手續費也不會吸收；現金支付日圓。手續費為 2026/11 網友實測整理，以店頭標示為準。',
          '如開在百貨商場之"店中店"(高島屋、大丸、PARCO、AEON)，退稅平台與手續費一律跟著該百貨商場走。']
 ny = y + 14 * S
