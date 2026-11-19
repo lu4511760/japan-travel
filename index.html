@@ -420,6 +420,8 @@ span.rsv{color:var(--meal)}
 .day-head.past, .day-head.past .dow, .day-head.past .day-sub{color:var(--rail)}
 .day-head.past::before{background:var(--rail)}
 .fl-updated.err{color:#c0392b}
+/* 登機門後面的吸菸區位置(灰小字，不跟著 fl-hot 變橘變粗) */
+.fl-smoke{margin-left:6px; font-size:12.5px; color:var(--muted); font-weight:400}
 /* ── 編輯介面(解鎖後才出現) ── */
 .ed-fab{
   position:fixed; right:16px; z-index:50;
@@ -1005,6 +1007,21 @@ window.__nodeLink=(function(){
     remember(td, tbl, key);
   }
 
+  // 桃園出境: 依登機門開頭字母，在登機門後面補吸菸區位置(灰小字)
+  var SMOKE={A:'吸菸區: A8、A9之間', B:'吸菸區: B8、B9之間',
+             C:'吸菸區: C3附近，精品店後方，貴賓室電扶梯旁', D:'吸菸區: D6附近'};
+  function addSmoke(tbl){
+    var td=document.querySelector('#'+tbl+' td[data-f="gate"]');
+    if(!td) return;
+    var g=td.textContent.replace(/[\u200b-\u200d\u2060\ufeff]/g,'').trim().charAt(0).toUpperCase();
+    if(!SMOKE[g]) return;
+    var sp=document.createElement('span');
+    sp.className='fl-smoke';
+    sp.textContent='('+SMOKE[g]+')';
+    td.appendChild(sp);
+    remember(td, tbl, 'gate');
+  }
+
   // quiet=true 時只取值、不碰畫面(1/16 過後的 JX802 就是這樣查的)
   // 回傳值是這班的誤點分鐘數(實際 - 表定)，取不到時回 null
   function fetchFlight(id, tbl, isDep, quiet){
@@ -1024,6 +1041,7 @@ window.__nodeLink=(function(){
       put(tbl,'otime', f.OTime ? f.OTime.slice(0,5) : '');
       put(tbl,'rtime', f.RTime ? f.RTime.slice(0,5) : '', true);
       if(isDep){
+        if(!quiet) addSmoke(tbl);
         put(tbl,'checkin', f.CheckIn ? f.CheckIn+' 號櫃台' : '', true);
       }else{
         // 抵達航班的行李轉盤，桃園 API 放在 StopCode 欄位
