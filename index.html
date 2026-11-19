@@ -168,7 +168,7 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
 /* 班機誤點、時刻被往後挪過: 在後面補上原本的表定時間 */
 .when-was{margin-left:8px; font-size:12.5px; color:var(--muted); font-weight:400; letter-spacing:0}
 /* 客運預計到達時間(.bus-arrive 標記補在時間後面)，樣式同 .when-was */
-.bus-arrive-at, .bus-dep-at{margin-left:8px; font-size:12.5px; color:var(--muted); font-weight:400; letter-spacing:0}
+.bus-arrive-at, .bus-dep-at, .bus-live-at{margin-left:8px; font-size:12.5px; color:var(--muted); font-weight:400; letter-spacing:0}
 body.editing .when-end{display:inline; color:var(--muted); font-weight:400}
 /* 「結束行程」: 只長在正在進行的那個節點上，而且只有編輯模式看得到。
    用 CSS 控制顯示，按鈕本身每個節點都先放好，這樣每分鐘換人進行中時不必重畫按鈕。 */
@@ -1383,7 +1383,8 @@ window.__nodeLink=(function(){
 //   data-dep  要搭的那班從起站發車的時刻(台灣時間)
 //   data-stop 上車站名，要跟官網站名一字不差
 //   data-name (選填)第一行的標題，例如路線號；沒填顯示「下一班」
-//   data-url  (選填)官網動態頁網址，會接在「官網資料時間」後面
+//   data-url  (選填)官網動態頁網址，會接在第一行後面「(動態資訊)」
+// 到上車站的時間顯示在這則的時刻後面(灰小字)，例如「預計 06:12 到站(距 2 站)」、「表定 10:34 到站」
 // 預計到達時間: 在下車那則的內容裡放
 //   <span class="bus-arrive" data-key="196801" data-stop="下車站名"></span>
 // 就會在那則的時間後面補上灰小字「預計 HH:MM 到達」(追的車跟同 key 的 .bus-live 同一台)。
@@ -1494,7 +1495,7 @@ window.__nodeLink=(function(){
     var stopName=el.getAttribute('data-stop')||'上車站';
     var trip=inWindow(el);            // true: 只追要搭的那班；false: 看下一班
     var d=LAST[el.getAttribute('data-key')];
-    var pos='讀取中…', e='—', at='';
+    var pos='讀取中…', when='';
     if(d && d.err){ pos='動態暫時讀不到'; }
     else if(d){
       var r;
@@ -1503,18 +1504,24 @@ window.__nodeLink=(function(){
         if(r.plate) setPlate(el, r.plate);
       }else r=analyzeNext(d.stops||[], stopName);
       CUR[el.getAttribute('data-key')]=r.plate||'';
-      pos=r.pos; e=r.eta; at=d.time||'';
-      if(r.away>0) e+='(距 '+r.away+' 站)';
-      else if(r.away===0 && e.indexOf('進站')<0) e+='(下一站)';
+      pos=r.pos;
+      // 到上車站的時間放在這則的時刻後面(灰小字): 「約 N 分」換算成時刻
+      var base=d.time ? toMin(d.time) : tpeNow().min, e=r.eta||'', m;
+      if((m=/^約 (\d+) 分$/.exec(e))) when='預計 '+hm(base+(+m[1]))+' 到站';
+      else if((m=/^約 (\d+) 時 (\d+) 分$/.exec(e))) when='預計 '+hm(base+(+m[1])*60+(+m[2]))+' 到站';
+      else if(/^表定 /.test(e)) when=e+' 到站';
+      else if(e && e!=='—') when=e;
+      if(when && /^預計/.test(when)){
+        if(r.away>0) when+='(距 '+r.away+' 站)';
+        else if(r.away===0) when+='(下一站)';
+      }
     }
-    // 字級跟節點其他行(jr-row)一致；資料時間用跟「最後更新」一樣的灰小字
     var name=el.getAttribute('data-name'), url=el.getAttribute('data-url')||'';
     var label=(name?esc(name):'下一班')+(trip?'('+esc(el.getAttribute('data-dep')||'')+' 班)':'');
     var link=/^https:\/\//.test(url) ? '(<a href="'+esc(url)+'" target="_blank" rel="noopener">動態資訊</a>)' : '';
-    el.innerHTML='<p class="jr-row">🚌 '+label+': '+nd(pos)+'</p>'
-      +'<p class="jr-row">⏱️ 到'+esc(stopName)+': '+nd(e)+'</p>'
-      +((at||link)?'<p class="jr-row" style="color:var(--muted);font-size:13px">'+(at?'🕐 官網資料時間 '+nd(at):'')+link+'</p>':'');
+    el.innerHTML='<p class="jr-row">🚌 '+label+': '+nd(pos)+link+'</p>';
     el.setAttribute('data-painted','1');
+    setWhen(el, 'bus-live-at', when);
   }
 
 
