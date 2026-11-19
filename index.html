@@ -1007,10 +1007,25 @@ window.__nodeLink=(function(){
     remember(td, tbl, key);
   }
 
-  // 出境登機門後面補吸菸區位置(灰小字)，依登機門開頭字元決定
-  // 桃園看字母；成田看數字開頭(第 2 航廈 6x～9x)，「吸菸區」三個字連到成田官網地圖
-  var SMOKE={A:'吸菸區: A8、A9之間', B:'吸菸區: B8、B9之間',
-             C:'吸菸區: C3附近，精品店後方，貴賓室電扶梯旁', D:'吸菸區: D6附近'};
+  // 出境登機門後面補吸菸區位置(灰小字)，「吸菸區」三個字連到機場官網地圖
+  // 桃園看字母＋號碼: A、D1、D2 → A9 附近；B、C1、C2 → B8 附近；C3 以上、D3 以上 → 第二航廈安檢站附近
+  var TPE_MAP='https://map.taoyuan-airport.com/?';
+  var SMOKE_TPE={
+    A9:{u:TPE_MAP+'level=8939e441-e4a3-45ac-9cc3-a1bb5640c369&terminal=T1&poi=b4400996-63ab-4864-a86c-fcaed88482ad', t:'A9附近'},
+    B8:{u:TPE_MAP+'level=8939e441-e4a3-45ac-9cc3-a1bb5640c369&terminal=T1&poi=ab59db4b-651b-4acc-addc-c04dfe9e0787', t:'B8附近'},
+    C:{u:TPE_MAP+'level=c958264f-2107-42e0-981e-a5630631a423&terminal=T2&poi=c755a55e-9ea6-47ad-ba1b-a8583b1c837b', t:'T2安檢站附近'},
+    D:{u:TPE_MAP+'level=c958264f-2107-42e0-981e-a5630631a423&terminal=T2&poi=f0cce14e-dbe6-40d1-9c6e-79cb96700b33', t:'T2安檢站附近'}
+  };
+  function smokeTpe(gate){
+    var m=/^([A-D])(\d*)/.exec(gate);
+    if(!m) return null;
+    var n=+(m[2]||0);
+    if(m[1]==='A') return SMOKE_TPE.A9;
+    if(m[1]==='B') return SMOKE_TPE.B8;
+    if(m[1]==='C') return n>=3 ? SMOKE_TPE.C : SMOKE_TPE.B8;
+    return n>=3 ? SMOKE_TPE.D : SMOKE_TPE.A9;          // D1、D2 走 A9
+  }
+  // 成田看數字開頭(第 2 航廈 6x～9x)
   var NRT_MAP='https://www.narita-airport.jp/zh-tc/map/?bearing=59.5&pitch=0&mode=searchResult&building=b32584d9-027d-4863-aa2e-3482e8fc2fb3&floor=3F';
   var SMOKE_NRT={
     '6':{u:NRT_MAP+'&zoom=18.58465424125953&lat=35.76983079999998&lng=140.39144609999994&clickedPoi=16856788', t:'66附近'},
@@ -1018,12 +1033,12 @@ window.__nodeLink=(function(){
     '8':{u:NRT_MAP+'&zoom=19.176181112850273&lat=35.77685624541452&lng=140.39156112228034&clickedPoi=17419216', t:'87附近'},
     '9':{u:'https://www.narita-airport.jp/zh-tc/map/?mode=normal&bearing=59.5&zoom=19.310034688091285&pitch=0&lat=35.774263300860014&lng=140.39350970108&clickedPoi=17419302&building=b32584d9-027d-4863-aa2e-3482e8fc2fb3&floor=3F', t:'95附近'}
   };
-  function addSmoke(tbl, map){
-    map=map||SMOKE;
+  function smokeNrt(gate){ return SMOKE_NRT[gate.charAt(0)] || null; }
+  function addSmoke(tbl, pick){
     var td=document.querySelector('#'+tbl+' td[data-f="gate"]');
     if(!td) return;
-    var g=td.textContent.replace(/[\u200b-\u200d\u2060\ufeff]/g,'').trim().charAt(0).toUpperCase();
-    var v=map[g];
+    var g=td.textContent.replace(/[\u200b-\u200d\u2060\ufeff]/g,'').trim().toUpperCase();
+    var v=pick(g);
     if(!v) return;
     var sp=document.createElement('span');
     sp.className='fl-smoke';
@@ -1058,7 +1073,7 @@ window.__nodeLink=(function(){
       put(tbl,'otime', f.OTime ? f.OTime.slice(0,5) : '');
       put(tbl,'rtime', f.RTime ? f.RTime.slice(0,5) : '', true);
       if(isDep){
-        if(!quiet) addSmoke(tbl);
+        if(!quiet) addSmoke(tbl, smokeTpe);
         put(tbl,'checkin', f.CheckIn ? f.CheckIn+' 號櫃台' : '', true);
       }else{
         // 抵達航班的行李轉盤，桃園 API 放在 StopCode 欄位
@@ -1114,7 +1129,7 @@ window.__nodeLink=(function(){
         // 沒有異動就照表定時間顯示，一律用橘色(跟桃園的實際時間一致)
         put(tbl,'rtime', f.changeScheduledTime || f.scheduledTime, true);
         putPoi(tbl,'gate', f.gates, true);
-        if(!isArr && !quiet) addSmoke(tbl, SMOKE_NRT);
+        if(!isArr && !quiet) addSmoke(tbl, smokeNrt);
         if(!isArr){
           var ci=f.checkInCounterOrArrivalLobby||{};
           var cnt=(ci.changeNameOfCheckInOrArrival && ci.changeNameOfCheckInOrArrival.length) ? ci.changeNameOfCheckInOrArrival : ci.nameOfCheckInOrArrival;
