@@ -42,7 +42,7 @@ PLATFORMS = [
                      'Sundrug*|0%', '大國藥妝*|0%', '松本清|0.33%', 'Cocokara|0.33%', 'UNIQLO|1%', 'GU|1%',
                      'MUJI|1.3%', '寶可夢中心|1.5%', '其他|1.5~4%'],
      ['網站'], True, True, True, True),
-    ('JPrefund', ['3COINS|¥320', '思夢樂|1~2.5%', 'Fancl|3.5%', '其他|0.4~3%'], ['網站'], True, True, True, True),
+    ('JPrefund', ['3COINS|¥320', '思夢樂|1~2.5%', 'Fancl|3.5%', 'HANDS|1.1~1.55%', '其他|0.4~3%'], ['網站'], True, True, True, True),
     ('Global Blue', ['高島屋|2.3%', '大丸松坂屋|2.3%', '伊勢丹三越|2.3%', '阪急阪神|2.3%', '西武Sogo',
                      'Yodobashi|2.3%', 'Sugi藥局|¥160', 'EDION|¥210', '其他|1.6~3%'],
      ['App', '網站'], True, True, False, True),
