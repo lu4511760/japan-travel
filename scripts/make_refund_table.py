@@ -217,6 +217,9 @@ d.line([0, y, W, y], fill=C_GRID, width=S)
 for ci in range(len(PLATFORMS) + 1):
     x = HEAD_W + ci * COL_W
     d.line([x, TITLE_H, x, y], fill=C_GRID, width=S)
+# 表頭上下的深藍粗線最後再畫一次，蓋過直格線，線才是連續的
+d.rectangle([HEAD_W, TITLE_H, W, TITLE_H + 3 * S], fill=C_HEAD)
+d.rectangle([HEAD_W, TITLE_H + HEADER_H - 3 * S, W, TITLE_H + HEADER_H], fill=C_HEAD)
 
 # 註腳
 notes = ['綠字＝店家宣告免退稅手續費(機場領現金仍會扣)。？＝查不到官方資訊。現金支付日圓，會取整數，且會另扣手續費。']
