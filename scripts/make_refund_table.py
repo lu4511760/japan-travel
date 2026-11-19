@@ -32,28 +32,50 @@ FONT = 'C:/Windows/Fonts/msjh.ttc'
 FONT_B = 'C:/Windows/Fonts/msjhbd.ttc'
 
 # 打勾欄位：True=有、False=沒有、None=查不到（畫問號）
-# 商家名稱結尾加 * ＝已宣告免退稅手續費（畫成綠字，* 不會印出來）；機場領現金的手續費另計
+# 商家寫法「名稱|手續費」：手續費(店家的退稅手續費，以未稅價計；¥ 是每筆定額)畫成灰小字接在名稱後面
+#   名稱結尾加 * ＝已宣告免退稅手續費（畫成綠字，* 不會印出來）；機場領現金的手續費另計
+#   名稱是「其他」＝其餘合作店家的手續費範圍，整行灰字當補述
+# 手續費來源：林氏璧 2026/11/15 整理(linshibi.com/?p=53059)、PIE VAT 官方說明(help.pievat.com)
 PLATFORMS = [
     # 名稱, 主要配合商家, 設定方式, 信用卡, 現金, GLORY, Cash Japan
-    ('J-TaxRefund', ['唐吉訶德*', 'Bic Camera*', 'UNIQLO', 'GU', 'MUJI', '松本清', 'Cocokara',
-                     '大國藥妝*', 'Sundrug*', '鶴羽藥妝*'],
+    ('J-TaxRefund', ['唐吉訶德*|0%', 'Bic Camera*|0%', '多慶屋*|0%', '山田電機*|0%', '鶴羽藥妝*|0%',
+                     'Sundrug*|0%', '大國藥妝*|0%', '松本清|0.33%', 'Cocokara|0.33%', 'UNIQLO|1%', 'GU|1%',
+                     'MUJI|1.3%', '寶可夢中心|1.5%', '其他|1.5~4%'],
      ['網站'], True, True, True, True),
-    ('JPrefund', ['3COINS', 'Shimamura'], ['網站'], True, True, True, True),
-    ('Global Blue', ['高島屋', '大丸松坂屋', '伊勢丹三越', '阪急阪神', '西武Sogo', 'Yodobashi', 'Sugi藥局'],
+    ('JPrefund', ['3COINS|¥320', '思夢樂|1~2.5%', 'Fancl|3.5%', '其他|0.4~3%'], ['網站'], True, True, True, True),
+    ('Global Blue', ['高島屋|2.3%', '大丸松坂屋|2.3%', '伊勢丹三越|2.3%', '阪急阪神|2.3%', '西武Sogo',
+                     'Yodobashi|2.3%', 'Sugi藥局|¥160', 'EDION|¥210', '其他|1.6~3%'],
      ['App', '網站'], True, True, False, True),
-    ('PIE VAT', ['SHIBUYA109', '三井Outlet', 'LaLaport', 'mont-bell'], ['App'], True, False, False, False),
-    ('Ocean\nTax Refund', ['Yamada電機*', 'animate'], ['LINE', 'WeChat', '網站'], True, False, False, False),
-    ('Planet', ['未公開'], ['網站'], True, True, True, False),
+    ('PIE VAT', ['澀谷109|1.55%', '三井Outlet|1.5%', 'LaLaport|1.5%', 'mont-bell|2~3%', '其他|1.5~3%'],
+     ['App'], True, False, False, False),
+    ('Ocean\nTax Refund', ['Yamada電機*|0%', 'animate|2.1%'], ['LINE', 'WeChat', '網站'], True, False, False, False),
+    ('Planet', ['AEON Mall|1.5%', '沖繩商場|2.5%'], ['網站'], True, True, True, False),
     ('IntaSect', ['未公開'], ['依收據'], None, True, True, False),
 ]
-# 打勾格子底下要加的小字：(平台名稱, 列索引) → 文字。列索引對照 ROWS（3＝現金退稅）
+# 打勾格子底下要加的小字：(平台名稱, 列索引) → (文字, 顏色)。列索引對照 ROWS（2＝信用卡、3＝現金退稅）
 # JPrefund 要領現金，得在海關確認前就上網把退款方式選成「機場領現金」，之後不能改（jptaxrefund.com/blog/jprefund-guide）
-MARK_NOTES = {('JPrefund', 3): '(需先線上設定)'}
+C_NOTE_GRAY = (120, 120, 120)
+C_NOTE_ORANGE = (220, 150, 30)
+MARK_NOTES = {
+    ('J-TaxRefund', 2): ('可能有匯款費\n約0.33~0.5%', C_NOTE_GRAY),
+    ('JPrefund', 2): ('可能另扣匯款費', C_NOTE_GRAY),
+    ('Global Blue', 2): ('換匯加價2~4%\n建議JCB/雙幣卡', C_NOTE_GRAY),
+    ('PIE VAT', 2): ('另扣提領費\n0.28~0.36%', C_NOTE_GRAY),
+    ('Ocean\nTax Refund', 2): ('無額外費用', C_NOTE_GRAY),
+    ('JPrefund', 3): ('(需先線上設定)', C_NOTE_ORANGE),
+    # 友都八喜 11 間分店的市區現金退稅(只收 Global Blue)
+    ('Global Blue', 3): ('友都八喜市區可領\n退稅額5%(約未稅0.5%)\n最低¥150、最高¥500', C_NOTE_GRAY),
+}
 ROWS = ['主要配合商家', '設定方式', '信用卡退稅', '現金退稅', 'GLORY\nSelf Tax Refund', 'Cash Japan']
+# 列名底下的灰小字(機場現金退稅機的手續費，另外加在店家手續費上)
+ROW_NOTES = {
+    4: '約未稅價1.1%\n最低/最高: 未公開\n未滿¥100捨去',
+    5: '約未稅價1%\n最低¥100、最高¥500\n以¥50四捨五入',
+}
 
 S = 2                      # 整張放大倍率（手機點開放大仍清楚）
 HEAD_W = 170 * S           # 左側列名欄寬
-COL_W = 150 * S
+COL_W = 165 * S
 LINE_H = 30 * S
 PAD = 14 * S
 
@@ -75,6 +97,10 @@ f_b = ImageFont.truetype(FONT_B, 20 * S)
 f_title = ImageFont.truetype(FONT_B, 30 * S)
 f_note = ImageFont.truetype(FONT, 16 * S)
 f_mark_note = ImageFont.truetype(FONT, 14 * S)
+f_fee = ImageFont.truetype(FONT, 15 * S)          # 商家後面的手續費
+f_small = ImageFont.truetype(FONT, 13 * S)        # 勾勾、列名底下的灰小字
+SMALL_LH = 18 * S                                 # 灰小字行高
+MARK_BOX = 34 * S                                 # 勾勾本身佔的高度
 
 
 def lines_of(r, ci):
@@ -87,11 +113,20 @@ def lines_of(r, ci):
     return None
 
 
+def nlines(t):
+    return len(t.split('\n')) if t else 0
+
+
 def row_height(r):
+    # 列名(含底下灰小字)要的高度
+    head = nlines(ROWS[r]) * LINE_H + (nlines(ROW_NOTES.get(r)) * SMALL_LH + 4 * S if r in ROW_NOTES else 0) + 2 * PAD
     if r >= 2:
-        return 64 * S
+        notes = [MARK_NOTES.get((p[0], r)) for p in PLATFORMS]
+        n = max([nlines(x[0]) for x in notes if x] or [0])
+        cell = MARK_BOX + (n * SMALL_LH + 6 * S if n else 0) + 2 * PAD
+        return max(64 * S, cell, head)
     n = max(len(lines_of(r, ci)) for ci in range(len(PLATFORMS)))
-    return max(n * LINE_H + 2 * PAD, 64 * S)
+    return max(n * LINE_H + 2 * PAD, 64 * S, head)
 
 
 TITLE_H = 70 * S
@@ -134,7 +169,7 @@ def paste_logo(lg, cx, cy, max_w, max_h):
     k = min(max_w / lg.width, max_h / lg.height)
     lg = lg.resize((max(1, round(lg.width * k)), max(1, round(lg.height * k))), Image.LANCZOS)
     im.paste(lg, (round(cx - lg.width / 2), round(cy - lg.height / 2)), lg)
-NOTE_H = 56 * S
+NOTE_H = 80 * S
 W = HEAD_W + COL_W * len(PLATFORMS)
 H = TITLE_H + HEADER_H + sum(row_height(r) for r in range(len(ROWS))) + NOTE_H
 
@@ -156,13 +191,51 @@ def center_text(box, text, font, fill):
         y += LINE_H
 
 
+def small_lines(text, cx, y, fill):
+    """從 y 開始往下畫置中的灰小字(可多行)。"""
+    for ln in text.split('\n'):
+        w = d.textlength(ln, font=f_small)
+        d.text((cx - w / 2, y + (SMALL_LH - f_small.size) / 2 - S), ln, font=f_small, fill=fill)
+        y += SMALL_LH
+
+
+def merchant_lines(box, items):
+    """主要配合商家：名稱(綠字＝免手續費) + 灰色小字手續費；「其他」整行灰字。"""
+    x0, y0, x1, y1 = box
+    y = (y0 + y1 - len(items) * LINE_H) / 2
+    gap = 4 * S
+    for it in items:
+        name, _, fee = it.partition('|')
+        col = C_TX
+        if name.endswith('*'):
+            name, col = name[:-1], C_FREE
+        if name == '其他' or name in ('未公開', '依收據'):
+            col = C_SUB
+        fee_t = '(%s)' % fee if fee else ''
+        wn = d.textlength(name, font=f_tx)
+        wf = d.textlength(fee_t, font=f_fee) if fee_t else 0
+        total = wn + (gap + wf if fee_t else 0)
+        if total > (x1 - x0) - 6 * S:
+            print('  ⚠ 太寬會超出格子:', name, fee_t)
+        x = (x0 + x1 - total) / 2
+        ty = y + (LINE_H - f_tx.size) / 2 - 2 * S
+        d.text((x, ty), name, font=f_tx, fill=col)
+        if fee_t:
+            # 手續費字比較小，底線對齊名稱
+            d.text((x + wn + gap, ty + (f_tx.size - f_fee.size) - S), fee_t, font=f_fee,
+                   fill=C_FREE if col == C_FREE else C_SUB)
+        y += LINE_H
+
+
 def draw_mark(box, v, note=None):
     cx, cy = (box[0] + box[2]) / 2, (box[1] + box[3]) / 2
     r = 15 * S
-    if note:                      # 有小字就把記號往上移，小字放下面
-        cy -= 11 * S
-        w = d.textlength(note, font=f_mark_note)
-        d.text((cx - w / 2, cy + r + 4 * S), note, font=f_mark_note, fill=C_UNK)
+    if note:                      # 有小字就把記號往上移，小字放下面，整塊垂直置中
+        text, ncol = note
+        block = MARK_BOX + 6 * S + nlines(text) * SMALL_LH
+        top = cy - block / 2
+        cy = top + MARK_BOX / 2
+        small_lines(text, cx, top + MARK_BOX + 6 * S, ncol)
     if v is True:
         d.line([(cx - r, cy), (cx - r / 3, cy + r * 0.7), (cx + r, cy - r * 0.7)], fill=C_YES, width=5 * S, joint='curve')
     elif v is False:
@@ -201,13 +274,22 @@ for r, name in enumerate(ROWS):
     if r % 2:
         d.rectangle([HEAD_W, y, W, y + h], fill=C_STRIPE)
     d.rectangle([0, y, HEAD_W, y + h], fill=C_ROWHEAD)
-    center_text((0, y, HEAD_W, y + h), name, f_b, C_TX)
+    if r in ROW_NOTES:              # 列名＋底下灰小字，整塊垂直置中
+        nh = nlines(name) * LINE_H
+        block = nh + 4 * S + nlines(ROW_NOTES[r]) * SMALL_LH
+        top = y + (h - block) / 2
+        center_text((0, top, HEAD_W, top + nh), name, f_b, C_TX)
+        small_lines(ROW_NOTES[r], HEAD_W / 2, top + nh + 4 * S, C_SUB)
+    else:
+        center_text((0, y, HEAD_W, y + h), name, f_b, C_TX)
     for ci, p in enumerate(PLATFORMS):
         x = HEAD_W + ci * COL_W
         box = (x, y, x + COL_W, y + h)
         ls = lines_of(r, ci)
         if ls is None:
             draw_mark(box, p[r + 1], MARK_NOTES.get((p[0], r)))
+        elif r == 0:
+            merchant_lines(box, ls)
         else:
             col = C_SUB if ls == ['未公開'] or ls == ['依收據'] else C_TX
             center_text(box, '\n'.join(ls), f_tx, col)
@@ -222,7 +304,8 @@ d.rectangle([HEAD_W, TITLE_H, W, TITLE_H + 3 * S], fill=C_HEAD)
 d.rectangle([HEAD_W, TITLE_H + HEADER_H - 3 * S, W, TITLE_H + HEADER_H], fill=C_HEAD)
 
 # 註腳
-notes = ['綠字＝店家宣告免退稅手續費(機場領現金仍會扣)。？＝查不到官方資訊。現金支付日圓，會取整數，且會另扣手續費。']
+notes = ['店家後面括號＝店家的退稅手續費(以未稅價計，¥＝每筆定額)；綠字＝店家宣告免手續費。？＝查不到官方資訊。',
+         '機場領現金另扣機台手續費(見左欄)，店家免手續費也不會吸收；現金支付日圓。手續費為 2026/11 網友實測整理，以店頭標示為準。']
 ny = y + 14 * S
 for n in notes:
     d.text((PAD, ny), n, font=f_note, fill=C_SUB)
