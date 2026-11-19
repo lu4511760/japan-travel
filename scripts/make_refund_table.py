@@ -34,21 +34,25 @@ FONT_B = 'C:/Windows/Fonts/msjhbd.ttc'
 # 打勾欄位：True=有、False=沒有、None=查不到（畫問號）
 # 商家寫法「名稱|手續費」：手續費(店家的退稅手續費，以未稅價計；¥ 是每筆定額)畫成灰小字接在名稱後面
 #   名稱結尾加 * ＝已宣告免退稅手續費（畫成綠字，* 不會印出來）；機場領現金的手續費另計
+#   名稱太長可用 \n 斷行，手續費接在最後一行後面
 #   名稱是「其他」＝其餘合作店家的手續費範圍，整行灰字當補述
 # 手續費來源：林氏璧 2026/11/15 整理(linshibi.com/?p=53059)、PIE VAT 官方說明(help.pievat.com)
 PLATFORMS = [
     # 名稱, 主要配合商家, 設定方式, 信用卡, 現金, GLORY, Cash Japan
     ('J-TaxRefund', ['唐吉訶德*|0%', 'Bic Camera*|0%', '多慶屋*|0%', '山田電機*|0%', '鶴羽藥妝*|0%',
-                     'Sundrug*|0%', '大國藥妝*|0%', '松本清|0.33%', 'Cocokara|0.33%', 'UNIQLO|1%', 'GU|1%',
-                     'MUJI|1.3%', '寶可夢中心|1.5%', '其他|1.5~4%'],
+                     'Sundrug*|0%', '大國藥妝*|0%', 'Sapporo Drug*|0%', 'Kojima*|0%', 'Sofmap*|0%',
+                     '松本清|0~0.33%', 'Cocokara|0.33%', 'UNIQLO|1%', 'GU|1%', '東武百貨|1%',
+                     'MUJI|1.3%', '松屋銀座|1~1.5%', '寶可夢中心|1.5%', '其他|1.5~4%'],
      ['網站'], True, True, True, True),
-    ('JPrefund', ['3COINS|¥320', '思夢樂|1~2.5%', 'Fancl|3.5%', 'HANDS|1.1~1.55%', '其他|0.4~3%'], ['網站'], True, True, True, True),
-    ('Global Blue', ['高島屋|2.3%', '大丸松坂屋|2.3%', '伊勢丹三越|2.3%', '阪急阪神|2.3%', '西武Sogo',
+    ('JPrefund', ['3COINS|¥320', '思夢樂|1~2.5%', 'LOFT|1.55~2%', 'HANDS|1.55~2%', 'PARCO|1.5~2%',
+                  'Fancl|3.5%', '其他|0.4~3%'], ['網站'], True, True, True, True),
+    ('Global Blue', ['高島屋|2.3%', '大丸松坂屋|2.3%', '伊勢丹三越|2.3%', '阪急阪神|2.3%', '京王百貨|1.5~1.65%',
+                     '近鐵百貨|1.55~2.3%', '小田急百貨|2.3%', '西武Sogo',
                      'Yodobashi|2.3%', 'Sugi藥局|¥160', 'EDION|¥210', '其他|1.6~3%'],
      ['App', '網站'], True, True, False, True),
-    ('PIE VAT', ['澀谷109|1.55%', '三井Outlet|1.5%', 'LaLaport|1.5%', 'mont-bell|2~3%', '其他|1.5~3%'],
+    ('PIE VAT', ['澀谷109|1.55%', '三井Outlet|1.5%', 'LaLaport|1.5%', 'mont-bell|2~3%', 'MURASAKI\nSPORTS|2~3%', '其他|1.5~3%'],
      ['App'], True, False, False, False),
-    ('Ocean\nTax Refund', ['Yamada電機*|0%', 'animate|2.1%'], ['LINE', 'WeChat', '網站'], True, False, False, False),
+    ('Ocean\nTax Refund', ['Yamada電機*|0%', 'animate|2.1%', 'ADASTRIA|2~2.5%'], ['LINE', 'WeChat', '網站'], True, False, False, False),
     ('Planet', ['AEON Mall|1.5%', '沖繩商場|2.5%'], ['網站'], True, True, True, False),
     ('IntaSect', ['未公開'], ['依收據'], None, True, True, False),
 ]
@@ -75,7 +79,7 @@ ROW_NOTES = {
 
 S = 2                      # 整張放大倍率（手機點開放大仍清楚）
 HEAD_W = 170 * S           # 左側列名欄寬
-COL_W = 165 * S
+COL_W = 178 * S
 LINE_H = 30 * S
 PAD = 14 * S
 
@@ -125,7 +129,7 @@ def row_height(r):
         n = max([nlines(x[0]) for x in notes if x] or [0])
         cell = MARK_BOX + (n * SMALL_LH + 6 * S if n else 0) + 2 * PAD
         return max(64 * S, cell, head)
-    n = max(len(lines_of(r, ci)) for ci in range(len(PLATFORMS)))
+    n = max(sum(nlines(it.partition('|')[0]) for it in lines_of(r, ci)) for ci in range(len(PLATFORMS)))
     return max(n * LINE_H + 2 * PAD, 64 * S, head)
 
 
@@ -169,7 +173,7 @@ def paste_logo(lg, cx, cy, max_w, max_h):
     k = min(max_w / lg.width, max_h / lg.height)
     lg = lg.resize((max(1, round(lg.width * k)), max(1, round(lg.height * k))), Image.LANCZOS)
     im.paste(lg, (round(cx - lg.width / 2), round(cy - lg.height / 2)), lg)
-NOTE_H = 80 * S
+NOTE_H = 106 * S
 W = HEAD_W + COL_W * len(PLATFORMS)
 H = TITLE_H + HEADER_H + sum(row_height(r) for r in range(len(ROWS))) + NOTE_H
 
@@ -202,6 +206,14 @@ def small_lines(text, cx, y, fill):
 def merchant_lines(box, items):
     """主要配合商家：名稱(綠字＝免手續費) + 灰色小字手續費；「其他」整行灰字。"""
     x0, y0, x1, y1 = box
+    # 名稱有 \n 的拆成多行：前面幾行只有名稱，手續費接在最後一行
+    flat = []
+    for it in items:
+        name, bar, fee = it.partition('|')
+        star = '*' if name.endswith('*') else ''
+        parts = name.rstrip('*').split('\n')
+        flat += [x + star for x in parts[:-1]] + [parts[-1] + star + bar + fee]
+    items = flat
     y = (y0 + y1 - len(items) * LINE_H) / 2
     gap = 4 * S
     for it in items:
@@ -305,7 +317,8 @@ d.rectangle([HEAD_W, TITLE_H + HEADER_H - 3 * S, W, TITLE_H + HEADER_H], fill=C_
 
 # 註腳
 notes = ['店家後面括號＝店家的退稅手續費(以未稅價計，¥＝每筆定額)；綠字＝店家宣告免手續費。？＝查不到官方資訊。',
-         '機場領現金另扣機台手續費(見左欄)，店家免手續費也不會吸收；現金支付日圓。手續費為 2026/11 網友實測整理，以店頭標示為準。']
+         '機場領現金另扣機台手續費(見左欄)，店家免手續費也不會吸收；現金支付日圓。手續費為 2026/11 網友實測整理，以店頭標示為準。',
+         '如開在百貨商場之"店中店"(高島屋、大丸、PARCO、AEON)，退稅平台與手續費一律跟著該百貨商場走。']
 ny = y + 14 * S
 for n in notes:
     d.text((PAD, ny), n, font=f_note, fill=C_SUB)
