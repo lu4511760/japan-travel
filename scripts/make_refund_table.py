@@ -17,14 +17,14 @@ OUT = os.path.join(ROOT, '退稅平台比較.webp')
 LOGO_DIR = os.path.join(ROOT, 'scripts', 'refund_logos')   # 來源見該資料夾的 README.md
 
 # 表頭 logo：平台名稱 → (檔名, 是否在 logo 下面再寫名字, SVG 顏色替換)
-# logo 本身就有名字的只放 logo；J-TaxRefund 只有圖案、Planet 只有小寫字樣，所以下面再寫名字
+# logo 本身就有名字的只放 logo；J-TaxRefund 只有圖案，所以下面再寫名字
 LOGOS = {
     'J-TaxRefund': ('jtaxrefund.svg', True, None),
     'JPrefund': ('jprefund.svg', False, None),
     'Global Blue': ('globalblue.svg', False, None),
     'PIE VAT': ('pievat.svg', False, None),
     'Ocean\nTax Refund': ('ocean_og.png', False, None),
-    'Planet': ('planet.svg', True, [('#FFFFFF', '#1B2A41')]),   # 官網是白字，白底表格要改深色
+    'Planet': ('planet.svg', False, [('#FFFFFF', '#1B2A41')]),   # 官網是白字，白底表格要改深色
     'IntaSect': ('intaxfree.png', False, None),
 }
 
