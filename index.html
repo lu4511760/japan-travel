@@ -1007,17 +1007,34 @@ window.__nodeLink=(function(){
     remember(td, tbl, key);
   }
 
-  // 桃園出境: 依登機門開頭字母，在登機門後面補吸菸區位置(灰小字)
+  // 出境登機門後面補吸菸區位置(灰小字)，依登機門開頭字元決定
+  // 桃園看字母；成田看數字開頭(第 2 航廈 6x～9x)，「吸菸區」三個字連到成田官網地圖
   var SMOKE={A:'吸菸區: A8、A9之間', B:'吸菸區: B8、B9之間',
              C:'吸菸區: C3附近，精品店後方，貴賓室電扶梯旁', D:'吸菸區: D6附近'};
-  function addSmoke(tbl){
+  var NRT_MAP='https://www.narita-airport.jp/zh-tc/map/?bearing=59.5&pitch=0&mode=searchResult&building=b32584d9-027d-4863-aa2e-3482e8fc2fb3&floor=3F';
+  var SMOKE_NRT={
+    '6':{u:NRT_MAP+'&zoom=18.58465424125953&lat=35.76983079999998&lng=140.39144609999994&clickedPoi=16856788', t:'66附近'},
+    '7':{u:NRT_MAP+'&zoom=18&lat=35.77627887317&lng=140.38686622853004&clickedPoi=16856831', t:'74附近'},
+    '8':{u:NRT_MAP+'&zoom=19.176181112850273&lat=35.77685624541452&lng=140.39156112228034&clickedPoi=17419216', t:'87附近'},
+    '9':{u:NRT_MAP+'&zoom=19.176181112850273&lat=35.77685624541452&lng=140.39156112228034&clickedPoi=17419216', t:'95附近'}
+  };
+  function addSmoke(tbl, map){
+    map=map||SMOKE;
     var td=document.querySelector('#'+tbl+' td[data-f="gate"]');
     if(!td) return;
     var g=td.textContent.replace(/[\u200b-\u200d\u2060\ufeff]/g,'').trim().charAt(0).toUpperCase();
-    if(!SMOKE[g]) return;
+    var v=map[g];
+    if(!v) return;
     var sp=document.createElement('span');
     sp.className='fl-smoke';
-    sp.textContent='('+SMOKE[g]+')';
+    if(typeof v==='string') sp.textContent='('+v+')';
+    else{
+      var a=document.createElement('a');
+      a.href=v.u; a.target='_blank'; a.rel='noopener'; a.textContent='吸菸區';
+      sp.appendChild(document.createTextNode('('));
+      sp.appendChild(a);
+      sp.appendChild(document.createTextNode(': '+v.t+')'));
+    }
     td.appendChild(sp);
     remember(td, tbl, 'gate');
   }
@@ -1097,6 +1114,7 @@ window.__nodeLink=(function(){
         // 沒有異動就照表定時間顯示，一律用橘色(跟桃園的實際時間一致)
         put(tbl,'rtime', f.changeScheduledTime || f.scheduledTime, true);
         putPoi(tbl,'gate', f.gates, true);
+        if(!isArr && !quiet) addSmoke(tbl, SMOKE_NRT);
         if(!isArr){
           var ci=f.checkInCounterOrArrivalLobby||{};
           var cnt=(ci.changeNameOfCheckInOrArrival && ci.changeNameOfCheckInOrArrival.length) ? ci.changeNameOfCheckInOrArrival : ci.nameOfCheckInOrArrival;
