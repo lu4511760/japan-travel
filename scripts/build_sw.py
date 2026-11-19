@@ -8,7 +8,7 @@ import glob
 import io
 import os
 
-CACHE_VERSION = 'japan2027-v7'
+CACHE_VERSION = 'japan2027-v8'
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 CORE = ['./', 'index.html', 'private.enc', 'manifest.webmanifest',

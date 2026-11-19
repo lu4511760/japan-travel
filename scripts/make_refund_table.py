@@ -5,12 +5,28 @@
 資料寫在下面的 PLATFORMS / ROWS，平台或商家有變動就改這裡再重跑。
 調查日期 2026/11/18，來源見 變動紀錄.md。
 """
+import io
 import os
+import re
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageChops, ImageDraw, ImageFont
+import pymupdf   # 用來把 SVG logo 轉成點陣圖
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, '退稅平台比較.webp')
+LOGO_DIR = os.path.join(ROOT, 'scripts', 'refund_logos')   # 來源見該資料夾的 README.md
+
+# 表頭 logo：平台名稱 → (檔名, 是否在 logo 下面再寫名字, SVG 顏色替換)
+# logo 本身就有名字的只放 logo；J-TaxRefund 只有圖案、Planet 只有小寫字樣，所以下面再寫名字
+LOGOS = {
+    'J-TaxRefund': ('jtaxrefund.svg', True, None),
+    'JPrefund': ('jprefund.svg', False, None),
+    'Global Blue': ('globalblue.svg', False, None),
+    'PIE VAT': ('pievat.svg', False, None),
+    'Ocean\nTax Refund': ('ocean_og.png', False, None),
+    'Planet': ('planet.svg', True, [('#FFFFFF', '#1B2A41')]),   # 官網是白字，白底表格要改深色
+    'IntaSect': ('intaxfree.png', False, None),
+}
 
 FONT = 'C:/Windows/Fonts/msjh.ttc'
 FONT_B = 'C:/Windows/Fonts/msjhbd.ttc'
@@ -79,7 +95,45 @@ def row_height(r):
 
 
 TITLE_H = 70 * S
-HEADER_H = 2 * LINE_H + 2 * PAD
+HEADER_H = 118 * S                 # 表頭放 logo，比原本兩行字高
+LOGO_W = COL_W - 26 * S            # logo 最大寬度
+LOGO_H = 62 * S                    # 只有 logo 時的最大高度
+LOGO_H_NAMED = 50 * S              # logo 下面還有名字時的最大高度
+
+
+def load_logo(fn, recolor):
+    """讀 logo（SVG 先轉點陣圖），裁掉四周空白，回傳 RGBA。"""
+    path = os.path.join(LOGO_DIR, fn)
+    if fn.endswith('.svg'):
+        t = io.open(path, encoding='utf-8').read()
+        # MuPDF 不認 <style> 裡的 class 上色：改成直接寫在元素上
+        for cls, col in re.findall(r'\.([\w-]+)\s*\{\s*fill:\s*([^;}\s]+)', t):
+            t = t.replace('class="%s"' % cls, 'fill="%s"' % col)
+        # 漸層畫不出來(會變黑)：改成漸層的主色
+        t = re.sub(r'fill="url\(#[^)]*\)"', 'fill="#D50000"', t)
+        for a, b in (recolor or []):
+            t = t.replace('fill="%s"' % a, 'fill="%s"' % b).replace('fill="%s"' % a.lower(), 'fill="%s"' % b)
+        doc = pymupdf.open(stream=t.encode('utf-8'), filetype='svg')
+        pg = doc[0]
+        z = 900 / max(pg.rect.width, pg.rect.height)
+        lg = Image.open(io.BytesIO(pg.get_pixmap(matrix=pymupdf.Matrix(z, z), alpha=True).tobytes('png'))).convert('RGBA')
+    else:
+        lg = Image.open(path).convert('RGBA')
+    a = lg.getchannel('A')
+    if a.getextrema()[0] == 255:   # 不透明的圖(白底)：依跟白色的差異裁，並把白底變透明
+        diff = ImageChops.difference(lg.convert('RGB'), Image.new('RGB', lg.size, (255, 255, 255))).convert('L')
+        mask = diff.point(lambda v: 255 if v > 24 else 0)
+        lg.putalpha(diff.point(lambda v: min(255, v * 6)))
+        bb = mask.getbbox()
+    else:
+        bb = a.point(lambda v: 255 if v > 10 else 0).getbbox()
+    return lg.crop(bb)
+
+
+def paste_logo(lg, cx, cy, max_w, max_h):
+    k = min(max_w / lg.width, max_h / lg.height)
+    lg = lg.resize((max(1, round(lg.width * k)), max(1, round(lg.height * k))), Image.LANCZOS)
+    im.paste(lg, (round(cx - lg.width / 2), round(cy - lg.height / 2)), lg)
 NOTE_H = 56 * S
 W = HEAD_W + COL_W * len(PLATFORMS)
 H = TITLE_H + HEADER_H + sum(row_height(r) for r in range(len(ROWS))) + NOTE_H
@@ -121,13 +175,24 @@ def draw_mark(box, v, note=None):
 # 標題
 d.text((PAD, (TITLE_H - f_title.size) / 2 - 4 * S), '日本退稅平台比較(2026/11 新制)', font=f_title, fill=C_HEAD)
 
-# 表頭
+# 表頭：「平台」格維持深藍，各平台格白底放 logo(深色 logo 在深藍底上看不到)
 y = TITLE_H
-d.rectangle([0, y, W, y + HEADER_H], fill=C_HEAD)
+d.rectangle([0, y, HEAD_W, y + HEADER_H], fill=C_HEAD)
 center_text((0, y, HEAD_W, y + HEADER_H), '平台', f_b, C_HEAD_TX)
 for ci, p in enumerate(PLATFORMS):
     x = HEAD_W + ci * COL_W
-    center_text((x, y, x + COL_W, y + HEADER_H), p[0], f_b, C_HEAD_TX)
+    cx = x + COL_W / 2
+    spec = LOGOS.get(p[0])
+    if not spec:
+        center_text((x, y, x + COL_W, y + HEADER_H), p[0], f_b, C_HEAD)
+        continue
+    lg = load_logo(spec[0], spec[2])
+    if spec[1]:                     # logo＋名字
+        paste_logo(lg, cx, y + PAD + LOGO_H_NAMED / 2, LOGO_W, LOGO_H_NAMED)
+        center_text((x, y + PAD + LOGO_H_NAMED, x + COL_W, y + HEADER_H - PAD / 2), p[0], f_b, C_HEAD)
+    else:                           # 只有 logo
+        paste_logo(lg, cx, y + HEADER_H / 2, LOGO_W, LOGO_H)
+d.line([HEAD_W, y + HEADER_H - S, W, y + HEADER_H - S], fill=C_HEAD, width=3 * S)
 y += HEADER_H
 
 # 內容
