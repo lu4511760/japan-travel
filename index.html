@@ -2967,7 +2967,8 @@ window.__nodeLink=(function(){
   };
 })();
 
-// 節點連結: 長按節點可複製該節點的連結，用這個連結打開會自動捲過去並閃三下
+// 節點連結: 長按節點(放開時)跳出手機的分享選單(LINE 等)，不支援分享的瀏覽器改成複製連結；
+// 用這個連結打開會自動捲過去並閃三下
 (function(){
   function fallback(text){
     var ta=document.createElement('textarea');
@@ -2997,9 +2998,46 @@ window.__nodeLink=(function(){
     setTimeout(function(){ t.remove(); }, 2200);
   }
 
-  // ── 長按複製 ──
-  var timer=null, sx=0, sy=0;
+  // 分享時附上的一行說明: 「1/20 13:00 午餐 卍力」(日期、時間、標題，沒標題就用第一個 📍 地點)
+  function shareText(ev){
+    var days=window.__tripDays||{}, day=null;
+    for(var n=ev; n; n=n.previousElementSibling) if(n.classList && n.classList.contains('day-head')){ day=n.id; break; }
+    var m=/^d(\d\d)(\d\d)$/.exec(day||''), date=m ? (+m[1])+'/'+(+m[2]) : '';
+    var tm=window.__tripTimeOf && window.__tripTimeOf(ev);
+    var clean=function(x){ return (x||'').replace(/[\u200b\u2060]/g,'').replace(/\s+/g,' ').trim(); };
+    var h=ev.querySelector('h2'), title=clean(h && h.textContent), place='';
+    // 第一個 📍 地點(例如「午餐」後面接店名)
+    Array.prototype.some.call(ev.querySelectorAll('.body a'), function(a){
+      var t=clean(a.textContent); if(t.indexOf('📍')===0){ place=t; return true; } return false;
+    });
+    if(place && title.indexOf(place.replace(/^📍\s*/,''))<0) title=title ? title+' '+place : place;
+    title=title.replace(/[\u200b\u2060]/g,'').replace(/\s+/g,' ').trim();
+    return [date, tm&&tm.t||'', title].filter(Boolean).join(' ');
+  }
+  function shareNode(ev){
+    var url=location.origin+location.pathname+'#n='+ev.dataset.id, text=shareText(ev);
+    if(navigator.share){
+      navigator.share({title:text, text:text, url:url})['catch'](function(err){
+        if(err && err.name==='AbortError') return;          // 使用者自己關掉分享選單
+        copyText(url); toast('已複製這個行程的連結');          // 分享被擋(例如不算使用者操作)就改複製
+      });
+    }else{
+      copyText(url); toast('已複製這個行程的連結');
+    }
+  }
+
+  // ── 長按分享 ──
+  // 分享選單必須在使用者操作的當下叫出來(iPhone 很嚴格，計時器裡叫會被擋)，
+  // 所以按滿 0.6 秒只先閃一下表示「放開就分享」，真正叫出選單是在放開手指那一刻。
+  var timer=null, sx=0, sy=0, armed=null;
   function clear(){ if(timer){ clearTimeout(timer); timer=null; } }
+  function release(e){
+    clear();
+    if(!armed) return;
+    var ev=armed; armed=null;
+    if(e && e.cancelable) e.preventDefault();               // 放開時不要再觸發點擊
+    shareNode(ev);
+  }
   document.addEventListener('pointerdown', function(e){
     clear();
     if(document.body.classList.contains('editing')) return;   // 編輯模式下不攔，免得跟編輯按鈕打架
@@ -3007,19 +3045,22 @@ window.__nodeLink=(function(){
     if(!ev || !ev.dataset.id) return;
     if(e.target.closest('a,button,input,label,textarea,iframe')) return;
     sx=e.clientX; sy=e.clientY;
+    armed=null;
     timer=setTimeout(function(){
       timer=null;
-      copyText(location.origin+location.pathname+'#n='+ev.dataset.id);
+      armed=ev;
       flash(ev);
-      toast('已複製這個行程的連結');
       if(navigator.vibrate){ try{ navigator.vibrate(30); }catch(e2){} }
     }, 600);
   });
   document.addEventListener('pointermove', function(e){
     if(timer && (Math.abs(e.clientX-sx)>10 || Math.abs(e.clientY-sy)>10)) clear();
   });
-  ['pointerup','pointercancel'].forEach(function(t){ document.addEventListener(t, clear, true); });
-  window.addEventListener('scroll', clear, true);
+  // 放開: 手機用 touchend(iPhone 認得的使用者操作)，滑鼠用 pointerup
+  document.addEventListener('touchend', release, true);
+  document.addEventListener('pointerup', function(e){ if(e.pointerType==='mouse') release(e); else clear(); }, true);
+  document.addEventListener('pointercancel', function(){ clear(); armed=null; }, true);
+  window.addEventListener('scroll', function(){ clear(); }, true);
 
   // ── 用節點連結打開 ──
   var id=window.__nodeLink;
