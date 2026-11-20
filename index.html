@@ -409,6 +409,11 @@ span.rsv{color:var(--meal)}
 /* 過去的私人節點同樣要灰: 權重需高於 .ev.private::before，否則紫色會蓋掉灰色 */
 .ev.private.past::before{border-color:var(--rail)}
 .ev.private .when::after{content:" 🔒"; font-size:12px; opacity:.6}
+/* 有 GPS 輔助判斷的節點(自動提早開始／離開結束，或 1968 鎖班次): 時間後面加 📡，只有解鎖(body.unlocked)才看得到 */
+body.unlocked .ev[data-geo-mode] .when::after,
+body.unlocked .ev:has(.bus-live[data-geo], .bus-dep[data-geo]) .when::after{content:" 📡"; font-size:12px; opacity:.6}
+body.unlocked .ev.private[data-geo-mode] .when::after,
+body.unlocked .ev.private:has(.bus-live[data-geo], .bus-dep[data-geo]) .when::after{content:" 🔒 📡"}
 .day-head.past, .day-head.past .dow, .day-head.past .day-sub{color:var(--rail)}
 .day-head.past::before{background:var(--rail)}
 .fl-updated.err{color:#c0392b}
@@ -2419,6 +2424,7 @@ window.__nodeLink=(function(){
     if(window.__tripCenter && !window.__nodeLink && !(window.__tripResting&&window.__tripResting()))
       setTimeout(function(){ window.__tripCenter(new Date()); }, 300);
     if(S.unlocked && window.__tripEditUI) window.__tripEditUI();
+    document.body.classList.toggle('unlocked', !!S.unlocked);   // 只給解鎖才顯示的東西用(例如 GPS 圖示 📡)
     // 補送離線期間存下的修改
     if(S.unlocked && S.token) flushPending();
   }
