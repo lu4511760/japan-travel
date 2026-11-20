@@ -436,7 +436,9 @@ span.rsv{color:var(--meal)}
 /* 現在開始(綠)、現在結束(紅)、還原表定(藍)
    開始只出現在今天接下來的那一則(.next)，結束只出現在進行中的那一則(.now)；
    每分鐘換人時靠 class 切換，不必重畫按鈕。藏起來的按鈕不佔位置，後面的自動往前補。 */
-.ed-act{float:right; margin:0 0 4px 8px; display:flex; gap:6px}   /* 實際時間按鈕: 節點右上角、靠右；用浮動，時間那行太長會自己讓開不重疊 */.ed-tools button[data-act="start"]{color:#fff; background:#2e9e5b; border-color:#2e9e5b; font-weight:700}
+.ed-act{float:right; margin:0 0 4px 8px; display:flex; gap:6px; position:relative; z-index:1}
+/* 實際時間按鈕: 節點右上角、靠右；用浮動，時間那行太長會自己讓開不重疊。
+   z-index: 過去的節點子元素有 opacity，時間那行會疊到浮動按鈕上面把點擊攔走，要墊高 */.ed-tools button[data-act="start"]{color:#fff; background:#2e9e5b; border-color:#2e9e5b; font-weight:700}
 .ed-tools button[data-act="end"]{color:#fff; background:#d84343; border-color:#d84343; font-weight:700}
 .ed-tools button[data-act="reset"]{color:#fff; background:#2f6fd0; border-color:#2f6fd0; font-weight:700}
 .ed-tools button[data-act="start"], .ed-tools button[data-act="end"]{display:none}
