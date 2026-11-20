@@ -166,7 +166,7 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
 /* 結束時間平常不佔版面，進編輯模式才顯示出來好對照 */
 .when-end{display:none}
 /* 班機誤點、時刻被往後挪過: 在後面補上原本的表定時間 */
-.when-was{margin-left:8px; font-size:12.5px; color:var(--muted); font-weight:400; letter-spacing:0}
+.when-was{display:inline-block; margin-left:8px; font-size:12.5px; color:var(--muted); font-weight:400; letter-spacing:0}
 /* 客運預計到達時間(.bus-arrive 標記補在時間後面)，樣式同 .when-was */
 .bus-arrive-at, .bus-dep-at, .bus-live-at{margin-left:8px; font-size:12.5px; color:var(--muted); font-weight:400; letter-spacing:0}
 body.editing .when-end{display:inline; color:var(--muted); font-weight:400}
@@ -436,7 +436,7 @@ span.rsv{color:var(--meal)}
 /* 現在開始(綠)、現在結束(紅)、還原表定(藍)
    開始只出現在今天接下來的那一則(.next)，結束只出現在進行中的那一則(.now)；
    每分鐘換人時靠 class 切換，不必重畫按鈕。藏起來的按鈕不佔位置，後面的自動往前補。 */
-.ed-tools button[data-act="start"]{color:#fff; background:#2e9e5b; border-color:#2e9e5b; font-weight:700}
+.ed-act{float:right; margin:0 0 4px 8px; display:flex; gap:6px}   /* 實際時間按鈕: 節點右上角、靠右；用浮動，時間那行太長會自己讓開不重疊 */.ed-tools button[data-act="start"]{color:#fff; background:#2e9e5b; border-color:#2e9e5b; font-weight:700}
 .ed-tools button[data-act="end"]{color:#fff; background:#d84343; border-color:#d84343; font-weight:700}
 .ed-tools button[data-act="reset"]{color:#fff; background:#2f6fd0; border-color:#2f6fd0; font-weight:700}
 .ed-tools button[data-act="start"], .ed-tools button[data-act="end"]{display:none}
@@ -2777,10 +2777,12 @@ window.__nodeLink=(function(){
       if(!id) return;
       var dd=dataOf(id), hasT=!!(dd && dd.it.time), hasAct=!!(dd && dd.it.act);
       var tools=el('div','ed-tools',
-        '<button data-act="edit" title="編輯">✏️</button><button data-act="del" title="刪除">🗑</button>'
-        +(hasT ? '<button data-act="start">現在開始</button><button data-act="end">現在結束</button>' : '')
+        '<button data-act="edit" title="編輯">✏️</button><button data-act="del" title="刪除">🗑</button>');
+      // 現在開始／現在結束／還原表定另外一組，放節點右上角(順序不變)
+      var acts=el('div','ed-tools ed-act',
+        (hasT ? '<button data-act="start">現在開始</button><button data-act="end">現在結束</button>' : '')
         +(hasAct ? '<button data-act="reset">還原表定</button>' : ''));
-      tools.onclick=function(e){
+      tools.onclick=acts.onclick=function(e){
         var b=e.target.closest('button'); if(!b) return;
         var a=b.dataset.act;
         if(a==='edit') openForm(id);
@@ -2790,6 +2792,7 @@ window.__nodeLink=(function(){
         else removeNode(id);
       };
       ev.appendChild(tools);
+      if(acts.innerHTML) ev.insertBefore(acts, ev.firstChild);   // 放最前面才浮得到右上角
       // 需預約的節點，標題旁多一個預約狀態勾選框
       var rsv=ev.querySelector('a.rsv, span.rsv');
       if(rsv){
