@@ -474,6 +474,7 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
 .ed-btns button.pri{color:#fff; background:var(--link); border-color:var(--link)}
 .share-pop{
   position:fixed; left:50%; transform:translateX(-50%); z-index:71; display:flex; gap:8px; padding:8px;
+  width:max-content; white-space:nowrap;   /* left:50% 會把可用寬度砍半，手機上按鈕被擠成兩行；固定一行 */
   background:rgba(20,20,20,.96); border-radius:14px; box-shadow:0 4px 16px rgba(0,0,0,.5);
 }
 .share-pop button{font-size:15px; padding:8px 14px; color:#fff; background:#333; border:1px solid #555; border-radius:10px; cursor:pointer}
