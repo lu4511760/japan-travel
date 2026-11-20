@@ -1979,23 +1979,24 @@ window.__nodeLink=(function(){
     if(head && card && head.nextElementSibling!==card) head.insertAdjacentElement('afterend', card);
   }
 
-  // 飛機上收不到訊號，手機時區會停在出發地(台灣 UTC+8)，落地連上日本網路才跳成 UTC+9。
-  // 這段期間手機的「現在幾點」比日本早一小時，寫日本時間的節點就會提早變成過去式
-  // (14:20 抵達成田，台灣時間 14:20 就灰掉，連上網又亮回來)。
-  // 所以 JST_ONLY 裡的節點改成: 手機時區比日本慢幾分鐘，判定時就把節點時刻往前扣幾分鐘(換算回真正的時刻)。
-  // 手機已經是日本時間(或更東)就不挪，其餘節點一律照手機當地時間，不受影響。
-  var JST_ONLY={n003:1};        // 1/16 抵達成田: 落地那一刻手機多半還停在台灣時間
+  // 飛機上收不到訊號，手機時區會停在出發地，落地連上當地網路才跳過去:
+  // · 去程(台灣→日本): 手機停在台灣 UTC+8，比日本慢 1 小時，寫日本時間的「抵達成田」會晚 1 小時才開始
+  // · 回程(日本→台灣): 手機停在日本 UTC+9，比台灣快 1 小時，寫台灣時間的「抵達桃園」會提早 1 小時開始、落地時已灰掉
+  // 所以 NODE_TZ 裡的節點指定自己用哪個時區(相對 UTC 的分鐘數)，手機時區跟它差 1 小時以內就換算回真正的時刻；
+  // 差更多表示人根本不在這趟行程的路線上，照手機當地時間就好。其餘節點一律照手機當地時間，不受影響。
+  var NODE_TZ={n003:540, n056:480};   // 1/16 抵達成田(日本時間)、1/23 抵達桃園(台灣時間)
   window.__tripTzOffset=null;   // 測試用: 假裝手機在這個時區(相對 UTC 的分鐘數，台北 480、東京 540)
-  function jstGap(now){
+  // 節點時區 − 手機時區(分): 成田在台灣手機上 +60，桃園在日本手機上 −60；不需補正回 0
+  function tzGap(id, now){
+    var tz=NODE_TZ[id];
+    if(tz==null) return 0;
     var off=(typeof window.__tripTzOffset==='number') ? window.__tripTzOffset : -now.getTimezoneOffset();
-    var gap=540-off;
-    // 只補台灣／香港這一類 UTC+8(差 60 分)的情形: 那才是「人已經到日本、手機還沒跟上」。
-    // 差更多表示人根本不在這趟行程的路線上，照手機當地時間就好，別亂挪。
-    return (gap>0 && gap<=60) ? gap : 0;
+    var gap=tz-off;
+    return (gap!==0 && Math.abs(gap)<=60) ? gap : 0;
   }
-  // 「現在開始／現在結束」要寫的時刻: 照這個節點用的時鐘(JST_ONLY 的節點在手機還是台灣時間時補成日本時間)
+  // 「現在開始／現在結束」要寫的時刻: 照這個節點用的時鐘(例如手機還停在日本時間時，抵達桃園寫台灣時間)
   window.__tripClockFor=function(id){
-    var n=new Date(), gap=JST_ONLY[id] ? jstGap(n) : 0;
+    var n=new Date(), gap=tzGap(id, n);
     n=new Date(n.getTime()+gap*60000);
     return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
   };
@@ -2021,14 +2022,15 @@ window.__nodeLink=(function(){
       x.end=x.e || nextStart[x.date] || '24:00';
       nextStart[x.date]=x.t;
     }
-    var cur=null, next=null, gap=jstGap(now);
+    var cur=null, next=null;
     items.forEach(function(x){
       if(x.head || !x.t || !x.date) return;
       x.start=new Date(x.date+'T'+x.t+':00');
       x.stop =new Date(x.date+'T'+(x.end==='24:00' ? '23:59:59' : x.end+':00'));
       if(x.end!=='24:00' && x.end<x.t) x.stop.setDate(x.stop.getDate()+1);     // 結束時間跨過午夜
-      if(gap && JST_ONLY[x.el.getAttribute('data-id')]){                       // 手機還停在出發地時區
-        // 日本時間 14:20 被當成台灣 14:20 解讀，實際時刻晚了 gap 分，要往前扣回來(2026/11/20 修正: 原本是加，反而晚兩小時)
+      var gap=tzGap(x.el.getAttribute('data-id'), now);
+      if(gap){                                                                  // 手機還停在出發地時區
+        // 節點時刻被當成手機時區解讀，要換算回節點時區的真正時刻(日本 14:20 在台灣手機上要往前扣 60 分；台灣 18:45 在日本手機上往後加 60 分)
         x.start=new Date(x.start.getTime()-gap*60000);
         x.stop =new Date(x.stop.getTime() -gap*60000);
       }
