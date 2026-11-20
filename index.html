@@ -472,6 +472,11 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
   color:var(--fg); background:var(--bg); border:1px solid var(--line);
 }
 .ed-btns button.pri{color:#fff; background:var(--link); border-color:var(--link)}
+.share-pop{
+  position:fixed; left:50%; transform:translateX(-50%); z-index:71; display:flex; gap:8px; padding:8px;
+  background:rgba(20,20,20,.96); border-radius:14px; box-shadow:0 4px 16px rgba(0,0,0,.5);
+}
+.share-pop button{font-size:15px; padding:8px 14px; color:#fff; background:#333; border:1px solid #555; border-radius:10px; cursor:pointer}
 .ed-toast{
   position:fixed; left:50%; bottom:86px; transform:translateX(-50%); z-index:70;
   padding:9px 18px; font-size:14px; color:#fff; background:rgba(20,20,20,.95);
@@ -2967,7 +2972,7 @@ window.__nodeLink=(function(){
   };
 })();
 
-// 節點連結: 長按節點(放開時)跳出手機的分享選單(LINE 等)，不支援分享的瀏覽器改成複製連結；
+// 節點連結: 長按節點 0.6 秒，iPhone 跳出「分享／複製連結」小選單，電腦直接複製連結；
 // 用這個連結打開會自動捲過去並閃三下
 (function(){
   function fallback(text){
@@ -3014,30 +3019,46 @@ window.__nodeLink=(function(){
     title=title.replace(/[\u200b\u2060]/g,'').replace(/\s+/g,' ').trim();
     return [date, tm&&tm.t||'', title].filter(Boolean).join(' ');
   }
+  var IOS=/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  function isIOS(){ return IOS || !!window.__tripForceIOS; }   // 測試用: console 設 __tripForceIOS=true
+  function linkOf(ev){ return location.origin+location.pathname+'#n='+ev.dataset.id; }
+  function copyNode(ev, msg){ copyText(linkOf(ev)); toast(msg||'已複製這個行程的連結'); }
+  // 叫出分享選單: 必須在「點按」的當下呼叫(iPhone 很嚴格，計時器裡呼叫會被擋)
   function shareNode(ev){
-    var url=location.origin+location.pathname+'#n='+ev.dataset.id, text=shareText(ev);
-    if(navigator.share){
-      navigator.share({title:text, text:text, url:url})['catch'](function(err){
-        if(err && err.name==='AbortError') return;          // 使用者自己關掉分享選單
-        copyText(url); toast('已複製這個行程的連結');          // 分享被擋(例如不算使用者操作)就改複製
-      });
-    }else{
-      copyText(url); toast('已複製這個行程的連結');
-    }
+    var text=shareText(ev);
+    navigator.share({title:text, text:text, url:linkOf(ev)})['catch'](function(err){
+      if(err && err.name==='AbortError') return;            // 使用者自己關掉分享選單
+      copyNode(ev, '分享失敗('+(err&&err.name||'?')+')，已改成複製連結');
+    });
   }
 
-  // ── 長按分享 ──
-  // 分享選單必須在使用者操作的當下叫出來(iPhone 很嚴格，計時器裡叫會被擋)，
-  // 所以按滿 0.6 秒只先閃一下表示「放開就分享」，真正叫出選單是在放開手指那一刻。
-  var timer=null, sx=0, sy=0, armed=null;
-  function clear(){ if(timer){ clearTimeout(timer); timer=null; } }
-  function release(e){
-    clear();
-    if(!armed) return;
-    var ev=armed; armed=null;
-    if(e && e.cancelable) e.preventDefault();               // 放開時不要再觸發點擊
-    shareNode(ev);
+  // iPhone 長按後跳出的小選單: 「分享」「複製連結」，點了才叫分享選單(這一下點按才算使用者操作)
+  var pop=null, popAt=0;
+  function closePop(){ if(pop){ pop.remove(); pop=null; } }
+  function openPop(ev){
+    closePop();
+    pop=document.createElement('div');
+    pop.className='share-pop';
+    pop.innerHTML='<button data-a="share">📤 分享</button><button data-a="copy">🔗 複製連結</button>';
+    document.body.appendChild(pop);
+    var r=ev.getBoundingClientRect(), h=pop.offsetHeight;
+    var top=r.top-h-8; if(top<70) top=Math.min(r.bottom+8, window.innerHeight-h-90);   // 放節點上方，太靠上就放下方
+    pop.style.top=Math.max(70, top)+'px';
+    popAt=Date.now();
+    pop.onclick=function(e){
+      var b=e.target.closest('button'); if(!b) return;
+      if(Date.now()-popAt<350) return;                       // 剛跳出來時手指放開的那一下不算
+      closePop();
+      if(b.dataset.a==='share') shareNode(ev); else copyNode(ev);
+    };
   }
+  document.addEventListener('pointerdown', function(e){ if(pop && !pop.contains(e.target)) closePop(); }, true);
+  window.addEventListener('scroll', function(){ if(pop && Date.now()-popAt>500) closePop(); }, true);
+
+  // ── 長按 0.6 秒 ──
+  // iPhone(而且支援分享): 跳出「分享／複製連結」小選單；電腦或不支援分享: 直接複製連結
+  var timer=null, sx=0, sy=0;
+  function clear(){ if(timer){ clearTimeout(timer); timer=null; } }
   document.addEventListener('pointerdown', function(e){
     clear();
     if(document.body.classList.contains('editing')) return;   // 編輯模式下不攔，免得跟編輯按鈕打架
@@ -3045,22 +3066,18 @@ window.__nodeLink=(function(){
     if(!ev || !ev.dataset.id) return;
     if(e.target.closest('a,button,input,label,textarea,iframe')) return;
     sx=e.clientX; sy=e.clientY;
-    armed=null;
     timer=setTimeout(function(){
       timer=null;
-      armed=ev;
       flash(ev);
-      if(navigator.vibrate){ try{ navigator.vibrate(30); }catch(e2){} }
+      if(isIOS() && navigator.share) openPop(ev);
+      else copyNode(ev, isIOS() ? '這個瀏覽器不支援分享，已複製連結' : null);
     }, 600);
   });
   document.addEventListener('pointermove', function(e){
     if(timer && (Math.abs(e.clientX-sx)>10 || Math.abs(e.clientY-sy)>10)) clear();
   });
-  // 放開: 手機用 touchend(iPhone 認得的使用者操作)，滑鼠用 pointerup
-  document.addEventListener('touchend', release, true);
-  document.addEventListener('pointerup', function(e){ if(e.pointerType==='mouse') release(e); else clear(); }, true);
-  document.addEventListener('pointercancel', function(){ clear(); armed=null; }, true);
-  window.addEventListener('scroll', function(){ clear(); }, true);
+  ['pointerup','pointercancel'].forEach(function(t){ document.addEventListener(t, clear, true); });
+  window.addEventListener('scroll', clear, true);
 
   // ── 用節點連結打開 ──
   var id=window.__nodeLink;
