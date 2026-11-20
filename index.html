@@ -170,15 +170,7 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
 /* 客運預計到達時間(.bus-arrive 標記補在時間後面)，樣式同 .when-was */
 .bus-arrive-at, .bus-dep-at, .bus-live-at{margin-left:8px; font-size:12.5px; color:var(--muted); font-weight:400; letter-spacing:0}
 body.editing .when-end{display:inline; color:var(--muted); font-weight:400}
-/* 「結束行程」: 只長在正在進行的那個節點上，而且只有編輯模式看得到。
-   用 CSS 控制顯示，按鈕本身每個節點都先放好，這樣每分鐘換人進行中時不必重畫按鈕。 */
-.ed-end{display:none}
-body.editing .ev.now .ed-end{
-  display:inline-block; margin-left:10px; vertical-align:2px;
-  font-family:inherit; font-size:12px; font-weight:700; letter-spacing:0; line-height:1.7;
-  color:var(--accent); background:var(--card);
-  border:1px solid var(--accent); border-radius:999px; padding:0 10px; cursor:pointer;
-}
+
 .ev h2{font-size:16.5px; margin:1px 0 7px}
 .ev h2.meal{color:var(--meal)}
 .ev h2.alert{color:var(--alert)}
@@ -708,7 +700,7 @@ window.__nodeLink=(function(){
   function fill(ev, it){
     var h='';
     if(it.time){
-      // 實際時間(it.act={t,e}，按「現在開始」「結束行程」寫入)蓋過表定；表定留在 data-t0／data-e0
+      // 實際時間(it.act={t,e}，按「現在開始」「現在結束」寫入)蓋過表定；表定留在 data-t0／data-e0
       var act=it.act||{}, t=act.t||it.time, e=act.e||it.end||'';
       var keep=(act.t||act.e) ? ' data-t0="'+it.time+'"'+(it.end?' data-e0="'+it.end+'"':'')
         +(act.t?' data-at="'+act.t+'"':'')+(act.e?' data-ae="'+act.e+'"':'') : '';
@@ -2080,7 +2072,7 @@ window.__nodeLink=(function(){
       else past = now >= x.stop;
       x.el.classList.toggle('past', !!past);
     });
-    // 標出正在進行的那一個: 編輯模式的「結束行程」按鈕靠這個 class 決定長在哪
+    // 標出正在進行的那一個: 也給「現在開始」判斷上一則用
     document.querySelectorAll('.tl .ev.now').forEach(function(e){ e.classList.remove('now'); });
     if(sc.cur) sc.cur.el.classList.add('now');
   }
@@ -2686,8 +2678,9 @@ window.__nodeLink=(function(){
     return String(Math.floor(x/60)).padStart(2,'0')+':'+String(x%60).padStart(2,'0');
   }
   function plainTitle(it){ return (it.title||'這個行程').replace(/<[^>]*>/g,''); }
-  function isToday(it){
-    var n=new Date(), today=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
+  function isToday(it, off){             // off=-1: 這則是不是昨天的
+    var n=new Date(); n.setDate(n.getDate()-(off||0));
+    var today=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
     return (window.__tripDays||{})[it.day]===today;
   }
   function setAct(d, id, act){
@@ -2706,11 +2699,12 @@ window.__nodeLink=(function(){
     if(Object.keys(x).length) S.pub.edits[id]=x; else delete S.pub.edits[id];
   }
 
-  // 「結束行程」: 實際結束 = 現在(表定不動)
+  // 「現在結束」: 實際結束 = 現在(表定不動)
   async function endNow(id){
     var d=dataOf(id);
     if(!d){ toast('找不到這個節點'); return; }
     var hhmm=hhmmNow();
+    if(!isToday(d.it) && !(isToday(d.it, -1) && hhmm<'06:00')){ toast('只能在行程當天使用'); return; }
     var start=(d.it.act&&d.it.act.t)||d.it.time||'';
     // 跨午夜的節點(23:50 開始、00:10 結束)本來就合法，只擋同一天往回填的情形
     if(start && hhmm<start && start<'12:00'){ toast('現在時間比開始時間還早'); return; }
@@ -2763,24 +2757,18 @@ window.__nodeLink=(function(){
       var dd=dataOf(id), hasT=!!(dd && dd.it.time), hasAct=!!(dd && dd.it.act);
       var tools=el('div','ed-tools',
         '<button data-act="edit" title="編輯">✏️</button><button data-act="del" title="刪除">🗑</button>'
-        +(hasT ? '<button data-act="start">現在開始</button>' : '')
+        +(hasT ? '<button data-act="start">現在開始</button><button data-act="end">現在結束</button>' : '')
         +(hasAct ? '<button data-act="reset">還原表定</button>' : ''));
       tools.onclick=function(e){
         var b=e.target.closest('button'); if(!b) return;
         var a=b.dataset.act;
         if(a==='edit') openForm(id);
         else if(a==='start') startNow(id);
+        else if(a==='end') endNow(id);
         else if(a==='reset') resetAct(id);
         else removeNode(id);
       };
       ev.appendChild(tools);
-      // 時刻那一行的尾巴放「結束行程」，平常藏著，輪到它進行中才現身
-      var when=ev.querySelector('.when');
-      if(when){
-        var endBtn=el('button','ed-end','結束行程');
-        endBtn.onclick=function(){ endNow(id); };
-        when.appendChild(endBtn);
-      }
       // 需預約的節點，標題旁多一個預約狀態勾選框
       var rsv=ev.querySelector('a.rsv, span.rsv');
       if(rsv){
