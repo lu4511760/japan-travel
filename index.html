@@ -708,8 +708,13 @@ window.__nodeLink=(function(){
   function fill(ev, it){
     var h='';
     if(it.time){
-      h+='<div class="when" data-t="'+it.time+'"'+(it.end?' data-e="'+it.end+'"':'')+'>'+it.time
-        +(it.end ? '<span class="when-end"> ~ '+it.end+'</span>' : '')
+      // 實際時間(it.act={t,e}，按「現在開始」「結束行程」寫入)蓋過表定；表定留在 data-t0／data-e0
+      var act=it.act||{}, t=act.t||it.time, e=act.e||it.end||'';
+      var keep=(act.t||act.e) ? ' data-t0="'+it.time+'"'+(it.end?' data-e0="'+it.end+'"':'')
+        +(act.t?' data-at="'+act.t+'"':'')+(act.e?' data-ae="'+act.e+'"':'') : '';
+      h+='<div class="when" data-t="'+t+'"'+(e?' data-e="'+e+'"':'')+keep+'>'+t
+        +(e ? '<span class="when-end"> ~ '+e+'</span>' : '')
+        +(act.t && act.t!==it.time ? '<span class="when-was">表定 '+it.time+'</span>' : '')
         +'</div>';
     }
     if(it.title) h+='<h2'+(it.cls?' class="'+it.cls+'"':'')+'>'+it.title+'</h2>';
@@ -762,7 +767,9 @@ window.__nodeLink=(function(){
     }
     var st=whenOf(id), t0=w.getAttribute('data-t0'), e0=w.getAttribute('data-e0');
     if(!t0) return false;
-    var t=addMin(t0, st.min), e=e0 ? addMin(e0, st.min) : null;
+    // 有實際時間(手動按的)就以它為準，班機誤點只挪沒被手動改過的那一邊
+    var at=w.getAttribute('data-at'), ae=w.getAttribute('data-ae');
+    var t=at || addMin(t0, st.min), e=ae || (e0 ? addMin(e0, st.min) : null);
     w.setAttribute('data-t', t);
     if(e) w.setAttribute('data-e', e);
     w.textContent='';
@@ -775,7 +782,7 @@ window.__nodeLink=(function(){
     }
     // 挪過就先寫表定幾點，早班誤點的提醒接在同一句後面
     var bits=[];
-    if(st.min) bits.push('表定 '+noDetect(t0));
+    if(at ? at!==t0 : st.min) bits.push('表定 '+noDetect(t0));
     if(st.note) bits.push(st.note);
     if(bits.length){
       var was=document.createElement('span');
@@ -1493,6 +1500,13 @@ window.__nodeLink=(function(){
 //   · 起站顯示「05:40發車」→ 還沒開
 //   · 開了以後，正開往上車站的那台就是這班(前一班早就過站了)，認到就把車牌記住，之後只追這個車牌
 // 畫面開著才抓(每 20 秒；官網動態頁自己是 16 秒刷新一次，Worker 再快取 15 秒)，背景不打。
+//
+// GPS 輔助鎖班次: 上車那則的 .bus-live／.bus-dep 加 data-geo="緯度,經度"(上車點座標)就會啟用。
+//   只有解鎖的手機、在搭車時間窗內才要求定位，1 分鐘讀一次，背景不讀；位置只留在記憶體，不存不傳。
+//   · .bus-live(上車點在中途): 鎖定的車過站 1 分鐘後，讀到人還在上車點 → 沒搭上，改追下一班
+//   · .bus-dep(上車點是起站): 起站換班時先不鎖，等開車 1 分鐘後的位置: 已離開才鎖剛開走那台；
+//     還在起站就等下一班；讀不到 GPS 或 5 分鐘內判斷不出來 → 照原規則鎖
+//   測試: console 設 __tripGeoFake={lat:緯度, lng:經度, acc:誤差公尺}，不必真的定位
 (function(){
   var API='https://narita-proxy.4511760.workers.dev/bus?key=';
   var PRE=40, POST=90;              // 「只追要搭的那班」的時間窗(分)，窗外顯示下一班
@@ -1523,11 +1537,43 @@ window.__nodeLink=(function(){
     return date===now.date && now.min>=dep-PRE && now.min<=dep+POST;
   }
 
+  // ── GPS ──
+  var GEO_R=150;                    // 上車點半徑(公尺)；離開要到 1.5 倍外才算，中間地帶不判斷
+  var FIX=null, geoDenied=false, geoBusy=false, geoAt=0;
+  var PASS={};                      // 鎖定的車第一次看到過站的時間
+  function geoOf(el){
+    var m=/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/.exec(el.getAttribute('data-geo')||'');
+    return m ? {lat:+m[1], lng:+m[2]} : null;
+  }
+  function distM(a, b){
+    var r=Math.PI/180, dLa=(b.lat-a.lat)*r, dLo=(b.lng-a.lng)*r;
+    var h=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLo/2)*Math.sin(dLo/2);
+    return 2*6371000*Math.asin(Math.sqrt(h));
+  }
+  function curFix(){
+    var f=window.__tripGeoFake;
+    if(f && f.lat!=null) return {lat:+f.lat, lng:+f.lng, acc:+(f.acc||10), ts:Date.now()};
+    return (FIX && Date.now()-FIX.ts<=10*60000) ? FIX : null;     // 超過 10 分鐘的位置不用
+  }
+  // 'in' 在上車點、'out' 已離開、null 判斷不出來(沒 GPS、位置太舊、在中間地帶)
+  function geoState(el, since){
+    var g=geoOf(el), f=curFix();
+    if(!g || !f || (since && f.ts<since)) return null;
+    var d=distM(g, f);
+    if(d+f.acc<=GEO_R) return 'in';
+    if(d-f.acc>=GEO_R*1.5) return 'out';
+    return null;
+  }
+  window.__tripGeoState=geoState;   // 測試用
+
   function plateKey(el){
     return 'japan2027-bus-'+(dayOf(el)||'')+'-'+el.getAttribute('data-key')+'-'+el.getAttribute('data-dep');
   }
   function getPlate(el){ try{ return localStorage.getItem(plateKey(el))||''; }catch(e){ return ''; } }
   function setPlate(el, p){ try{ localStorage.setItem(plateKey(el), p); }catch(e){} }
+  // 沒搭上的車牌(GPS 判定)，之後認車時跳過
+  function getSkip(el){ try{ return JSON.parse(localStorage.getItem(plateKey(el)+'-skip')||'[]')||[]; }catch(e){ return []; } }
+  function setSkip(el, a){ try{ localStorage.setItem(plateKey(el)+'-skip', JSON.stringify(a)); }catch(e){} }
 
   // 狀態文字 → 好讀的樣子: 「8分」→「約 8 分」、「21:18」→「表定 21:18」
   function eta(pt){
@@ -1538,7 +1584,7 @@ window.__nodeLink=(function(){
   }
 
   // 核心判斷: 回傳 {pos, eta, plate}
-  function analyze(stops, dep, stopName, plate){
+  function analyze(stops, dep, stopName, plate, skip){
     var ti=-1;
     stops.forEach(function(s, i){ if(ti<0 && s.na===stopName) ti=i; });
     if(ti<0) return {pos:'官網找不到「'+stopName+'」這站', eta:'—', plate:plate};
@@ -1548,7 +1594,7 @@ window.__nodeLink=(function(){
         var t=stops[ti];
         return {pos:'尚未發車('+dep+' 發車)', eta: t.car ? '—' : eta(t.ptime), plate:''};
       }
-      if(stops[ti].car) plate=stops[ti].car;        // 開了: 正開往上車站的那台就是
+      if(stops[ti].car && (skip||[]).indexOf(stops[ti].car)<0) plate=stops[ti].car;   // 開了: 正開往上車站的那台就是(沒搭上的跳過)
     }
     if(!plate) return {pos:'還沒收到這班車的位置', eta:eta(stops[ti].ptime), plate:''};
     var ni=-1;
@@ -1584,12 +1630,22 @@ window.__nodeLink=(function(){
     var stopName=el.getAttribute('data-stop')||'上車站';
     var trip=inWindow(el);            // true: 只追要搭的那班；false: 看下一班
     var d=LAST[el.getAttribute('data-key')];
-    var pos='讀取中…', when='';
+    var pos='讀取中…', when='', skip=[];
     if(d && d.err){ pos='動態暫時讀不到'; }
     else if(d){
       var r;
       if(trip){
-        r=analyze(d.stops||[], el.getAttribute('data-dep'), stopName, getPlate(el));
+        skip=getSkip(el);
+        r=analyze(d.stops||[], el.getAttribute('data-dep'), stopName, getPlate(el), skip);
+        // GPS: 鎖定的車過站 1 分鐘後，讀到的位置還在上車點 → 沒搭上，改追下一班
+        if(r.plate && r.eta==='已過站'){
+          var pk=plateKey(el)+'|'+r.plate;
+          if(!PASS[pk]) PASS[pk]=Date.now();
+          if(geoState(el, PASS[pk]+60000)==='in'){
+            skip=skip.concat([r.plate]); setSkip(el, skip); setPlate(el, '');
+            r=analyze(d.stops||[], el.getAttribute('data-dep'), stopName, '', skip);
+          }
+        }
         if(r.plate) setPlate(el, r.plate);
       }else r=analyzeNext(d.stops||[], stopName);
       CUR[el.getAttribute('data-key')]=r.plate||'';
@@ -1606,7 +1662,7 @@ window.__nodeLink=(function(){
       }
     }
     var name=el.getAttribute('data-name'), url=el.getAttribute('data-url')||'';
-    var label=(name?esc(name):'下一班')+(trip?'('+esc(el.getAttribute('data-dep')||'')+' 班)':'');
+    var label=(name?esc(name):'下一班')+(trip?(skip.length?'(沒搭上，改追下一班)':'('+esc(el.getAttribute('data-dep')||'')+' 班)'):'');
     var link=/^https:\/\//.test(url) ? '(<a href="'+esc(url)+'" target="_blank" rel="noopener">動態資訊</a>)' : '';
     el.innerHTML='<p class="jr-row">🚌 '+label+': '+nd(pos)+link+'</p>';
     el.setAttribute('data-painted','1');
@@ -1683,6 +1739,12 @@ window.__nodeLink=(function(){
   }
   function lsGet(k){ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch(e){ return null; } }
   function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+  // .bus-dep 的時間窗: 那則的當天、時刻前 40 分到後 120 分
+  function depWin(mk){
+    var ev=mk.closest('.ev'), w=ev && ev.querySelector('.when');
+    var day=dayOf(mk), now=tpeNow(), t=toMin(w ? w.getAttribute('data-t') : '');
+    return !!(window.__tripBusForce || (day===now.date && now.min>=t-40 && now.min<=t+120));
+  }
   function paintDep(mk){
     var k=mk.getAttribute('data-key'), d=LAST[k], txt='';
     if(d && !d.err){
@@ -1690,16 +1752,26 @@ window.__nodeLink=(function(){
       stops.forEach(function(s, i){ if(bi<0 && s.na===stopName) bi=i; });
       var m=/^(\d{1,2}:\d{2})發車$/.exec((stops[0]||{}).ptime||''), next=m ? m[1] : '';
       // 當天時間窗內: 起站的下一班換了 → 剛開走的那台就是要搭的，記住
-      var ev=mk.closest('.ev'), w=ev && ev.querySelector('.when');
-      var day=dayOf(mk), now=tpeNow(), t=toMin(w ? w.getAttribute('data-t') : '');
-      var win=window.__tripBusForce || (day===now.date && now.min>=t-40 && now.min<=t+120);
-      var lk='japan2027-bus-lock-'+(day||'')+'-'+k, lastK='japan2027-bus-last-'+(day||'')+'-'+k;
+      var day=dayOf(mk), win=depWin(mk);
+      var lk='japan2027-bus-lock-'+(day||'')+'-'+k, lastK='japan2027-bus-last-'+(day||'')+'-'+k, pk=lk+'-pend';
       var lock=win ? lsGet(lk) : null;
       if(win && !(lock && lock.plate)){
         var last=lsGet(lastK);
         if(last && last!==next){
           var car=''; stops.forEach(function(s){ if(!car && s.car) car=s.car; });
-          if(car){ lock={dep:last, plate:car}; lsSet(lk, lock); }
+          if(car){
+            // 有 GPS 就先記著，等開車 1 分鐘後的位置再決定；沒有就照原規則直接鎖
+            if(geoOf(mk) && curFix()) lsSet(pk, {dep:last, plate:car, at:Date.now()});
+            else { lock={dep:last, plate:car}; lsSet(lk, lock); }
+          }
+        }
+        var pend=lsGet(pk);
+        if(pend && !(lock && lock.plate)){
+          var gs=geoState(mk, pend.at+60000);
+          if(gs==='in') lsSet(pk, null);                                   // 人還在起站: 沒搭上那台，等下一班
+          else if(gs==='out' || !curFix() || Date.now()-pend.at>5*60000){   // 已離開，或判斷不出來太久 → 鎖
+            lock={dep:pend.dep, plate:pend.plate}; lsSet(lk, lock); lsSet(pk, null);
+          }
         }
         if(!(lock && lock.plate) && next) lsSet(lastK, next);
       }
@@ -1740,12 +1812,37 @@ window.__nodeLink=(function(){
     });
   }
 
+  // 要不要讀 GPS: 解鎖的手機、上車那則有座標、在它的時間窗內
+  function geoWanted(){
+    if(geoDenied || !navigator.geolocation) return false;
+    if(!(window.__trip && window.__trip.unlocked)) return false;
+    if(!(window.matchMedia && matchMedia('(pointer:coarse)').matches)) return false;
+    return els().some(function(el){ return geoOf(el) && inWindow(el); })
+        || deps().some(function(mk){ return geoOf(mk) && depWin(mk); });
+  }
+  function geoTick(){
+    if(document.hidden || geoBusy || window.__tripGeoFake || !geoWanted()) return;
+    if(Date.now()-geoAt<55000) return;                       // 1 分鐘一次
+    geoBusy=true; geoAt=Date.now();
+    navigator.geolocation.getCurrentPosition(function(pos){
+      geoBusy=false;
+      var c=pos.coords;
+      if(c.accuracy<=200) FIX={lat:c.latitude, lng:c.longitude, acc:c.accuracy, ts:Date.now()};   // 誤差太大的丟掉
+      paintAll();
+    }, function(err){
+      geoBusy=false;
+      if(err && err.code===1) geoDenied=true;                 // 拒絕了就不再問
+    }, {enableHighAccuracy:true, timeout:20000, maximumAge:30000});
+  }
+
   function tick(){
     if(document.hidden) return;
     refresh();
+    geoTick();
   }
 
   refresh();
+  setTimeout(geoTick, 1500);        // 解鎖要等雲端資料載入，稍等一下再看要不要定位
   setInterval(tick, 20000);         // 官網動態頁 16 秒刷新一次，20 秒問一次夠了
   document.addEventListener('visibilitychange', tick);
   // 私人行程解鎖、節點重畫後 .bus-live 是新的空元素，補畫一次(只畫還沒畫過的，避免自己觸發自己)
@@ -2438,6 +2535,8 @@ window.__nodeLink=(function(){
       '<label>時間 <input id="ed-time" placeholder="HH:MM" value="'+(it.time||'')+'"></label>'+
       '<label>結束時間(可留空；留空＝做到下一個行程開始為止)'+
         '<input id="ed-end" placeholder="HH:MM" value="'+(it.end||'')+'"></label>'+
+      '<label>實際開始(留空＝照表定) <input id="ed-at" placeholder="HH:MM" value="'+((it.act&&it.act.t)||'')+'"></label>'+
+      '<label>實際結束(留空＝照表定) <input id="ed-ae" placeholder="HH:MM" value="'+((it.act&&it.act.e)||'')+'"></label>'+
       '<label>標題 <input id="ed-title" value="'+(it.title||'').replace(/"/g,'&quot;')+'"></label>'+
       '<label>樣式 <select id="ed-cls">'+
         ['','meal','alert'].map(function(v){
@@ -2465,6 +2564,9 @@ window.__nodeLink=(function(){
       var bl=v('#ed-below').split(/\n\s*\n/).map(function(x){return x.trim();}).filter(Boolean);
       if(bl.length) next.below = bl.length===1 ? bl[0] : bl;
       var cls=v('#ed-cls'); if(cls) next.cls=cls;
+      var at=v('#ed-at'), ae=v('#ed-ae');
+      if((at && !/^\d{2}:\d{2}$/.test(at)) || (ae && !/^\d{2}:\d{2}$/.test(ae))){ alert('實際時間請填 HH:MM，例如 09:30'); return; }
+      if(at || ae){ next.act={}; if(at) next.act.t=at; if(ae) next.act.e=ae; }
       if(it.nodeId) next.nodeId=it.nodeId;
       if(next.time && !/^\d{2}:\d{2}$/.test(next.time)){ alert('時間請填 HH:MM，例如 09:30'); return; }
       if(next.end && !/^\d{2}:\d{2}$/.test(next.end)){ alert('結束時間請填 HH:MM，例如 11:30'); return; }
@@ -2571,22 +2673,82 @@ window.__nodeLink=(function(){
     await flush();
   }
 
-  // 「結束行程」: 把這個節點的結束時間改成現在，代表它到此為止
+  // ── 實際時間 ──
+  // 表定(time／end)不動，實際發生的時間另存在 act={t:'HH:MM', e:'HH:MM'}，畫面改依實際時間跑；
+  // 存雲端，其他人同步看到。「還原表定」把 act 拿掉。
+  function hhmmNow(){
+    var n=new Date();
+    return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+  }
+  function toMin(hm){ var p=String(hm||'').split(':'); return (+p[0])*60+(+p[1]); }
+  function addMin(hm, m){
+    var x=((toMin(hm)+m)%1440+1440)%1440;
+    return String(Math.floor(x/60)).padStart(2,'0')+':'+String(x%60).padStart(2,'0');
+  }
+  function plainTitle(it){ return (it.title||'這個行程').replace(/<[^>]*>/g,''); }
+  function isToday(it){
+    var n=new Date(), today=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
+    return (window.__tripDays||{})[it.day]===today;
+  }
+  function setAct(d, id, act){
+    var a={};
+    if(act && act.t) a.t=act.t;
+    if(act && act.e) a.e=act.e;
+    var v=(a.t||a.e) ? a : null;
+    if(d.where==='priv' || d.where==='added'){       // 這兩種拿到的就是原物件，直接改
+      if(v) d.it.act=v; else delete d.it.act;
+      return;
+    }
+    // 基礎節點: 只在雲端修改裡記 act，不整份複製(之後改基礎資料才不會被舊副本蓋掉)
+    S.pub.edits=S.pub.edits||{};
+    var x=Object.assign({}, S.pub.edits[id]||{});
+    if(v) x.act=v; else delete x.act;
+    if(Object.keys(x).length) S.pub.edits[id]=x; else delete S.pub.edits[id];
+  }
+
+  // 「結束行程」: 實際結束 = 現在(表定不動)
   async function endNow(id){
     var d=dataOf(id);
     if(!d){ toast('找不到這個節點'); return; }
-    var n=new Date();
-    var hhmm=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
-    var start=d.it.time||'';
+    var hhmm=hhmmNow();
+    var start=(d.it.act&&d.it.act.t)||d.it.time||'';
     // 跨午夜的節點(23:50 開始、00:10 結束)本來就合法，只擋同一天往回填的情形
     if(start && hhmm<start && start<'12:00'){ toast('現在時間比開始時間還早'); return; }
-    if(!confirm('把「'+(d.it.title||'這個行程').replace(/<[^>]*>/g,'')+'」的結束時間改成 '+hhmm+'？')) return;
-    if(d.where==='priv' || d.where==='added'){
-      d.it.end=hhmm;                                  // 這兩種拿到的就是原物件，直接改
-    }else{
-      S.pub.edits=S.pub.edits||{};
-      S.pub.edits[id]=Object.assign({}, d.it, {end:hhmm});   // d.it 已經是基礎資料＋先前的修改
+    if(!confirm('把「'+plainTitle(d.it)+'」的實際結束改成 '+hhmm+'？')) return;
+    setAct(d, id, Object.assign({}, d.it.act||{}, {e:hhmm}));
+    await flush();
+  }
+
+  // 「現在開始」: 實際開始 = 現在。15 分鐘以內的短節點(發車、抵達這種時間點)整段一起挪，長度不變；
+  // 正在進行的上一則若有寫死的結束時間、而且比現在晚，一起結束在現在。
+  async function startNow(id){
+    var d=dataOf(id);
+    if(!d){ toast('找不到這個節點'); return; }
+    var it=d.it;
+    if(!it.time){ toast('這個節點沒有時間'); return; }
+    if(!isToday(it)){ toast('只能在行程當天使用'); return; }
+    var hhmm=hhmmNow(), act=Object.assign({}, it.act||{}), msg='把「'+plainTitle(it)+'」的實際開始改成 '+hhmm;
+    var dur=it.end ? (toMin(it.end)-toMin(it.time)+1440)%1440 : null;
+    act.t=hhmm;
+    if(dur!==null && dur<=15){ act.e=addMin(hhmm, dur); msg+='，結束 '+act.e+'(整段挪)'; }
+    else if(act.e && toMin(act.e)<=toMin(hhmm)) delete act.e;        // 舊的實際結束比新開始早，作廢
+    if(!confirm(msg+'？')) return;
+    setAct(d, id, act);
+    var ev=document.querySelector('.tl .ev[data-id="'+id+'"]');
+    var cur=document.querySelector('.tl .ev.now');
+    if(cur && cur!==ev && cur.dataset.id){
+      var tm=window.__tripTimeOf(cur), pd=dataOf(cur.dataset.id);
+      if(pd && tm && tm.e && toMin(tm.t)<=toMin(hhmm) && toMin(tm.e)>toMin(hhmm))
+        setAct(pd, cur.dataset.id, Object.assign({}, pd.it.act||{}, {e:hhmm}));
     }
+    await flush();
+  }
+
+  async function resetAct(id){
+    var d=dataOf(id);
+    if(!d){ toast('找不到這個節點'); return; }
+    if(!confirm('「'+plainTitle(d.it)+'」還原成表定時間？')) return;
+    setAct(d, id, null);
     await flush();
   }
 
@@ -2598,11 +2760,17 @@ window.__nodeLink=(function(){
     document.querySelectorAll('.tl .ev').forEach(function(ev){
       var id=ev.dataset.id;
       if(!id) return;
+      var dd=dataOf(id), hasT=!!(dd && dd.it.time), hasAct=!!(dd && dd.it.act);
       var tools=el('div','ed-tools',
-        '<button data-act="edit" title="編輯">✏️</button><button data-act="del" title="刪除">🗑</button>');
+        '<button data-act="edit" title="編輯">✏️</button><button data-act="del" title="刪除">🗑</button>'
+        +(hasT ? '<button data-act="start">現在開始</button>' : '')
+        +(hasAct ? '<button data-act="reset">還原表定</button>' : ''));
       tools.onclick=function(e){
         var b=e.target.closest('button'); if(!b) return;
-        if(b.dataset.act==='edit') openForm(id);
+        var a=b.dataset.act;
+        if(a==='edit') openForm(id);
+        else if(a==='start') startNow(id);
+        else if(a==='reset') resetAct(id);
         else removeNode(id);
       };
       ev.appendChild(tools);
