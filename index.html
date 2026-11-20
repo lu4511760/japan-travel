@@ -433,9 +433,14 @@ span.rsv{color:var(--meal)}
   color:var(--fg); background:var(--card);
   border:1px solid var(--line); border-radius:8px;
 }
-/* 現在開始(綠)、現在結束(紅) */
+/* 現在開始(綠)、現在結束(紅)、還原表定(藍)
+   開始只出現在今天接下來的那一則(.next)，結束只出現在進行中的那一則(.now)；
+   每分鐘換人時靠 class 切換，不必重畫按鈕。藏起來的按鈕不佔位置，後面的自動往前補。 */
 .ed-tools button[data-act="start"]{color:#fff; background:#2e9e5b; border-color:#2e9e5b; font-weight:700}
 .ed-tools button[data-act="end"]{color:#fff; background:#d84343; border-color:#d84343; font-weight:700}
+.ed-tools button[data-act="reset"]{color:#fff; background:#2f6fd0; border-color:#2f6fd0; font-weight:700}
+.ed-tools button[data-act="start"], .ed-tools button[data-act="end"]{display:none}
+.ev.next .ed-tools button[data-act="start"], .ev.now .ed-tools button[data-act="end"]{display:inline-block}
 .ed-add{display:flex; gap:8px; margin:4px 0 12px}
 body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
 .ed-mask{
@@ -1977,7 +1982,7 @@ window.__nodeLink=(function(){
   // 飛機上收不到訊號，手機時區會停在出發地(台灣 UTC+8)，落地連上日本網路才跳成 UTC+9。
   // 這段期間手機的「現在幾點」比日本早一小時，寫日本時間的節點就會提早變成過去式
   // (14:20 抵達成田，台灣時間 14:20 就灰掉，連上網又亮回來)。
-  // 所以 JST_ONLY 裡的節點改成: 手機時區比日本慢幾分鐘，判定時就往後挪幾分鐘。
+  // 所以 JST_ONLY 裡的節點改成: 手機時區比日本慢幾分鐘，判定時就把節點時刻往前扣幾分鐘(換算回真正的時刻)。
   // 手機已經是日本時間(或更東)就不挪，其餘節點一律照手機當地時間，不受影響。
   var JST_ONLY={n003:1};        // 1/16 抵達成田: 落地那一刻手機多半還停在台灣時間
   window.__tripTzOffset=null;   // 測試用: 假裝手機在這個時區(相對 UTC 的分鐘數，台北 480、東京 540)
@@ -1988,6 +1993,12 @@ window.__nodeLink=(function(){
     // 差更多表示人根本不在這趟行程的路線上，照手機當地時間就好，別亂挪。
     return (gap>0 && gap<=60) ? gap : 0;
   }
+  // 「現在開始／現在結束」要寫的時刻: 照這個節點用的時鐘(JST_ONLY 的節點在手機還是台灣時間時補成日本時間)
+  window.__tripClockFor=function(id){
+    var n=new Date(), gap=JST_ONLY[id] ? jstGap(n) : 0;
+    n=new Date(n.getTime()+gap*60000);
+    return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+  };
 
   // 掃一次時間軸，算出每個節點的「有效結束時間」，並找出目前進行中與接下來的節點
   // · 有填結束時間就以它為準
@@ -2017,8 +2028,9 @@ window.__nodeLink=(function(){
       x.stop =new Date(x.date+'T'+(x.end==='24:00' ? '23:59:59' : x.end+':00'));
       if(x.end!=='24:00' && x.end<x.t) x.stop.setDate(x.stop.getDate()+1);     // 結束時間跨過午夜
       if(gap && JST_ONLY[x.el.getAttribute('data-id')]){                       // 手機還停在出發地時區
-        x.start=new Date(x.start.getTime()+gap*60000);
-        x.stop =new Date(x.stop.getTime() +gap*60000);
+        // 日本時間 14:20 被當成台灣 14:20 解讀，實際時刻晚了 gap 分，要往前扣回來(2026/11/20 修正: 原本是加，反而晚兩小時)
+        x.start=new Date(x.start.getTime()-gap*60000);
+        x.stop =new Date(x.stop.getTime() -gap*60000);
       }
       if(x.start<=now && now<x.stop) cur=x;             // 重疊時以較晚開始的為準
       if(x.start>now && !next) next=x;
@@ -2078,6 +2090,9 @@ window.__nodeLink=(function(){
     // 標出正在進行的那一個: 也給「現在開始」判斷上一則用
     document.querySelectorAll('.tl .ev.now').forEach(function(e){ e.classList.remove('now'); });
     if(sc.cur) sc.cur.el.classList.add('now');
+    // 今天接下來的那一則: 編輯模式的「現在開始」只長在它上面(畫面上不做任何標記)
+    document.querySelectorAll('.tl .ev.next').forEach(function(e){ e.classList.remove('next'); });
+    if(sc.next && sc.next.date===today) sc.next.el.classList.add('next');
   }
 
   // 餐廳訂位連結: 日期自動代入最近的週三(當天就是週三則取下週三)
@@ -2671,7 +2686,8 @@ window.__nodeLink=(function(){
   // ── 實際時間 ──
   // 表定(time／end)不動，實際發生的時間另存在 act={t:'HH:MM', e:'HH:MM'}，畫面改依實際時間跑；
   // 存雲端，其他人同步看到。「還原表定」把 act 拿掉。
-  function hhmmNow(){
+  function hhmmNow(id){
+    if(id && window.__tripClockFor) return window.__tripClockFor(id);
     var n=new Date();
     return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
   }
@@ -2706,7 +2722,7 @@ window.__nodeLink=(function(){
   async function endNow(id){
     var d=dataOf(id);
     if(!d){ toast('找不到這個節點'); return; }
-    var hhmm=hhmmNow();
+    var hhmm=hhmmNow(id);
     if(!isToday(d.it) && !(isToday(d.it, -1) && hhmm<'06:00')){ toast('只能在行程當天使用'); return; }
     var start=(d.it.act&&d.it.act.t)||d.it.time||'';
     // 跨午夜的節點(23:50 開始、00:10 結束)本來就合法，只擋同一天往回填的情形
@@ -2724,7 +2740,7 @@ window.__nodeLink=(function(){
     var it=d.it;
     if(!it.time){ toast('這個節點沒有時間'); return; }
     if(!isToday(it)){ toast('只能在行程當天使用'); return; }
-    var hhmm=hhmmNow(), act=Object.assign({}, it.act||{}), msg='把「'+plainTitle(it)+'」的實際開始改成 '+hhmm;
+    var hhmm=hhmmNow(id), act=Object.assign({}, it.act||{}), msg='把「'+plainTitle(it)+'」的實際開始改成 '+hhmm;
     var dur=it.end ? (toMin(it.end)-toMin(it.time)+1440)%1440 : null;
     act.t=hhmm;
     if(dur!==null && dur<=15){ act.e=addMin(hhmm, dur); msg+='，結束 '+act.e+'(整段挪)'; }
