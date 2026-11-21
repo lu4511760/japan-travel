@@ -62,7 +62,7 @@ nav{
   margin:0 -16px 24px; padding:8px 12px;
   display:flex; align-items:center; overflow:hidden;
 }
-/* 會滑動的只有日期這一塊；財務紀錄站在它旁邊，日期滑到底也不會跑到它底下。
+/* 會滑動的只有日期這一塊; 財務紀錄站在它旁邊，日期滑到底也不會跑到它底下。
    min-width:0 不能省，不然 flex 子元素會被內容撐開，根本不會出現捲軸。 */
 .nav-days{
   flex:1 1 auto; min-width:0;
@@ -77,8 +77,8 @@ nav a{
   font-variant-numeric:tabular-nums; line-height:1.28;
 }
 nav a .dn{display:block; font-size:11px; letter-spacing:.4px; opacity:.8}
-/* 財務紀錄沒有「Day N」那種副標，兩行都是一樣的字；行高縮一點，高度才跟其他日期一致 */
-/* 站在日期區塊的外面，所以不必釘也不會被日期蓋到；沒顯示時日期就自己佔滿整條 */
+/* 財務紀錄沒有「Day N」那種副標，兩行都是一樣的字; 行高縮一點，高度才跟其他日期一致 */
+/* 站在日期區塊的外面，所以不必釘也不會被日期蓋到; 沒顯示時日期就自己佔滿整條 */
 #fin-nav{line-height:1.14; flex:none; color:var(--fin)}
 /* nav a 是 inline-block，會蓋掉 hidden 本身的 display:none，要自己補一條 */
 #fin-nav[hidden], #fin-sec[hidden]{display:none}
@@ -94,7 +94,7 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
 }
 .ev{position:relative; margin-bottom:24px; scroll-margin-top:126px}   /* 日期列 + 黏在下面的每日標題 */
 .flash{animation:evflash .5s ease-in-out 5; border-radius:12px}
-/* 行前清單的卡片本身有底色，閃背景看不出來，改成連卡片底色一起換；
+/* 行前清單的卡片本身有底色，閃背景看不出來，改成連卡片底色一起換;
    展開時標題與內容都在閃，捲到哪一段都看得到 */
 #checklist.flash{animation:none}
 #checklist.flash > summary,
@@ -122,11 +122,11 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
 /* 每日標題: 一天只顯示一次「第幾天・日期 週幾」 */
 .day-head{
   /* 往下捲時黏在日期列底下，才知道現在看的是第幾天。
-     用負 margin ＋ 等量 padding 把背景往左右撐滿(文字位置不變)，
+     用負 margin + 等量 padding 把背景往左右撐滿(文字位置不變)，
      否則節點圓點會從標題兩側穿過去(它們在 .tl 的 padding 裡)。
      背景是純色。下緣曾經做過漸層淡出，但代價一路加碼:
-     加 backdrop-filter 讓透出的內容糊掉 → 連時間軸的線也被糊成一片透出來，線忽粗忽細；
-     在線的位置補底色遮罩 → 展開時那塊「沒有內容透出來」的色帶特別明顯；
+     加 backdrop-filter 讓透出的內容糊掉 → 連時間軸的線也被糊成一片透出來，線忽粗忽細;
+     在線的位置補底色遮罩 → 展開時那塊「沒有內容透出來」的色帶特別明顯;
      把淡出區縮短 → 又接近硬切。最後決定不做漸層。
      黏住的範圍由外層的 .day 決定，捲到下一天時瀏覽器自己把它推走。 */
   position:sticky; top:59px; z-index:9;
@@ -138,7 +138,7 @@ nav a.past{color:var(--rail); border-color:var(--rail); opacity:.55}
 }
 .tl > .day:first-child .day-head{margin-top:-8px}
 .day-head .dow{color:var(--muted); font-weight:400; margin-left:10px; font-size:22px}
-/* 當天行程的一句話簡述；點標題可以收合那一天，所以副標後面跟一個小箭頭 */
+/* 當天行程的一句話簡述; 點標題可以收合那一天，所以副標後面跟一個小箭頭 */
 .day-head{cursor:pointer}
 .day-head .day-sub{
   display:block; margin-top:3px;
@@ -209,7 +209,7 @@ details.block summary{
 }
 details.block[open] summary{border-radius:10px 10px 0 0}
 /* 行前清單的標題跟每日標題同一套: 往下捲時黏在日期列底下，
-   知道現在看的還是清單；捲完清單就讓第 1 天的標題接手黏住。
+   知道現在看的還是清單; 捲完清單就讓第 1 天的標題接手黏住。
    z-index 與 .day-head 同階，兩者相遇時 DOM 在後面的每日標題蓋在上面，看起來就是被推走。 */
 #checklist > summary{position:sticky; top:59px; z-index:9}
 /* 每一項不是打勾就是刪除檢核時，標題與計數變綠，一眼看出準備完成 */
@@ -268,7 +268,7 @@ body.editing .test-day{display:block}
 body.editing .now-fab{display:none}          /* 編輯模式下讓位給編輯列 */
 body.review .now-fab{display:none}           /* 回顧行程時沒有「現在」可以回 */
 
-/* 展開／收合各天: 按一下做一件事，字樣跳到下一個動作 */
+/* 展開/收合各天: 按一下做一件事，字樣跳到下一個動作 */
 .fold-fab{
   position:fixed; right:16px; bottom:78px; z-index:50;
   width:52px; height:52px; border-radius:50%; cursor:pointer; padding:0;
@@ -277,7 +277,7 @@ body.review .now-fab{display:none}           /* 回顧行程時沒有「現在�
   box-shadow:0 3px 12px rgba(0,0,0,.35);
 }
 .fold-fab:active{transform:translateY(1px)}
-/* 收得越多顏色越深: 全開(最淡)→ 收一半 → 收到剩一天／全收(實心) */
+/* 收得越多顏色越深: 全開(最淡)→ 收一半 → 收到剩一天/全收(實心) */
 .fold-fab{transition:background .25s, color .25s, border-color .25s}
 .fold-fab[data-step="1"]{background:var(--accent-soft); color:var(--accent); border-color:var(--accent)}
 .fold-fab[data-step="2"]{background:var(--fg); color:var(--bg); border-color:var(--fg)}
@@ -385,7 +385,7 @@ span.rsv{color:var(--meal)}
 .ev.past::before{border-color:var(--rail)}
 /* 雪場資訊不是時間事件，不顯示軸點 */
 #ski-info::before{display:none}
-/* 雪場資訊內容很長，做成點標題就收合，跟行前清單一樣；預設是收起來的。
+/* 雪場資訊內容很長，做成點標題就收合，跟行前清單一樣; 預設是收起來的。
    用原生的 details 而不是自己 display:none，收起來的字才找得到:
    手機瀏覽器的「在頁面中尋找」搜到裡面的字會自動展開(雪場現場查資料很需要) */
 #ski-info summary{
@@ -409,7 +409,7 @@ span.rsv{color:var(--meal)}
 /* 過去的私人節點同樣要灰: 權重需高於 .ev.private::before，否則紫色會蓋掉灰色 */
 .ev.private.past::before{border-color:var(--rail)}
 .ev.private .when::after{content:" 🔒"; font-size:12px; opacity:.6}
-/* 有 GPS 輔助判斷的節點(自動提早開始／離開結束，或 1968 鎖班次): 時間後面加 📡，只有解鎖(body.unlocked)才看得到 */
+/* 有 GPS 輔助判斷的節點(自動提早開始/離開結束，或 1968 鎖班次): 時間後面加 📡，只有解鎖(body.unlocked)才看得到 */
 body.unlocked .ev[data-geo-mode] .when::after,
 body.unlocked .ev:has(.bus-live[data-geo], .bus-dep[data-geo]) .when::after{content:" 📡"; font-size:12px; opacity:.6}
 body.unlocked .ev.private[data-geo-mode] .when::after,
@@ -439,10 +439,10 @@ body.unlocked .ev.private:has(.bus-live[data-geo], .bus-dep[data-geo]) .when::af
   border:1px solid var(--line); border-radius:8px;
 }
 /* 現在開始(綠)、現在結束(紅)、還原表定(藍)
-   開始只出現在今天接下來的那一則(.next)，結束只出現在進行中的那一則(.now)；
+   開始只出現在今天接下來的那一則(.next)，結束只出現在進行中的那一則(.now);
    每分鐘換人時靠 class 切換，不必重畫按鈕。藏起來的按鈕不佔位置，後面的自動往前補。 */
 .ed-act{float:right; margin:0 0 4px 8px; display:flex; gap:6px; position:relative; z-index:1}
-/* 實際時間按鈕: 節點右上角、靠右；用浮動，時間那行太長會自己讓開不重疊。
+/* 實際時間按鈕: 節點右上角、靠右; 用浮動，時間那行太長會自己讓開不重疊。
    z-index: 過去的節點子元素有 opacity，時間那行會疊到浮動按鈕上面把點擊攔走，要墊高 */.ed-tools button[data-act="start"]{color:#fff; background:#2e9e5b; border-color:#2e9e5b; font-weight:700}
 .ed-tools button[data-act="end"]{color:#fff; background:#d84343; border-color:#d84343; font-weight:700}
 .ed-tools button[data-act="reset"]{color:#fff; background:#2f6fd0; border-color:#2f6fd0; font-weight:700}
@@ -474,7 +474,7 @@ body.editing .ev{outline:1px dashed var(--line); outline-offset:6px}
 .ed-btns button.pri{color:#fff; background:var(--link); border-color:var(--link)}
 .share-pop{
   position:fixed; left:50%; transform:translateX(-50%); z-index:71; display:flex; gap:8px; padding:8px;
-  width:max-content; white-space:nowrap;   /* left:50% 會把可用寬度砍半，手機上按鈕被擠成兩行；固定一行 */
+  width:max-content; white-space:nowrap;   /* left:50% 會把可用寬度砍半，手機上按鈕被擠成兩行; 固定一行 */
   background:rgba(20,20,20,.96); border-radius:14px; box-shadow:0 4px 16px rgba(0,0,0,.5);
 }
 .share-pop button{font-size:15px; padding:8px 14px; color:#fff; background:#333; border:1px solid #555; border-radius:10px; cursor:pointer}
@@ -536,7 +536,7 @@ body:not(.editing) .fin-settle, body:not(.editing) .fin-add{display:none}
 /* 新增視窗裡的一筆: 誰欠誰、哪種幣別、多少錢 */
 .fin-row{margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid var(--line)}
 .fin-line{display:flex; align-items:center; gap:8px; margin-top:6px}
-/* .ed-box 裡的 select／input 預設寬度是 100%，放進同一行會把金額框擠扁，這裡改成各自佔份量 */
+/* .ed-box 裡的 select/input 預設寬度是 100%，放進同一行會把金額框擠扁，這裡改成各自佔份量 */
 .fin-line select, .fin-line input{width:auto; min-width:0; margin-top:0}
 .fin-line select{flex:1 1 auto}
 .fin-line span{flex:0 0 auto; color:var(--muted); font-size:13px}
@@ -641,8 +641,8 @@ body:not(.editing) .fin-settle, body:not(.editing) .fin-add{display:none}
     </div>
   </details>
 
-  <script id="trip-data" type="application/json">{"days":[{"id":"d0116","label":"第1天・01/16","dow":"週六","sub":"飛日本•斑尾雪場"},{"id":"d0117","label":"第2天・01/17","dow":"週日","sub":"滑雪教練課"},{"id":"d0118","label":"第3天・01/18","dow":"週一","sub":"滑雪教練課"},{"id":"d0119","label":"第4天・01/19","dow":"週二","sub":"自由開滑"},{"id":"d0120","label":"第5天・01/20","dow":"週三","sub":"到東京•秋葉原"},{"id":"d0121","label":"第6天・01/21","dow":"週四","sub":"築地•新宿"},{"id":"d0122","label":"第7天・01/22","dow":"週五","sub":"池袋•淺草"},{"id":"d0123","label":"第8天・01/23","dow":"週六","sub":"回台灣"}],"items":[{"id":"n001","day":"d0116","time":"10:10","title":"🛫 桃園出發 JX802 第一航廈 10:10 起飛","body":"<p class=\"note\" style=\"margin-top:8px\">🕐 <span class=\"fl-updated\">尚未更新<\/span><\/p>\n<table class=\"fl-table\" id=\"fl-dep\">\n<tr><td>航班狀態<\/td><td data-f=\"st\">—<\/td><\/tr>\n<tr><td>報到櫃台<\/td><td data-f=\"checkin\">—<\/td><\/tr>\n<tr><td>登機門<\/td><td data-f=\"gate\">—<\/td><\/tr>\n<tr><td>表定起飛<\/td><td data-f=\"otime\">—<\/td><\/tr>\n<tr><td>實際起飛<\/td><td data-f=\"rtime\">—<\/td><\/tr>\n<tr><td>安檢等待<\/td><td data-f=\"security\">—<\/td><\/tr>\n<\/table>\n<p style=\"margin-top:8px\">\n<a href=\"https://www.taoyuan-airport.com/flight_depart\" id=\"tpe-dep-link\" rel=\"noopener\" target=\"_blank\">桃園機場官網<\/a>\n<\/p>","end":"10:20"},{"id":"n002","day":"d0116","time":"11:00","title":"🍱 午餐: 飛機餐","cls":"meal","end":"11:30"},{"id":"n003","day":"d0116","time":"14:20","title":"🛬 抵達成田","body":"<p class=\"note\" style=\"margin-top:8px\">🕐 <span class=\"fl-updated\">尚未更新<\/span><\/p>\n<table class=\"fl-table\" id=\"fl-dep-nrt\">\n<tr><td>航班狀態<\/td><td data-f=\"st\">—<\/td><\/tr>\n<tr><td>表定抵達<\/td><td data-f=\"otime\">—<\/td><\/tr>\n<tr><td>實際抵達<\/td><td data-f=\"rtime\">—<\/td><\/tr>\n<tr><td>到達門<\/td><td data-f=\"gate\">—<\/td><\/tr>\n<tr><td>入境審查<\/td><td data-f=\"imm\">—<\/td><\/tr>\n<\/table>\n<p style=\"margin-top:8px\">\n<a href=\"https://www.narita-airport.jp/zh-tc/flight/\" id=\"nrt-arr-link\" rel=\"noopener\" target=\"_blank\">成田機場官網<\/a>・<a href=\"https://www.narita-airport.jp/zh-tc/airportguide/inter-arr/immigration/\" rel=\"noopener\" target=\"_blank\">入境審查狀況<\/a>\n<\/p>","end":"15:20"},{"id":"n004","day":"d0116","time":"16:00","title":"🚌 DBC 集合上遊覽車","body":"<p>集合地點: <a href=\"https://www.narita-airport.jp/zh-tc/map/?bearing=59.5&amp;zoom=18.535454490297724&amp;pitch=0&amp;lat=35.77381890000001&amp;lng=140.38744050000003&amp;building=b32584d9-027d-4863-aa2e-3482e8fc2fb3&amp;floor=1F&amp;clickedPoi=16856980\" rel=\"noopener\" target=\"_blank\">📍 國際航班到達大廳 B<\/a><\/p>","end":"16:10"},{"id":"n005","day":"d0116","time":"18:30","title":"🍜 晚餐: 上里服務區","cls":"meal","body":"<p><a href=\"https://www.google.com/maps?cid=16291457626903747550\" rel=\"noopener\" target=\"_blank\">📍 麦さと屋<\/a>\n          (<a href=\"%E9%BA%A6%E3%81%95%E3%81%A8%E5%B1%8B%20Menu%20ZH.webp\" rel=\"noopener\" target=\"_blank\">菜單<\/a>)<\/p>\n<p class=\"note\">烏龍麵與蕎麥麵，肉汁烏龍麵最多人點<\/p>\n<p><a href=\"https://www.google.com/maps?cid=6004865367253462709\" rel=\"noopener\" target=\"_blank\">📍 姫豚丼＆カレー 姫軒<\/a>\n          (<a href=\"%E5%A7%AB%E8%B1%9A%E4%B8%BC%EF%BC%86%E3%82%AB%E3%83%AC%E3%83%BC%20%E5%A7%AB%E8%BB%92%20Menu%20ZH.webp\" rel=\"noopener\" target=\"_blank\">菜單<\/a>)<\/p>\n<p class=\"note\">在地品牌「姫豚」的丼飯專門店<\/p>\n<p><a href=\"https://www.google.com/maps?cid=10040392674387368543\" rel=\"noopener\" target=\"_blank\">📍 蔵仕込みらーめん KURA<\/a>\n          (<a href=\"%E8%94%B5%E4%BB%95%E8%BE%BC%E3%81%BF%E3%82%89%E3%83%BC%E3%82%81%E3%82%93%20KURA%20Menu%20ZH.webp\" rel=\"noopener\" target=\"_blank\">菜單<\/a>)<\/p>\n<p class=\"note\">拉麵，季節限定口味會換<\/p>","end":"19:30","geo":{"at":"36.2541587,139.1192211","r":200,"mode":"stay"}},{"id":"n007","day":"d0116","time":"21:30","body":"<p><a href=\"https://www.google.com/maps?cid=13547708399019310565\" rel=\"noopener\" target=\"_blank\">📍 Tangram飯店 斑尾東急度假村<\/a><\/p>","end":"21:40","geo":{"at":"36.8535654,138.2625863","r":200,"mode":"arrive"}},{"id":"n008","day":"d0116","time":"22:30","title":"♨️ 泡溫泉","end":"23:30"},{"id":"n009","day":"d0117","title":"🎿 雪場資訊","body":"<p style=\"margin-top:4px\"><a href=\"Madarao%20Map%20%26%20Guide.webp\" rel=\"noopener\" target=\"_blank\">🗺️ 斑尾高原地圖<\/a><\/p>\n<p style=\"margin-top:12px\"><b>🌡️ 即時雪況<\/b><\/p>\n<p class=\"note\" style=\"margin-top:8px\">🕐 <span class=\"snow-updated\">尚未更新<\/span><\/p>\n<table class=\"fl-table\" id=\"snow-now\">\n<tr><td>天氣<\/td><td data-s=\"wx\">—<\/td><\/tr>\n<tr><td>氣溫<\/td><td data-s=\"temp\">—<\/td><\/tr>\n<tr><td>雪質<\/td><td data-s=\"qual\">—<\/td><\/tr>\n<tr><td>積雪<\/td><td data-s=\"depth\">—<\/td><\/tr>\n<\/table>\n<p class=\"note\" style=\"margin-top:8px\">官方網站: <a href=\"https://www.tangram.jp/ski/\" rel=\"noopener\" target=\"_blank\">tangram.jp<\/a>・<a href=\"https://www.madarao.jp/ski/\" rel=\"noopener\" target=\"_blank\">madarao.jp<\/a><\/p>\n<p style=\"margin-top:12px\"><b>📹 即時影像<\/b><\/p>\n<p class=\"note\">野尻湖テラス LIVE<\/p>\n<iframe id=\"live-nojiri\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen=\"\" class=\"live-cam\" loading=\"lazy\" referrerpolicy=\"strict-origin-when-cross-origin\" src=\"https://www.youtube.com/embed/Ba8mu-3ORa8\" title=\"【24時間配信中】野尻湖テラスLIVEカメラ＠タングラム公式\"><\/iframe>\n<p class=\"note\" style=\"margin-top:8px\">ホテルタングラム LIVE<\/p>\n<iframe id=\"live-hotel\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen=\"\" class=\"live-cam\" loading=\"lazy\" referrerpolicy=\"strict-origin-when-cross-origin\" src=\"https://www.youtube.com/embed/aA-lYRXMbtQ\" title=\"【24時間配信中】ホテルタングラムLIVEカメラ＠タングラム公式\"><\/iframe>\n<p style=\"margin-top:12px\"><b>🍽️ 餐廳<\/b><\/p>\n<p><a href=\"https://www.google.com/maps?cid=8638558114167208322\" rel=\"noopener\" target=\"_blank\">📍 仁王門屋(戶隱手打)<\/a>\n          (<a href=\"%E4%BB%81%E7%8E%8B%E9%96%80%E5%B1%8B%20Menu%20ZH.webp\" rel=\"noopener\" target=\"_blank\">菜單<\/a>)<\/p>\n<p class=\"note\">飯店地下 1 樓・11:30~14:30(最後點餐 14:00)・<b>每週二、三公休<\/b>・戶隱蕎麥名店期間限定出店<\/p>\n<p style=\"margin-top:8px\"><a href=\"https://www.google.com/maps?cid=17052795522864188130\" rel=\"noopener\" target=\"_blank\">📍 ZIGZAG<\/a>\n          (<a href=\"ZIGZAG%20Menu%20ZH.webp\" rel=\"noopener\" target=\"_blank\">午餐菜單<\/a>)<\/p>\n<p class=\"note\">飯店 1 樓・午餐 11:00~14:30(最後點餐 14:00)・主餐皆附軟性飲料無限暢飲<\/p>\n<p class=\"note\">早餐 Buffet 07:00~09:30(最後入店 09:00)・晚餐 Buffet 18:00~21:00(最後入店 20:00)・和洋中吃到飽，住宿方案已含早晚餐・400 席，不收時間預約，旺日分兩輪入場(check-in 時櫃檯會說)<\/p>\n<p style=\"margin-top:8px\"><a href=\"https://www.google.com/maps?cid=15363857014904960448\" rel=\"noopener\" target=\"_blank\">📍 レストラン ハイジ<\/a><\/p>\n<p class=\"note\">斑尾高原側，要滑過去(需斑尾全山共通券)・9:00~16:00(最後點餐 15:30)・800 席是這一帶最大・人氣: 牛肉咖哩、蘑菇奶油義大利麵、醬汁炸豬排丼、可麗餅<\/p>\n<p style=\"margin-top:8px\"><a href=\"https://www.google.com/maps?cid=10457555821653696883\" rel=\"noopener\" target=\"_blank\">📍 ル・タングラム<\/a><span class=\"note\">(加價晚餐)<\/span><\/p>\n<p class=\"note\">飯店 3 樓・18:00~21:00・全席預約制，可提前兩個月~最晚前一天電話訂・<b>每週二公休<\/b><\/p>\n<p class=\"note\">8,800 円的「野尻湖会席」補 3,300 円(2026/12/12~2027/2/28): 前菜拼盤、信州香菇蝦丸清湯、生魚片三種、信州米豚五花燉蘿蔔、烤蘋果清口、鹽烤鱈魚佐白子、長野越光米套餐、甜點<\/p>\n<p class=\"note\">11,000 円的補 5,500 円(這檔官網沒公布菜單，要電話問)<\/p>","nodeId":"ski-info"},{"id":"n010","day":"d0117","time":"06:00","title":"♨️ 泡溫泉"},{"id":"n011","day":"d0117","time":"07:00","title":"🍳 早餐: 飯店","cls":"meal","end":"07:40"},{"id":"n012","day":"d0117","time":"08:30","title":"🧥 換裝(內裡＋個人購買)"},{"id":"n013","day":"d0117","time":"09:00","title":"🎿 確認租借裝備 &amp; 著裝"},{"id":"n014","day":"d0117","time":"10:00","title":"⛷️ 滑雪課"},{"id":"n015","day":"d0117","time":"12:00","title":"🍛 午餐: 雪場餐廳","cls":"meal","end":"13:00"},{"id":"n016","day":"d0117","time":"13:00","title":"⛷️ 滑雪課"},{"id":"n017","day":"d0117","time":"16:00","title":"🏨 回飯店換裝","end":"17:00"},{"id":"n018","day":"d0117","time":"18:00","title":"🍽️ 晚餐: 飯店","cls":"meal","end":"19:00"},{"id":"n019","day":"d0117","time":"22:00","title":"♨️ 泡溫泉","end":"23:00"},{"id":"n020","day":"d0118","time":"06:00","title":"♨️ 泡溫泉"},{"id":"n021","day":"d0118","time":"07:00","title":"🍳 早餐: 飯店","cls":"meal","end":"07:40"},{"id":"n022","day":"d0118","time":"08:30","title":"🧥 著裝"},{"id":"n023","day":"d0118","time":"10:00","title":"⛷️ 滑雪課"},{"id":"n024","day":"d0118","time":"12:00","title":"🍛 午餐: 雪場餐廳","cls":"meal","end":"13:00"},{"id":"n025","day":"d0118","time":"13:00","title":"⛷️ 滑雪課"},{"id":"n026","day":"d0118","time":"16:00","title":"🏨 回飯店換裝","end":"17:00"},{"id":"n027","day":"d0118","time":"18:00","title":"🍽️ 晚餐: 飯店","cls":"meal","end":"19:00"},{"id":"n028","day":"d0118","time":"22:00","title":"♨️ 泡溫泉","end":"23:00"},{"id":"n029","day":"d0119","time":"06:00","title":"♨️ 泡溫泉"},{"id":"n030","day":"d0119","time":"07:00","title":"🍳 早餐: 飯店","cls":"meal","end":"07:40"},{"id":"n031","day":"d0119","time":"08:30","title":"🧥 著裝"},{"id":"n032","day":"d0119","time":"10:00","title":"⛷️ 上雪開滑"},{"id":"n033","day":"d0119","time":"12:00","title":"🍛 午餐: 雪場餐廳","cls":"meal","end":"13:00"},{"id":"n034","day":"d0119","time":"13:00","title":"⛷️ 上雪開滑"},{"id":"n035","day":"d0119","time":"16:00","title":"🏨 回飯店換裝","end":"17:00"},{"id":"n036","day":"d0119","time":"18:00","title":"🍽️ 晚餐: 飯店","cls":"meal","end":"19:00"},{"id":"n037","day":"d0119","time":"19:00","title":"🧳 整理大件行李","cls":"alert","end":"19:30"},{"id":"n038","day":"d0119","time":"20:00","title":"🚚 DBC 收大件行李送至東京","cls":"alert","end":"20:10"},{"id":"n039","day":"d0119","time":"22:00","title":"♨️ 泡溫泉","end":"23:00"},{"id":"n040","day":"d0120","time":"06:00","title":"♨️ 泡溫泉"},{"id":"n041","day":"d0120","time":"07:00","title":"🍳 早餐: 飯店","cls":"meal","end":"07:40"},{"id":"n042","day":"d0120","time":"09:00","title":"🎫 DBC 集合發證書、高鐵票","end":"09:10"},{"id":"n088","day":"d0120","time":"09:30","end":"09:40","title":"🚌 DBC 專車出發"},{"id":"n044","day":"d0120","time":"10:15","body":"<p><a href=\"https://www.google.com/maps?cid=4061021936276330804\" rel=\"noopener\" target=\"_blank\">📍 飯山車站<\/a><\/p>","end":"10:25","geo":{"at":"36.8455567,138.3586613","r":100,"mode":"arrive"}},{"id":"n045","day":"d0120","time":"10:33","title":"🚄 <span class=\"jr-line hk\">北陸新幹線<\/span>發車","end":"10:38"},{"id":"n046","day":"d0120","time":"12:14","body":"<p><a href=\"https://www.google.com/maps?cid=7820979510707196484\" target=\"_blank\" rel=\"noopener\">📍 上野<\/a> → <a href=\"https://www.google.com/maps?cid=1553519931154601905\" target=\"_blank\" rel=\"noopener\">📍 秋葉原<\/a> <span class=\"note\">(5分鐘)<\/span><\/p><p class=\"jr-row\">① <span class=\"jr-code jy\">JY<\/span><span class=\"jr-line jy\">山手線<\/span> <span class=\"chip\">普通<\/span>東京/品川方面(外環線)、3號月台<\/p><p class=\"jr-row\">② <span class=\"jr-code jk\">JK<\/span><span class=\"jr-line jk\">京濱東北線<\/span> <span class=\"chip\">各停<\/span>大船、4號月台<\/p>","end":"12:30"},{"id":"n048","day":"d0120","time":"13:00","title":"🍜 午餐","cls":"meal","body":"<p><a href=\"https://www.google.com/maps?cid=15988956320242529384\" rel=\"noopener\" target=\"_blank\">📍 スパイス・ラー麺 卍力 秋葉原店<\/a>\n          (<a href=\"Manriki%20Spice%20Ramen%20Akihabara%20Menu%20ZH.webp\" rel=\"noopener\" target=\"_blank\">菜單<\/a>)<\/p>\n<p class=\"note\">台東 1-10-5 一樓・11:00~21:00・每週一公休・香菜配湯咖哩風的辣味拉麵<\/p>","end":"14:00","geo":{"at":"35.7012269,139.7759231","r":100,"mode":"stay"}},{"id":"n057","day":"d0120","time":"14:00","title":"🛍️ 逛秋葉原","body":"<p><a href=\"https://www.google.com/maps?cid=6360000460982730678\" target=\"_blank\" rel=\"noopener\">📍 Shosen Book Tower<\/a><br><span class=\"note\">11:00~20:00・5F 鐵道迷天堂<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=16355384424981067463\" target=\"_blank\" rel=\"noopener\">📍 GENERAL STORE RAILYARD 秋葉原<\/a><br><span class=\"note\">10:00~21:00・JR鐵道紀念品店<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=3516513028144054760\" target=\"_blank\" rel=\"noopener\">📍 秋葉原無線電會館<\/a><br><span class=\"note\">10:00~20:00・公仔、扭蛋、模型<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=13400288268817439895\" target=\"_blank\" rel=\"noopener\">📍 amiami Akihabara Figure Tower<\/a><br><span class=\"note\">10:00~21:00・公仔<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=10553894423225248039\" target=\"_blank\" rel=\"noopener\">📍 Animate Akihabara<\/a><br><span class=\"note\">10:00~21:00・公仔、扭蛋、模型<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=5235142483072264364\" target=\"_blank\" rel=\"noopener\">📍 おもちゃのMARURU<\/a><br><span class=\"note\">11:00~20:00・公仔<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=17552749546243718283\" target=\"_blank\" rel=\"noopener\">📍 神田神社<\/a><br><span class=\"note\">09:00~18:00・IT御守<\/span><\/p>"},{"id":"n058","day":"d0120","time":"18:00","body":"<div class=\"opts\" data-opt=\"d0120-1800\"><button type=\"button\" class=\"opt-tab\" data-opt-i=\"0\">路線一<\/button><button type=\"button\" class=\"opt-tab\" data-opt-i=\"1\">路線二<\/button><\/div>\n<div class=\"opt-pane\" data-opt=\"d0120-1800\" data-opt-i=\"0\"><p><a href=\"https://www.google.com/maps?cid=1553519931154601905\" target=\"_blank\" rel=\"noopener\">📍 秋葉原<\/a> → <a href=\"https://www.google.com/maps?cid=2393511273337389901\" target=\"_blank\" rel=\"noopener\">📍 池袋<\/a> <span class=\"note\">(20分鐘)<\/span><\/p><p class=\"jr-row\"><span class=\"jr-code jy\">JY<\/span><span class=\"jr-line jy\">山手線<\/span> <span class=\"chip\">普通<\/span>上野/池袋方面(內環線)、2號月台<\/p><\/div>\n<div class=\"opt-pane\" data-opt=\"d0120-1800\" data-opt-i=\"1\" hidden><p><a href=\"https://www.google.com/maps?cid=2576646016325463020\" target=\"_blank\" rel=\"noopener\">📍 御茶之水<\/a> → <a href=\"https://www.google.com/maps?cid=2393511273337389901\" target=\"_blank\" rel=\"noopener\">📍 池袋<\/a> <span class=\"note\">(11分鐘)<\/span><\/p><p class=\"jr-row\"><span class=\"mt-code ma\">M<\/span><span class=\"jr-line ma\">丸之內線<\/span> <span class=\"chip\">各停<\/span>池袋、2號月台<\/p><\/div>","end":"18:30"},{"id":"n060","day":"d0120","time":"19:00","title":"🍖 晚餐","cls":"meal","body":"<p><a href=\"https://www.google.com/maps?cid=1197874353798139641\" target=\"_blank\" rel=\"noopener\">📍 焼肉力丸 池袋東口店<\/a> (<a href=\"https://www.google.com/maps/reserve/dine?c=75N6-MYF25U&amp;ssst=2026-10-25T10%3A00%3A00.000Z&amp;ld=20261025T190000&amp;ps=4&amp;ahbb=1&amp;gei=FtbcauvvD_PS1e8PyM3R8AU&amp;hl=zh-TW&amp;opi=79508299&amp;source=pa&amp;sourceurl=https%3A%2F%2Fwww.google.com.tw%2Fmaps%2Fpreview%2Fplace%3Fauthuser%3D0%26hl%3Dzh-TW%26gl%3Dtw%26q%3D%25E7%2584%25BC%25E8%2582%2589%25E5%258A%259B%25E4%25B8%25B8%2B%25E6%25B1%25A0%25E8%25A2%258B%25E6%259D%25B1%25E5%258F%25A3%25E5%25BA%2597\" target=\"_blank\" rel=\"noopener\" class=\"rsv\">需預約<\/a>)(<a href=\"%E7%84%BC%E8%82%89%E5%8A%9B%E4%B8%B8%20%E6%B1%A0%E8%A2%8B%E6%9D%B1%E5%8F%A3%E5%BA%97%20Menu%20ZH.webp\" target=\"_blank\" rel=\"noopener\">菜單<\/a>)<\/p>\n<p class=\"note\">南池袋 1-22-2 F･L･C 大樓 5 樓・11:30~23:30(週一 16:00 才開)・燒肉吃到飽・需預約<\/p>","end":"21:00","geo":{"at":"35.7290853,139.7123793","r":100,"mode":"stay"}},{"id":"n061","day":"d0120","time":"21:30","title":"🏨 飯店 Check-In","body":"<p><a href=\"https://www.google.com/maps?cid=1669693716906684867\" target=\"_blank\" rel=\"noopener\">📍 東京池袋大都會大飯店<\/a><\/p>\n<p class=\"note\" style=\"margin-top:8px\">📋 在日住所(VJW 填表用)<\/p>\n<p>郵政編號: 1718505<button type=\"button\" class=\"copy-btn\" data-copy=\"1718505\">複製<\/button><\/p>\n<p class=\"note\">都道府縣: TOKYO TO<\/p>\n<p class=\"note\">市區町村名稱: TOSHIMA KU<\/p>\n<p class=\"note\">町字、番地: 1 CHOME-6-1<\/p>\n<p>酒店名: HOTEL METROPOLITAN TOKYO IKEBUKURO<button type=\"button\" class=\"copy-btn\" data-copy=\"HOTEL METROPOLITAN TOKYO IKEBUKURO\">複製<\/button><\/p>\n<p>電話: 81339801111<button type=\"button\" class=\"copy-btn\" data-copy=\"81339801111\">複製<\/button><\/p>","below":"<span class=\"remind\">🔔 訂購 1/23 利木津巴士 10:30 → 成田機場 Terminal 2 車票(¥3,600)<\/span>","end":"21:50","geo":{"at":"35.7285233,139.7080017","r":100,"mode":"arrive"}},{"id":"n062","day":"d0121","time":"07:00","body":"<p><a href=\"https://www.google.com/maps?cid=2393511273337389901\" target=\"_blank\" rel=\"noopener\">📍 池袋<\/a> → <a href=\"https://www.google.com/maps?cid=705007821826241348\" target=\"_blank\" rel=\"noopener\">📍 新富町<\/a> <span class=\"note\">(25分鐘)<\/span><\/p><p class=\"jr-row\"><span class=\"mt-code yu\">Y<\/span><span class=\"jr-line yu\">有樂町線<\/span> <span class=\"chip\">各停<\/span>新木場、3號月台<\/p>","end":"07:35"},{"id":"n064","day":"d0121","time":"08:00","title":"🍳 早餐: 築地市場","body":"<p><a href=\"https://www.google.com/maps?cid=10762732184996540674\" target=\"_blank\" rel=\"noopener\">📍 狐狸屋牛丼<\/a> (<a href=\"%E7%8B%90%E7%8B%B8%E5%B1%8B%E7%89%9B%E4%B8%BC%20Menu%20ZH.webp\" target=\"_blank\" rel=\"noopener\">菜單<\/a>)<\/p>\n<p class=\"note\">築地場外市場一樓・6:30~13:00・週日與週三公休・名物是牛丼與燉牛雜，開店就排隊<\/p>\n<p><a href=\"https://www.google.com/maps?cid=15453293774189458572\" target=\"_blank\" rel=\"noopener\">📍 若葉拉麵<\/a> (<a href=\"%E8%8B%A5%E8%91%89%E6%8B%89%E9%BA%B5%20Menu%20ZH.webp\" target=\"_blank\" rel=\"noopener\">菜單<\/a>)<\/p>\n<p class=\"note\">築地場外市場一樓・6:30~13:00(週三 7:30 起)・週日公休・老字號中華そば<\/p>\n<p><a href=\"https://www.google.com/maps?cid=8431770654714236915\" target=\"_blank\" rel=\"noopener\">📍 黑銀鮪屋<\/a> (<a href=\"%E9%BB%91%E9%8A%80%E9%AE%AA%E5%B1%8B%20Menu%20ZH.webp\" target=\"_blank\" rel=\"noopener\">菜單<\/a>)<\/p>\n<p class=\"note\">築地場外市場・8:00~13:00・全年無休・鮪魚專賣店<\/p>","cls":"meal","end":"09:30"},{"id":"n065","day":"d0121","time":"11:00","body":"<p><a href=\"https://www.google.com/maps?cid=15576708788006522373\" target=\"_blank\" rel=\"noopener\">📍 博品館 TOY PARK 銀座本店<\/a> <span class=\"note\">玩具鋪<\/span><\/p>"},{"id":"n066","day":"d0121","time":"12:00","body":"<p><a href=\"https://www.google.com/maps?cid=3820899596196599689\" target=\"_blank\" rel=\"noopener\">📍 新橋<\/a> → <a href=\"https://www.google.com/maps?cid=2031864442327465429\" target=\"_blank\" rel=\"noopener\">📍 新宿<\/a> <span class=\"note\">(15分鐘)<\/span><\/p><p class=\"jr-row\"><span class=\"mt-code gi\">G<\/span><span class=\"jr-line gi\">銀座線<\/span> <span class=\"chip\">各停<\/span>澀谷、1號月台，到赤坂見附<\/p><p class=\"jr-row\">→ <span class=\"mt-code ma\">M<\/span><span class=\"jr-line ma\">丸之內線<\/span> <span class=\"chip\">各停<\/span>方南町/荻窪、2號月台<\/p>","end":"12:25"},{"id":"n071","day":"d0121","time":"12:30","title":"🍖 午餐","cls":"meal","body":"<p><a href=\"https://www.google.com/maps?cid=13077509271574808759\" target=\"_blank\" rel=\"noopener\">📍 めし処 ぶたや<\/a> (<a href=\"%E3%82%81%E3%81%97%E5%87%A6%20%E3%81%B6%E3%81%9F%E3%82%84%20Menu%20ZH.webp\" target=\"_blank\" rel=\"noopener\">菜單<\/a>)<\/p>\n<p class=\"note\">歌舞伎町 1-23-14 第1 Metro 大樓地下 1 樓・8:00~15:00・每週三公休・豬肉定食小店<\/p>","end":"13:30","geo":{"at":"35.6941656,139.7009986","r":100,"mode":"stay"}},{"id":"n070","day":"d0121","time":"13:30","title":"🛍️ 逛新宿","body":"<p><a href=\"https://www.google.com/maps?cid=10080282347125608540\" target=\"_blank\" rel=\"noopener\">📍 Hands be<\/a><br><span class=\"note\">11:00~21:30・雜貨舖<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=5874700311985490173\" target=\"_blank\" rel=\"noopener\">📍 ガチャガチャの森 新宿サブナード店<\/a><br><span class=\"note\">10:30~21:00・扭蛋<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=4249080794830832111\" target=\"_blank\" rel=\"noopener\">📍 ガチャガチャの森 新宿サブナードEAST店<\/a><br><span class=\"note\">10:30~21:00・扭蛋<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=5747731829808392372\" target=\"_blank\" rel=\"noopener\">📍 #C-pla 新宿アドホック店<\/a><br><span class=\"note\">10:00~23:00・扭蛋<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=15038129067309236490\" target=\"_blank\" rel=\"noopener\">📍 KIDDYLAND 新宿店<\/a><br><span class=\"note\">10:30~20:30・拉拉熊<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=15925741963762439993\" target=\"_blank\" rel=\"noopener\">📍 新宿東口の猫<\/a><br><span class=\"note\">07:00~01:00・3D貓<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=242009723914584489\" target=\"_blank\" rel=\"noopener\">📍 LUSH SPA<\/a><br><span class=\"note\">11:00~21:00・手工香皂<\/span><\/p>"},{"id":"n069","day":"d0121","time":"18:00","title":"🍜 晚餐","cls":"meal","body":"<p><a href=\"https://www.google.com/maps?cid=11355978000014477052\" target=\"_blank\" rel=\"noopener\">📍 麵屋海神<\/a> (<a href=\"%E9%BA%B5%E5%B1%8B%E6%B5%B7%E7%A5%9E%20Menu%20ZH.webp\" target=\"_blank\" rel=\"noopener\">菜單<\/a>)<\/p>\n<p class=\"note\">新宿 3-35-7 三樂大樓 2 樓・11:00~15:00、16:30~22:00・招牌是魚骨熬湯的「あら炊き塩らぁめん」，當天用哪種魚會寫在牆上<\/p>","end":"19:00"},{"id":"n085","day":"d0121","time":"19:00","body":"<p><a href=\"https://www.google.com/maps?cid=8128504766577805906\" target=\"_blank\" rel=\"noopener\">📍 大久保公園<\/a><\/p>","geo":{"at":"35.69747,139.7018296","r":100,"mode":"stay"},"end":"20:00"},{"id":"n075","day":"d0121","time":"20:00","body":"<div class=\"opts\" data-opt=\"d0121-2000\"><button type=\"button\" class=\"opt-tab\" data-opt-i=\"0\">路線一<\/button><button type=\"button\" class=\"opt-tab\" data-opt-i=\"1\">路線二<\/button><\/div>\n<div class=\"opt-pane\" data-opt=\"d0121-2000\" data-opt-i=\"0\"><p><a href=\"https://www.google.com/maps?cid=8133565029071115589\" target=\"_blank\" rel=\"noopener\">📍 新大久保<\/a> → <a href=\"https://www.google.com/maps?cid=2393511273337389901\" target=\"_blank\" rel=\"noopener\">📍 池袋<\/a> <span class=\"note\">(5分鐘)<\/span><\/p><p class=\"jr-row\"><span class=\"jr-code jy\">JY<\/span><span class=\"jr-line jy\">山手線<\/span> <span class=\"chip\">普通<\/span>池袋/上野方面(外環線)、1號月台<\/p><\/div>\n<div class=\"opt-pane\" data-opt=\"d0121-2000\" data-opt-i=\"1\" hidden><p><a href=\"https://www.google.com/maps?cid=2031864442327465429\" target=\"_blank\" rel=\"noopener\">📍 新宿<\/a> → <a href=\"https://www.google.com/maps?cid=2393511273337389901\" target=\"_blank\" rel=\"noopener\">📍 池袋<\/a> <span class=\"note\">(5~10分鐘)<\/span><\/p><p class=\"jr-row\">① <span class=\"jr-code ja\">JA<\/span><span class=\"jr-line ja\">埼京線<\/span> <span class=\"chip\">各停<\/span>武藏浦和、3號月台<\/p><p class=\"jr-row\">② <span class=\"jr-code js\">JS<\/span><span class=\"jr-line js\">湘南新宿線<\/span> <span class=\"chip\">快速<\/span>宇都宮、4號月台<\/p><p class=\"jr-row\">③ <span class=\"jr-code jy\">JY<\/span><span class=\"jr-line jy\">山手線<\/span> <span class=\"chip\">普通<\/span>池袋/上野方面(外環線)、15號月台<\/p><\/div>","end":"20:20"},{"id":"n073","day":"d0121","time":"21:30","body":"<p><a href=\"https://www.google.com/maps?cid=16835949890870607016\" target=\"_blank\" rel=\"noopener\">📍 筋肉女子<\/a> (<a href=\"https://e.japanticket.com/shops/muscle_girls?lang=ch\" target=\"_blank\" rel=\"noopener\" class=\"rsv\">需預約<\/a>) <span class=\"note\">(¥6,000、80分鐘暢飲喝到飽)<\/span><\/p>\n<p class=\"note\">池袋 2-41-2 葉山大樓地下 1 樓・17:00~23:00・每週二公休・客人當「教練」的肌肉主題秀吧，招牌是店員握力現榨的葡萄柚沙瓦，還有舞蹈與鋼管秀、合照・未滿 18 歲不可入場<\/p>","end":"22:50"},{"id":"n050","day":"d0122","time":"07:00","title":"🍳 早餐: 飯店","cls":"meal","end":"07:40"},{"id":"n076","day":"d0122","time":"08:00","title":"🛍️ 池袋採購・大地遊戲","body":"<p><a href=\"https://www.google.com/maps?cid=2525922220261983772\" target=\"_blank\" rel=\"noopener\">📍 唐吉訶德 池袋東口站前店<\/a><br><span class=\"note\">24 小時・百貨<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=16412844814734261450\" target=\"_blank\" rel=\"noopener\">📍 松本清 池袋東口店<\/a><br><span class=\"note\">09:00~23:00・藥妝<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=8115812595944977215\" target=\"_blank\" rel=\"noopener\">📍 Bic Camera 池袋本店<\/a><br><span class=\"note\">10:00~22:00・電器<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=1713663173228143996\" target=\"_blank\" rel=\"noopener\">📍 gashacoco 池袋<\/a><br><span class=\"note\">11:00~22:00・扭蛋<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=17630143392211855215\" target=\"_blank\" rel=\"noopener\">📍 池袋PARCO 本館<\/a><br><span class=\"note\">11:00~21:00・百貨公司<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=9683968183432611920\" target=\"_blank\" rel=\"noopener\">📍 UNIQLO 東武池袋店<\/a><br><span class=\"note\">10:00~20:00・服飾<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=5902843909250360002\" target=\"_blank\" rel=\"noopener\">📍 太陽城<\/a><br><span class=\"note\">10:00~20:00・複合商場<\/span><\/p>"},{"id":"n077","day":"d0122","time":"12:00","title":"🍜 午餐","cls":"meal","body":"<p><a href=\"https://www.google.com/maps?cid=10387936669752543683\" target=\"_blank\" rel=\"noopener\">📍 東池袋大勝軒 本店<\/a> (<a href=\"%E6%9D%B1%E6%B1%A0%E8%A2%8B%E5%A4%A7%E5%8B%9D%E8%BB%92%20%E6%9C%AC%E5%BA%97%20Menu%20ZH.webp\" target=\"_blank\" rel=\"noopener\">菜單<\/a>)<\/p>\n<p class=\"note\">南池袋 Sunroad 商店街・11:00~22:00・每週三公休・沾麵(つけ麺)的始祖店，每天現做中粗麵<\/p>","end":"13:00","geo":{"at":"35.7261126,139.7186423","r":100,"mode":"stay"}},{"id":"n078","day":"d0122","time":"13:00","body":"<p><a href=\"https://www.google.com/maps?cid=13609408369424050604\" target=\"_blank\" rel=\"noopener\">📍 東池袋四丁目<\/a> → <a href=\"https://www.google.com/maps?cid=11609313286837124148\" target=\"_blank\" rel=\"noopener\">📍 三之輪橋<\/a> <span class=\"note\">(50分鐘)(路面電車，體驗在地風情)<\/span><\/p><p class=\"jr-row\"><span class=\"mt-code sa\">SA<\/span><span class=\"jr-line sa\">都電荒川線<\/span> <span class=\"chip\">普通<\/span>三之輪橋<\/p>","end":"14:00"},{"id":"n079","day":"d0122","time":"14:30","body":"<div class=\"opts\" data-opt=\"d0122-1430\"><button type=\"button\" class=\"opt-tab\" data-opt-i=\"0\">行程一<\/button><button type=\"button\" class=\"opt-tab\" data-opt-i=\"1\">行程二<\/button><\/div>\n<div class=\"opt-pane\" data-opt=\"d0122-1430\" data-opt-i=\"0\"><p><a href=\"https://www.google.com/maps?cid=7785923974874169613\" target=\"_blank\" rel=\"noopener\">📍 淺草寺<\/a><\/p><\/div>\n<div class=\"opt-pane\" data-opt=\"d0122-1430\" data-opt-i=\"1\" hidden><p><a href=\"https://www.google.com/maps?cid=7851600028886154582\" target=\"_blank\" rel=\"noopener\">📍 吉原花街<\/a><\/p><\/div>"},{"id":"n080","day":"d0122","time":"16:30","body":"<p><a href=\"https://www.google.com/maps?cid=17590780981198114800\" target=\"_blank\" rel=\"noopener\">📍 淺草<\/a> → <a href=\"https://www.google.com/maps?cid=6752178208096084204\" target=\"_blank\" rel=\"noopener\">📍 神田<\/a> <span class=\"note\">(10分鐘)<\/span><\/p><p class=\"jr-row\"><span class=\"mt-code gi\">G<\/span><span class=\"jr-line gi\">銀座線<\/span> <span class=\"chip\">各停<\/span>澀谷<\/p>","end":"16:50"},{"id":"n081","day":"d0122","time":"17:00","title":"🎿 御茶之水雪具街","body":"<p><a href=\"https://www.google.com/maps?cid=14260861304891723720\" target=\"_blank\" rel=\"noopener\">📍 FUSO SKI&amp;BOOTS TUNE<\/a><br><span class=\"note\">11:30~20:00<\/span><\/p>"},{"id":"n082","day":"d0122","time":"19:00","title":"🍜 晚餐","cls":"meal","body":"<p><a href=\"https://www.google.com/maps?cid=3519305832366735324\" target=\"_blank\" rel=\"noopener\">📍 拉麵 潮<\/a> (<a href=\"%E6%8B%89%E9%BA%B5%20%E6%BD%AE%20Menu%20ZH.webp\" target=\"_blank\" rel=\"noopener\">菜單<\/a>)<\/p>\n<p class=\"note\">神田淡路町 2-4-4 アール神田淡路町 地下 1 樓・平日 11:00~21:00、週六日到 19:00・鯛魚高湯拉麵<\/p>","end":"20:00","geo":{"at":"35.6963892,139.7677704","r":100,"mode":"stay"}},{"id":"n083","day":"d0122","time":"20:00","body":"<p><a href=\"https://www.google.com/maps?cid=14396907931151304951\" target=\"_blank\" rel=\"noopener\">📍 淡路町<\/a> → <a href=\"https://www.google.com/maps?cid=2393511273337389901\" target=\"_blank\" rel=\"noopener\">📍 池袋<\/a> <span class=\"note\">(15分鐘)<\/span><\/p><p class=\"jr-row\"><span class=\"mt-code ma\">M<\/span><span class=\"jr-line ma\">丸之內線<\/span> <span class=\"chip\">各停<\/span>池袋、2號月台<\/p>","end":"20:25"},{"id":"n084","day":"d0122","time":"23:30","title":"🌙 宵夜","cls":"meal","body":"<p><a href=\"https://www.google.com/maps?cid=9408920881125569229\" target=\"_blank\" rel=\"noopener\">📍 無敵家拉麵<\/a><\/p>\n<p class=\"note\">南池袋 1-17-1 崎本大樓一樓・10:30~凌晨 4:00・厚切叉燒的豚骨拉麵，深夜也要排隊的名店<\/p>","end":"00:00","geo":{"at":"35.7269046,139.7116557","r":100,"mode":"stay"}},{"id":"n051","day":"d0123","time":"07:00","title":"🍳 早餐: 飯店","cls":"meal","end":"07:40"},{"id":"n052","day":"d0123","time":"10:30","body":"<p><a href=\"https://www.google.com/maps?cid=12073308251882461182\" target=\"_blank\" rel=\"noopener\">📍 大都會大飯店<\/a><\/p>","below":"🚌 利木津巴士發車 (<a href=\"https://www.limousinebus.co.jp/zh-tw/timetable/detail/Narita-Ikebukuro/?dir=2\" id=\"limousine-link\" target=\"_blank\" rel=\"noopener\">公車時刻表<\/a>)","end":"10:40"},{"id":"n053","day":"d0123","time":"12:10","body":"<p><a href=\"https://www.google.com/maps?cid=14320255406666017353\" rel=\"noopener\" target=\"_blank\">📍 成田機場第二航廈<\/a><\/p>","end":"12:20","geo":{"at":"35.773213,140.387543","r":200,"mode":"arrive"}},{"id":"n087","day":"d0123","time":"12:30","end":"12:40","title":"💴 退稅流程","body":"<p class=\"jr-row\">🛃 海關檢查(以下方式擇一): <span style=\"white-space:nowrap\">✅ 確認完成•<\/span><wbr><span style=\"white-space:nowrap\">❌ 人工檢查<\/span><\/p><p style=\"margin-left:1.5em\">1. <a href=\"%E6%97%A5%E6%9C%AC%E9%80%80%E7%A8%85%E6%96%B0%E5%88%B6.webp\" target=\"_blank\" rel=\"noopener\">線上步驟<\/a>: <a href=\"https://www.vjw.digital.go.jp/\" target=\"_blank\" rel=\"noopener\">Visit Japan Web<\/a> 線上確認，不用排現場<\/p><p class=\"jr-row\" style=\"margin-left:1.5em\">📶 機場退稅專用 Wi-Fi<\/p><p style=\"margin-left:3em\">SSID: <span style=\"white-space:nowrap\">Customs_WiFi_For_TaxRefund<\/span><\/p><p style=\"margin-left:3em\">密碼: jcustoms<button type=\"button\" class=\"copy-btn\" data-copy=\"jcustoms\">複製<\/button><\/p><p style=\"margin-left:1.5em\">2. 現場櫃台: 自動機台刷護照，3F(安檢前)，<a href=\"https://www.narita-airport.jp/zh-tc/map/?mode=searchResult&amp;bearing=59.5&amp;zoom=18.433242053191073&amp;pitch=0&amp;lat=35.774738638269994&amp;lng=140.38679625001998&amp;building=b32584d9-027d-4863-aa2e-3482e8fc2fb3&amp;floor=3F&amp;clickedPoi=21483798\" target=\"_blank\" rel=\"noopener\">A櫃台附近<\/a><\/p><p class=\"jr-row\" style=\"margin-top:14px\">🏢 常用退稅平台(<a href=\"%E9%80%80%E7%A8%85%E5%B9%B3%E5%8F%B0%E6%AF%94%E8%BC%83.webp\" target=\"_blank\" rel=\"noopener\">比較表<\/a>)<\/p><p style=\"margin-left:1.5em\"><a style=\"white-space:nowrap\" href=\"https://j-taxrefund.com/\" target=\"_blank\" rel=\"noopener\">J-TaxRefund<\/a>•<wbr><a style=\"white-space:nowrap\" href=\"https://jprefund.com/\" target=\"_blank\" rel=\"noopener\">JPrefund<\/a>•<wbr><a style=\"white-space:nowrap\" href=\"https://www.globalblue.com/zh\" target=\"_blank\" rel=\"noopener\">Global Blue<\/a>•<wbr><a style=\"white-space:nowrap\" href=\"https://pievat.com/tourists/japan\" target=\"_blank\" rel=\"noopener\">PIE VAT<\/a><\/p><p class=\"jr-row\" style=\"margin-top:14px\">💳 信用卡退稅: 於對應平台上設定信用卡即可<span style=\"color:var(--muted);font-size:13px\">(回台灣再設定也來得及)<\/span><\/p><p class=\"jr-row\" style=\"margin-top:14px\">💴 現金退稅機位置<\/p><p style=\"margin-left:1.5em\">GLORY Self Tax Refund: 3F(安檢前)，<a href=\"https://www.narita-airport.jp/zh-tc/map/?mode=normal&amp;bearing=59.5&amp;zoom=19.155186601836867&amp;pitch=0&amp;lat=35.77450465194036&amp;lng=140.387602448469&amp;clickedPoi=21483127&amp;building=b32584d9-027d-4863-aa2e-3482e8fc2fb3&amp;floor=3F\" target=\"_blank\" rel=\"noopener\">B、C櫃台中間<\/a><\/p><p style=\"margin-left:1.5em\">Cash Japan: 3F(安檢後)，<a href=\"https://www.narita-airport.jp/zh-tc/map/?bearing=59.5&amp;zoom=18&amp;pitch=0&amp;lat=35.772572405199995&amp;lng=140.38962336863005&amp;mode=searchResult&amp;clickedPoi=21483743&amp;building=b32584d9-027d-4863-aa2e-3482e8fc2fb3&amp;floor=3F\" target=\"_blank\" rel=\"noopener\">61登機門附近<\/a>，<a href=\"https://www.narita-airport.jp/zh-tc/map/?bearing=59.5&amp;zoom=18&amp;pitch=0&amp;lat=35.77457251102&amp;lng=140.38817367173&amp;mode=searchResult&amp;building=b32584d9-027d-4863-aa2e-3482e8fc2fb3&amp;floor=3F&amp;clickedPoi=21483691\" target=\"_blank\" rel=\"noopener\">71登機門附近<\/a><\/p>"},{"id":"n054","day":"d0123","time":"13:00","title":"🍛 午餐: 機場餐廳","cls":"meal","end":"14:00"},{"id":"n055","day":"d0123","time":"15:40","title":"🛫 成田出發 JX803 第二航廈 15:40 起飛","body":"<p class=\"note\" style=\"margin-top:8px\">🕐 <span class=\"fl-updated\">尚未更新<\/span><\/p>\n<table class=\"fl-table\" id=\"fl-ret-nrt\">\n<tr><td>航班狀態<\/td><td data-f=\"st\">—<\/td><\/tr>\n<tr><td>報到櫃台<\/td><td data-f=\"checkin\">—<\/td><\/tr>\n<tr><td>登機門<\/td><td data-f=\"gate\">—<\/td><\/tr>\n<tr><td>表定起飛<\/td><td data-f=\"otime\">—<\/td><\/tr>\n<tr><td>實際起飛<\/td><td data-f=\"rtime\">—<\/td><\/tr>\n<tr><td>安檢等待<\/td><td data-f=\"sec\">—<\/td><\/tr>\n<\/table>\n<p style=\"margin:6px 0\">\n<a href=\"https://www.narita-airport.jp/zh-tc/flight/\" id=\"nrt-dep-link\" rel=\"noopener\" target=\"_blank\">成田機場官網<\/a>\n<\/p>","end":"15:50"},{"id":"n086","day":"d0123","time":"16:30","end":"17:00","title":"🍽️ 晚餐: 飛機餐","cls":"meal"},{"id":"n056","day":"d0123","time":"18:45","title":"🛬 抵達桃園","body":"<p class=\"note\" style=\"margin-top:8px\">🕐 <span class=\"fl-updated\">尚未更新<\/span><\/p>\n<table class=\"fl-table\" id=\"fl-ret\">\n<tr><td>航班狀態<\/td><td data-f=\"st\">—<\/td><\/tr>\n<tr><td>表定抵達<\/td><td data-f=\"otime\">—<\/td><\/tr>\n<tr><td>實際抵達<\/td><td data-f=\"rtime\">—<\/td><\/tr>\n<tr><td>到達門<\/td><td data-f=\"gate\">—<\/td><\/tr>\n<tr><td>行李轉盤<\/td><td data-f=\"belt\">—<\/td><\/tr>\n<\/table>\n<p style=\"margin-top:8px\">\n<a href=\"https://www.taoyuan-airport.com/flight_arrive\" id=\"tpe-arr-link\" rel=\"noopener\" target=\"_blank\">桃園機場官網<\/a>\n<\/p>","end":"19:45"}]}</script>
-  <!-- 桃園機場地圖 POI 對照表：由 scripts/build_tpe_poi.py 產生，不要手改 -->
+  <script id="trip-data" type="application/json">{"days":[{"id":"d0116","label":"第1天・01/16","dow":"週六","sub":"飛日本•斑尾雪場"},{"id":"d0117","label":"第2天・01/17","dow":"週日","sub":"滑雪教練課"},{"id":"d0118","label":"第3天・01/18","dow":"週一","sub":"滑雪教練課"},{"id":"d0119","label":"第4天・01/19","dow":"週二","sub":"自由開滑"},{"id":"d0120","label":"第5天・01/20","dow":"週三","sub":"到東京•秋葉原"},{"id":"d0121","label":"第6天・01/21","dow":"週四","sub":"築地•新宿"},{"id":"d0122","label":"第7天・01/22","dow":"週五","sub":"池袋•淺草"},{"id":"d0123","label":"第8天・01/23","dow":"週六","sub":"回台灣"}],"items":[{"id":"n001","day":"d0116","time":"10:10","title":"🛫 桃園出發 JX802 第一航廈 10:10 起飛","body":"<p class=\"note\" style=\"margin-top:8px\">🕐 <span class=\"fl-updated\">尚未更新<\/span><\/p>\n<table class=\"fl-table\" id=\"fl-dep\">\n<tr><td>航班狀態<\/td><td data-f=\"st\">—<\/td><\/tr>\n<tr><td>報到櫃台<\/td><td data-f=\"checkin\">—<\/td><\/tr>\n<tr><td>登機門<\/td><td data-f=\"gate\">—<\/td><\/tr>\n<tr><td>表定起飛<\/td><td data-f=\"otime\">—<\/td><\/tr>\n<tr><td>實際起飛<\/td><td data-f=\"rtime\">—<\/td><\/tr>\n<tr><td>安檢等待<\/td><td data-f=\"security\">—<\/td><\/tr>\n<\/table>\n<p style=\"margin-top:8px\">\n<a href=\"https://www.taoyuan-airport.com/flight_depart\" id=\"tpe-dep-link\" rel=\"noopener\" target=\"_blank\">桃園機場官網<\/a>\n<\/p>","end":"10:20"},{"id":"n002","day":"d0116","time":"11:00","title":"🍱 午餐: 飛機餐","cls":"meal","end":"11:30"},{"id":"n003","day":"d0116","time":"14:20","title":"🛬 抵達成田","body":"<p class=\"note\" style=\"margin-top:8px\">🕐 <span class=\"fl-updated\">尚未更新<\/span><\/p>\n<table class=\"fl-table\" id=\"fl-dep-nrt\">\n<tr><td>航班狀態<\/td><td data-f=\"st\">—<\/td><\/tr>\n<tr><td>表定抵達<\/td><td data-f=\"otime\">—<\/td><\/tr>\n<tr><td>實際抵達<\/td><td data-f=\"rtime\">—<\/td><\/tr>\n<tr><td>到達門<\/td><td data-f=\"gate\">—<\/td><\/tr>\n<tr><td>入境審查<\/td><td data-f=\"imm\">—<\/td><\/tr>\n<\/table>\n<p style=\"margin-top:8px\">\n<a href=\"https://www.narita-airport.jp/zh-tc/flight/\" id=\"nrt-arr-link\" rel=\"noopener\" target=\"_blank\">成田機場官網<\/a>・<a href=\"https://www.narita-airport.jp/zh-tc/airportguide/inter-arr/immigration/\" rel=\"noopener\" target=\"_blank\">入境審查狀況<\/a>\n<\/p>","end":"15:20"},{"id":"n004","day":"d0116","time":"16:00","title":"🚌 DBC 集合上遊覽車","body":"<p>集合地點: <a href=\"https://www.narita-airport.jp/zh-tc/map/?bearing=59.5&amp;zoom=18.535454490297724&amp;pitch=0&amp;lat=35.77381890000001&amp;lng=140.38744050000003&amp;building=b32584d9-027d-4863-aa2e-3482e8fc2fb3&amp;floor=1F&amp;clickedPoi=16856980\" rel=\"noopener\" target=\"_blank\">📍 國際航班到達大廳 B<\/a><\/p>","end":"16:10"},{"id":"n005","day":"d0116","time":"18:30","title":"🍜 晚餐: 上里服務區","cls":"meal","body":"<p><a href=\"https://www.google.com/maps?cid=16291457626903747550\" rel=\"noopener\" target=\"_blank\">📍 麦さと屋<\/a>\n          (<a href=\"%E9%BA%A6%E3%81%95%E3%81%A8%E5%B1%8B%20Menu%20ZH.webp\" rel=\"noopener\" target=\"_blank\">菜單<\/a>)<\/p>\n<p class=\"note\">烏龍麵與蕎麥麵，肉汁烏龍麵最多人點<\/p>\n<p><a href=\"https://www.google.com/maps?cid=6004865367253462709\" rel=\"noopener\" target=\"_blank\">📍 姫豚丼＆カレー 姫軒<\/a>\n          (<a href=\"%E5%A7%AB%E8%B1%9A%E4%B8%BC%EF%BC%86%E3%82%AB%E3%83%AC%E3%83%BC%20%E5%A7%AB%E8%BB%92%20Menu%20ZH.webp\" rel=\"noopener\" target=\"_blank\">菜單<\/a>)<\/p>\n<p class=\"note\">在地品牌「姫豚」的丼飯專門店<\/p>\n<p><a href=\"https://www.google.com/maps?cid=10040392674387368543\" rel=\"noopener\" target=\"_blank\">📍 蔵仕込みらーめん KURA<\/a>\n          (<a href=\"%E8%94%B5%E4%BB%95%E8%BE%BC%E3%81%BF%E3%82%89%E3%83%BC%E3%82%81%E3%82%93%20KURA%20Menu%20ZH.webp\" rel=\"noopener\" target=\"_blank\">菜單<\/a>)<\/p>\n<p class=\"note\">拉麵，季節限定口味會換<\/p>","end":"19:30","geo":{"at":"36.2541587,139.1192211","r":200,"mode":"stay"}},{"id":"n007","day":"d0116","time":"21:30","body":"<p><a href=\"https://www.google.com/maps?cid=13547708399019310565\" rel=\"noopener\" target=\"_blank\">📍 Tangram飯店 斑尾東急度假村<\/a><\/p>","end":"21:40","geo":{"at":"36.8535654,138.2625863","r":200,"mode":"arrive"}},{"id":"n008","day":"d0116","time":"22:30","title":"♨️ 泡溫泉","end":"23:30"},{"id":"n009","day":"d0117","title":"🎿 雪場資訊","body":"<p style=\"margin-top:4px\"><a href=\"Madarao%20Map%20%26%20Guide.webp\" rel=\"noopener\" target=\"_blank\">🗺️ 斑尾高原地圖<\/a><\/p>\n<p style=\"margin-top:12px\"><b>🌡️ 即時雪況<\/b><\/p>\n<p class=\"note\" style=\"margin-top:8px\">🕐 <span class=\"snow-updated\">尚未更新<\/span><\/p>\n<table class=\"fl-table\" id=\"snow-now\">\n<tr><td>天氣<\/td><td data-s=\"wx\">—<\/td><\/tr>\n<tr><td>氣溫<\/td><td data-s=\"temp\">—<\/td><\/tr>\n<tr><td>雪質<\/td><td data-s=\"qual\">—<\/td><\/tr>\n<tr><td>積雪<\/td><td data-s=\"depth\">—<\/td><\/tr>\n<\/table>\n<p class=\"note\" style=\"margin-top:8px\">官方網站: <a href=\"https://www.tangram.jp/ski/\" rel=\"noopener\" target=\"_blank\">tangram.jp<\/a>・<a href=\"https://www.madarao.jp/ski/\" rel=\"noopener\" target=\"_blank\">madarao.jp<\/a><\/p>\n<p style=\"margin-top:12px\"><b>📹 即時影像<\/b><\/p>\n<p class=\"note\">野尻湖テラス LIVE<\/p>\n<iframe id=\"live-nojiri\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen=\"\" class=\"live-cam\" loading=\"lazy\" referrerpolicy=\"strict-origin-when-cross-origin\" src=\"https://www.youtube.com/embed/Ba8mu-3ORa8\" title=\"【24時間配信中】野尻湖テラスLIVEカメラ＠タングラム公式\"><\/iframe>\n<p class=\"note\" style=\"margin-top:8px\">ホテルタングラム LIVE<\/p>\n<iframe id=\"live-hotel\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen=\"\" class=\"live-cam\" loading=\"lazy\" referrerpolicy=\"strict-origin-when-cross-origin\" src=\"https://www.youtube.com/embed/aA-lYRXMbtQ\" title=\"【24時間配信中】ホテルタングラムLIVEカメラ＠タングラム公式\"><\/iframe>\n<p style=\"margin-top:12px\"><b>🍽️ 餐廳<\/b><\/p>\n<p><a href=\"https://www.google.com/maps?cid=8638558114167208322\" rel=\"noopener\" target=\"_blank\">📍 仁王門屋(戶隱手打)<\/a>\n          (<a href=\"%E4%BB%81%E7%8E%8B%E9%96%80%E5%B1%8B%20Menu%20ZH.webp\" rel=\"noopener\" target=\"_blank\">菜單<\/a>)<\/p>\n<p class=\"note\">飯店地下 1 樓・11:30~14:30(最後點餐 14:00)・<b>每週二、三公休<\/b>・戶隱蕎麥名店期間限定出店<\/p>\n<p style=\"margin-top:8px\"><a href=\"https://www.google.com/maps?cid=17052795522864188130\" rel=\"noopener\" target=\"_blank\">📍 ZIGZAG<\/a>\n          (<a href=\"ZIGZAG%20Menu%20ZH.webp\" rel=\"noopener\" target=\"_blank\">午餐菜單<\/a>)<\/p>\n<p class=\"note\">飯店 1 樓・午餐 11:00~14:30(最後點餐 14:00)・主餐皆附軟性飲料無限暢飲<\/p>\n<p class=\"note\">早餐 Buffet 07:00~09:30(最後入店 09:00)・晚餐 Buffet 18:00~21:00(最後入店 20:00)・和洋中吃到飽，住宿方案已含早晚餐・400 席，不收時間預約，旺日分兩輪入場(check-in 時櫃檯會說)<\/p>\n<p style=\"margin-top:8px\"><a href=\"https://www.google.com/maps?cid=15363857014904960448\" rel=\"noopener\" target=\"_blank\">📍 レストラン ハイジ<\/a><\/p>\n<p class=\"note\">斑尾高原側，要滑過去(需斑尾全山共通券)・9:00~16:00(最後點餐 15:30)・800 席是這一帶最大・人氣: 牛肉咖哩、蘑菇奶油義大利麵、醬汁炸豬排丼、可麗餅<\/p>\n<p style=\"margin-top:8px\"><a href=\"https://www.google.com/maps?cid=10457555821653696883\" rel=\"noopener\" target=\"_blank\">📍 ル・タングラム<\/a><span class=\"note\">(加價晚餐)<\/span><\/p>\n<p class=\"note\">飯店 3 樓・18:00~21:00・全席預約制，可提前兩個月~最晚前一天電話訂・<b>每週二公休<\/b><\/p>\n<p class=\"note\">8,800 円的「野尻湖会席」補 3,300 円(2026/12/12~2027/2/28): 前菜拼盤、信州香菇蝦丸清湯、生魚片三種、信州米豚五花燉蘿蔔、烤蘋果清口、鹽烤鱈魚佐白子、長野越光米套餐、甜點<\/p>\n<p class=\"note\">11,000 円的補 5,500 円(這檔官網沒公布菜單，要電話問)<\/p>","nodeId":"ski-info"},{"id":"n010","day":"d0117","time":"06:00","title":"♨️ 泡溫泉"},{"id":"n011","day":"d0117","time":"07:00","title":"🍳 早餐: 飯店","cls":"meal","end":"07:40"},{"id":"n012","day":"d0117","time":"08:30","title":"🧥 換裝(內裡+個人購買)"},{"id":"n013","day":"d0117","time":"09:00","title":"🎿 確認租借裝備 &amp; 著裝"},{"id":"n014","day":"d0117","time":"10:00","title":"⛷️ 滑雪課"},{"id":"n015","day":"d0117","time":"12:00","title":"🍛 午餐: 雪場餐廳","cls":"meal","end":"13:00"},{"id":"n016","day":"d0117","time":"13:00","title":"⛷️ 滑雪課"},{"id":"n017","day":"d0117","time":"16:00","title":"🏨 回飯店換裝","end":"17:00"},{"id":"n018","day":"d0117","time":"18:00","title":"🍽️ 晚餐: 飯店","cls":"meal","end":"19:00"},{"id":"n019","day":"d0117","time":"22:00","title":"♨️ 泡溫泉","end":"23:00"},{"id":"n020","day":"d0118","time":"06:00","title":"♨️ 泡溫泉"},{"id":"n021","day":"d0118","time":"07:00","title":"🍳 早餐: 飯店","cls":"meal","end":"07:40"},{"id":"n022","day":"d0118","time":"08:30","title":"🧥 著裝"},{"id":"n023","day":"d0118","time":"10:00","title":"⛷️ 滑雪課"},{"id":"n024","day":"d0118","time":"12:00","title":"🍛 午餐: 雪場餐廳","cls":"meal","end":"13:00"},{"id":"n025","day":"d0118","time":"13:00","title":"⛷️ 滑雪課"},{"id":"n026","day":"d0118","time":"16:00","title":"🏨 回飯店換裝","end":"17:00"},{"id":"n027","day":"d0118","time":"18:00","title":"🍽️ 晚餐: 飯店","cls":"meal","end":"19:00"},{"id":"n028","day":"d0118","time":"22:00","title":"♨️ 泡溫泉","end":"23:00"},{"id":"n029","day":"d0119","time":"06:00","title":"♨️ 泡溫泉"},{"id":"n030","day":"d0119","time":"07:00","title":"🍳 早餐: 飯店","cls":"meal","end":"07:40"},{"id":"n031","day":"d0119","time":"08:30","title":"🧥 著裝"},{"id":"n032","day":"d0119","time":"10:00","title":"⛷️ 上雪開滑"},{"id":"n033","day":"d0119","time":"12:00","title":"🍛 午餐: 雪場餐廳","cls":"meal","end":"13:00"},{"id":"n034","day":"d0119","time":"13:00","title":"⛷️ 上雪開滑"},{"id":"n035","day":"d0119","time":"16:00","title":"🏨 回飯店換裝","end":"17:00"},{"id":"n036","day":"d0119","time":"18:00","title":"🍽️ 晚餐: 飯店","cls":"meal","end":"19:00"},{"id":"n037","day":"d0119","time":"19:00","title":"🧳 整理大件行李","cls":"alert","end":"19:30"},{"id":"n038","day":"d0119","time":"20:00","title":"🚚 DBC 收大件行李送至東京","cls":"alert","end":"20:10"},{"id":"n039","day":"d0119","time":"22:00","title":"♨️ 泡溫泉","end":"23:00"},{"id":"n040","day":"d0120","time":"06:00","title":"♨️ 泡溫泉"},{"id":"n041","day":"d0120","time":"07:00","title":"🍳 早餐: 飯店","cls":"meal","end":"07:40"},{"id":"n042","day":"d0120","time":"09:00","title":"🎫 DBC 集合發證書、高鐵票","end":"09:10"},{"id":"n088","day":"d0120","time":"09:30","end":"09:40","title":"🚌 DBC 專車出發"},{"id":"n044","day":"d0120","time":"10:15","body":"<p><a href=\"https://www.google.com/maps?cid=4061021936276330804\" rel=\"noopener\" target=\"_blank\">📍 飯山車站<\/a><\/p>","end":"10:25","geo":{"at":"36.8455567,138.3586613","r":100,"mode":"arrive"}},{"id":"n045","day":"d0120","time":"10:33","title":"🚄 <span class=\"jr-line hk\">北陸新幹線<\/span>發車","end":"10:38"},{"id":"n046","day":"d0120","time":"12:14","body":"<p><a href=\"https://www.google.com/maps?cid=7820979510707196484\" target=\"_blank\" rel=\"noopener\">📍 上野<\/a> → <a href=\"https://www.google.com/maps?cid=1553519931154601905\" target=\"_blank\" rel=\"noopener\">📍 秋葉原<\/a> <span class=\"note\">(5分鐘)<\/span><\/p><p class=\"jr-row\">① <span class=\"jr-code jy\">JY<\/span><span class=\"jr-line jy\">山手線<\/span> <span class=\"chip\">普通<\/span>東京/品川方面(外環線)、3號月台<\/p><p class=\"jr-row\">② <span class=\"jr-code jk\">JK<\/span><span class=\"jr-line jk\">京濱東北線<\/span> <span class=\"chip\">各停<\/span>大船、4號月台<\/p>","end":"12:30"},{"id":"n048","day":"d0120","time":"13:00","title":"🍜 午餐","cls":"meal","body":"<p><a href=\"https://www.google.com/maps?cid=15988956320242529384\" rel=\"noopener\" target=\"_blank\">📍 スパイス・ラー麺 卍力 秋葉原店<\/a>\n          (<a href=\"Manriki%20Spice%20Ramen%20Akihabara%20Menu%20ZH.webp\" rel=\"noopener\" target=\"_blank\">菜單<\/a>)<\/p>\n<p class=\"note\">台東 1-10-5 一樓・11:00~21:00・每週一公休・香菜配湯咖哩風的辣味拉麵<\/p>","end":"14:00","geo":{"at":"35.7012269,139.7759231","r":100,"mode":"stay"}},{"id":"n057","day":"d0120","time":"14:00","title":"🛍️ 逛秋葉原","body":"<p><a href=\"https://www.google.com/maps?cid=6360000460982730678\" target=\"_blank\" rel=\"noopener\">📍 Shosen Book Tower<\/a><br><span class=\"note\">11:00~20:00・5F 鐵道迷天堂<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=16355384424981067463\" target=\"_blank\" rel=\"noopener\">📍 GENERAL STORE RAILYARD 秋葉原<\/a><br><span class=\"note\">10:00~21:00・JR鐵道紀念品店<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=3516513028144054760\" target=\"_blank\" rel=\"noopener\">📍 秋葉原無線電會館<\/a><br><span class=\"note\">10:00~20:00・公仔、扭蛋、模型<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=13400288268817439895\" target=\"_blank\" rel=\"noopener\">📍 amiami Akihabara Figure Tower<\/a><br><span class=\"note\">10:00~21:00・公仔<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=10553894423225248039\" target=\"_blank\" rel=\"noopener\">📍 Animate Akihabara<\/a><br><span class=\"note\">10:00~21:00・公仔、扭蛋、模型<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=5235142483072264364\" target=\"_blank\" rel=\"noopener\">📍 おもちゃのMARURU<\/a><br><span class=\"note\">11:00~20:00・公仔<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=17552749546243718283\" target=\"_blank\" rel=\"noopener\">📍 神田神社<\/a><br><span class=\"note\">09:00~18:00・IT御守<\/span><\/p>"},{"id":"n058","day":"d0120","time":"18:00","body":"<div class=\"opts\" data-opt=\"d0120-1800\"><button type=\"button\" class=\"opt-tab\" data-opt-i=\"0\">路線一<\/button><button type=\"button\" class=\"opt-tab\" data-opt-i=\"1\">路線二<\/button><\/div>\n<div class=\"opt-pane\" data-opt=\"d0120-1800\" data-opt-i=\"0\"><p><a href=\"https://www.google.com/maps?cid=1553519931154601905\" target=\"_blank\" rel=\"noopener\">📍 秋葉原<\/a> → <a href=\"https://www.google.com/maps?cid=2393511273337389901\" target=\"_blank\" rel=\"noopener\">📍 池袋<\/a> <span class=\"note\">(20分鐘)<\/span><\/p><p class=\"jr-row\"><span class=\"jr-code jy\">JY<\/span><span class=\"jr-line jy\">山手線<\/span> <span class=\"chip\">普通<\/span>上野/池袋方面(內環線)、2號月台<\/p><\/div>\n<div class=\"opt-pane\" data-opt=\"d0120-1800\" data-opt-i=\"1\" hidden><p><a href=\"https://www.google.com/maps?cid=2576646016325463020\" target=\"_blank\" rel=\"noopener\">📍 御茶之水<\/a> → <a href=\"https://www.google.com/maps?cid=2393511273337389901\" target=\"_blank\" rel=\"noopener\">📍 池袋<\/a> <span class=\"note\">(11分鐘)<\/span><\/p><p class=\"jr-row\"><span class=\"mt-code ma\">M<\/span><span class=\"jr-line ma\">丸之內線<\/span> <span class=\"chip\">各停<\/span>池袋、2號月台<\/p><\/div>","end":"18:30"},{"id":"n060","day":"d0120","time":"19:00","title":"🍖 晚餐","cls":"meal","body":"<p><a href=\"https://www.google.com/maps?cid=1197874353798139641\" target=\"_blank\" rel=\"noopener\">📍 焼肉力丸 池袋東口店<\/a> (<a href=\"https://www.google.com/maps/reserve/dine?c=75N6-MYF25U&amp;ssst=2026-10-25T10%3A00%3A00.000Z&amp;ld=20261025T190000&amp;ps=4&amp;ahbb=1&amp;gei=FtbcauvvD_PS1e8PyM3R8AU&amp;hl=zh-TW&amp;opi=79508299&amp;source=pa&amp;sourceurl=https%3A%2F%2Fwww.google.com.tw%2Fmaps%2Fpreview%2Fplace%3Fauthuser%3D0%26hl%3Dzh-TW%26gl%3Dtw%26q%3D%25E7%2584%25BC%25E8%2582%2589%25E5%258A%259B%25E4%25B8%25B8%2B%25E6%25B1%25A0%25E8%25A2%258B%25E6%259D%25B1%25E5%258F%25A3%25E5%25BA%2597\" target=\"_blank\" rel=\"noopener\" class=\"rsv\">需預約<\/a>)(<a href=\"%E7%84%BC%E8%82%89%E5%8A%9B%E4%B8%B8%20%E6%B1%A0%E8%A2%8B%E6%9D%B1%E5%8F%A3%E5%BA%97%20Menu%20ZH.webp\" target=\"_blank\" rel=\"noopener\">菜單<\/a>)<\/p>\n<p class=\"note\">南池袋 1-22-2 F･L･C 大樓 5 樓・11:30~23:30(週一 16:00 才開)・燒肉吃到飽・需預約<\/p>","end":"21:00","geo":{"at":"35.7290853,139.7123793","r":100,"mode":"stay"}},{"id":"n061","day":"d0120","time":"21:30","title":"🏨 飯店 Check-In","body":"<p><a href=\"https://www.google.com/maps?cid=1669693716906684867\" target=\"_blank\" rel=\"noopener\">📍 東京池袋大都會大飯店<\/a><\/p>\n<p class=\"note\" style=\"margin-top:8px\">📋 在日住所(VJW 填表用)<\/p>\n<p>郵政編號: 1718505<button type=\"button\" class=\"copy-btn\" data-copy=\"1718505\">複製<\/button><\/p>\n<p class=\"note\">都道府縣: TOKYO TO<\/p>\n<p class=\"note\">市區町村名稱: TOSHIMA KU<\/p>\n<p class=\"note\">町字、番地: 1 CHOME-6-1<\/p>\n<p>酒店名: HOTEL METROPOLITAN TOKYO IKEBUKURO<button type=\"button\" class=\"copy-btn\" data-copy=\"HOTEL METROPOLITAN TOKYO IKEBUKURO\">複製<\/button><\/p>\n<p>電話: 81339801111<button type=\"button\" class=\"copy-btn\" data-copy=\"81339801111\">複製<\/button><\/p>","below":"<span class=\"remind\">🔔 訂購 1/23 利木津巴士 10:30 → 成田機場 Terminal 2 車票(¥3,600)<\/span>","end":"21:50","geo":{"at":"35.7285233,139.7080017","r":100,"mode":"arrive"}},{"id":"n062","day":"d0121","time":"07:00","body":"<p><a href=\"https://www.google.com/maps?cid=2393511273337389901\" target=\"_blank\" rel=\"noopener\">📍 池袋<\/a> → <a href=\"https://www.google.com/maps?cid=705007821826241348\" target=\"_blank\" rel=\"noopener\">📍 新富町<\/a> <span class=\"note\">(25分鐘)<\/span><\/p><p class=\"jr-row\"><span class=\"mt-code yu\">Y<\/span><span class=\"jr-line yu\">有樂町線<\/span> <span class=\"chip\">各停<\/span>新木場、3號月台<\/p>","end":"07:35"},{"id":"n064","day":"d0121","time":"08:00","title":"🍳 早餐: 築地市場","body":"<p><a href=\"https://www.google.com/maps?cid=10762732184996540674\" target=\"_blank\" rel=\"noopener\">📍 狐狸屋牛丼<\/a> (<a href=\"%E7%8B%90%E7%8B%B8%E5%B1%8B%E7%89%9B%E4%B8%BC%20Menu%20ZH.webp\" target=\"_blank\" rel=\"noopener\">菜單<\/a>)<\/p>\n<p class=\"note\">築地場外市場一樓・6:30~13:00・週日與週三公休・名物是牛丼與燉牛雜，開店就排隊<\/p>\n<p><a href=\"https://www.google.com/maps?cid=15453293774189458572\" target=\"_blank\" rel=\"noopener\">📍 若葉拉麵<\/a> (<a href=\"%E8%8B%A5%E8%91%89%E6%8B%89%E9%BA%B5%20Menu%20ZH.webp\" target=\"_blank\" rel=\"noopener\">菜單<\/a>)<\/p>\n<p class=\"note\">築地場外市場一樓・6:30~13:00(週三 7:30 起)・週日公休・老字號中華そば<\/p>\n<p><a href=\"https://www.google.com/maps?cid=8431770654714236915\" target=\"_blank\" rel=\"noopener\">📍 黑銀鮪屋<\/a> (<a href=\"%E9%BB%91%E9%8A%80%E9%AE%AA%E5%B1%8B%20Menu%20ZH.webp\" target=\"_blank\" rel=\"noopener\">菜單<\/a>)<\/p>\n<p class=\"note\">築地場外市場・8:00~13:00・全年無休・鮪魚專賣店<\/p>","cls":"meal","end":"09:30"},{"id":"n065","day":"d0121","time":"11:00","body":"<p><a href=\"https://www.google.com/maps?cid=15576708788006522373\" target=\"_blank\" rel=\"noopener\">📍 博品館 TOY PARK 銀座本店<\/a> <span class=\"note\">玩具鋪<\/span><\/p>"},{"id":"n066","day":"d0121","time":"12:00","body":"<p><a href=\"https://www.google.com/maps?cid=3820899596196599689\" target=\"_blank\" rel=\"noopener\">📍 新橋<\/a> → <a href=\"https://www.google.com/maps?cid=2031864442327465429\" target=\"_blank\" rel=\"noopener\">📍 新宿<\/a> <span class=\"note\">(15分鐘)<\/span><\/p><p class=\"jr-row\"><span class=\"mt-code gi\">G<\/span><span class=\"jr-line gi\">銀座線<\/span> <span class=\"chip\">各停<\/span>澀谷、1號月台，到赤坂見附<\/p><p class=\"jr-row\">→ <span class=\"mt-code ma\">M<\/span><span class=\"jr-line ma\">丸之內線<\/span> <span class=\"chip\">各停<\/span>方南町/荻窪、2號月台<\/p>","end":"12:25"},{"id":"n071","day":"d0121","time":"12:30","title":"🍖 午餐","cls":"meal","body":"<p><a href=\"https://www.google.com/maps?cid=13077509271574808759\" target=\"_blank\" rel=\"noopener\">📍 めし処 ぶたや<\/a> (<a href=\"%E3%82%81%E3%81%97%E5%87%A6%20%E3%81%B6%E3%81%9F%E3%82%84%20Menu%20ZH.webp\" target=\"_blank\" rel=\"noopener\">菜單<\/a>)<\/p>\n<p class=\"note\">歌舞伎町 1-23-14 第1 Metro 大樓地下 1 樓・8:00~15:00・每週三公休・豬肉定食小店<\/p>","end":"13:30","geo":{"at":"35.6941656,139.7009986","r":100,"mode":"stay"}},{"id":"n070","day":"d0121","time":"13:30","title":"🛍️ 逛新宿","body":"<p><a href=\"https://www.google.com/maps?cid=10080282347125608540\" target=\"_blank\" rel=\"noopener\">📍 Hands be<\/a><br><span class=\"note\">11:00~21:30・雜貨舖<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=5874700311985490173\" target=\"_blank\" rel=\"noopener\">📍 ガチャガチャの森 新宿サブナード店<\/a><br><span class=\"note\">10:30~21:00・扭蛋<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=4249080794830832111\" target=\"_blank\" rel=\"noopener\">📍 ガチャガチャの森 新宿サブナードEAST店<\/a><br><span class=\"note\">10:30~21:00・扭蛋<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=5747731829808392372\" target=\"_blank\" rel=\"noopener\">📍 #C-pla 新宿アドホック店<\/a><br><span class=\"note\">10:00~23:00・扭蛋<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=15038129067309236490\" target=\"_blank\" rel=\"noopener\">📍 KIDDYLAND 新宿店<\/a><br><span class=\"note\">10:30~20:30・拉拉熊<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=15925741963762439993\" target=\"_blank\" rel=\"noopener\">📍 新宿東口の猫<\/a><br><span class=\"note\">07:00~01:00・3D貓<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=242009723914584489\" target=\"_blank\" rel=\"noopener\">📍 LUSH SPA<\/a><br><span class=\"note\">11:00~21:00・手工香皂<\/span><\/p>"},{"id":"n069","day":"d0121","time":"18:00","title":"🍜 晚餐","cls":"meal","body":"<p><a href=\"https://www.google.com/maps?cid=11355978000014477052\" target=\"_blank\" rel=\"noopener\">📍 麵屋海神<\/a> (<a href=\"%E9%BA%B5%E5%B1%8B%E6%B5%B7%E7%A5%9E%20Menu%20ZH.webp\" target=\"_blank\" rel=\"noopener\">菜單<\/a>)<\/p>\n<p class=\"note\">新宿 3-35-7 三樂大樓 2 樓・11:00~15:00、16:30~22:00・招牌是魚骨熬湯的「あら炊き塩らぁめん」，當天用哪種魚會寫在牆上<\/p>","end":"19:00"},{"id":"n085","day":"d0121","time":"19:00","body":"<p><a href=\"https://www.google.com/maps?cid=8128504766577805906\" target=\"_blank\" rel=\"noopener\">📍 大久保公園<\/a><\/p>","geo":{"at":"35.69747,139.7018296","r":100,"mode":"stay"},"end":"20:00"},{"id":"n075","day":"d0121","time":"20:00","body":"<div class=\"opts\" data-opt=\"d0121-2000\"><button type=\"button\" class=\"opt-tab\" data-opt-i=\"0\">路線一<\/button><button type=\"button\" class=\"opt-tab\" data-opt-i=\"1\">路線二<\/button><\/div>\n<div class=\"opt-pane\" data-opt=\"d0121-2000\" data-opt-i=\"0\"><p><a href=\"https://www.google.com/maps?cid=8133565029071115589\" target=\"_blank\" rel=\"noopener\">📍 新大久保<\/a> → <a href=\"https://www.google.com/maps?cid=2393511273337389901\" target=\"_blank\" rel=\"noopener\">📍 池袋<\/a> <span class=\"note\">(5分鐘)<\/span><\/p><p class=\"jr-row\"><span class=\"jr-code jy\">JY<\/span><span class=\"jr-line jy\">山手線<\/span> <span class=\"chip\">普通<\/span>池袋/上野方面(外環線)、1號月台<\/p><\/div>\n<div class=\"opt-pane\" data-opt=\"d0121-2000\" data-opt-i=\"1\" hidden><p><a href=\"https://www.google.com/maps?cid=2031864442327465429\" target=\"_blank\" rel=\"noopener\">📍 新宿<\/a> → <a href=\"https://www.google.com/maps?cid=2393511273337389901\" target=\"_blank\" rel=\"noopener\">📍 池袋<\/a> <span class=\"note\">(5~10分鐘)<\/span><\/p><p class=\"jr-row\">① <span class=\"jr-code ja\">JA<\/span><span class=\"jr-line ja\">埼京線<\/span> <span class=\"chip\">各停<\/span>武藏浦和、3號月台<\/p><p class=\"jr-row\">② <span class=\"jr-code js\">JS<\/span><span class=\"jr-line js\">湘南新宿線<\/span> <span class=\"chip\">快速<\/span>宇都宮、4號月台<\/p><p class=\"jr-row\">③ <span class=\"jr-code jy\">JY<\/span><span class=\"jr-line jy\">山手線<\/span> <span class=\"chip\">普通<\/span>池袋/上野方面(外環線)、15號月台<\/p><\/div>","end":"20:20"},{"id":"n073","day":"d0121","time":"21:30","body":"<p><a href=\"https://www.google.com/maps?cid=16835949890870607016\" target=\"_blank\" rel=\"noopener\">📍 筋肉女子<\/a> (<a href=\"https://e.japanticket.com/shops/muscle_girls?lang=ch\" target=\"_blank\" rel=\"noopener\" class=\"rsv\">需預約<\/a>) <span class=\"note\">(¥6,000、80分鐘暢飲喝到飽)<\/span><\/p>\n<p class=\"note\">池袋 2-41-2 葉山大樓地下 1 樓・17:00~23:00・每週二公休・客人當「教練」的肌肉主題秀吧，招牌是店員握力現榨的葡萄柚沙瓦，還有舞蹈與鋼管秀、合照・未滿 18 歲不可入場<\/p>","end":"22:50"},{"id":"n050","day":"d0122","time":"07:00","title":"🍳 早餐: 飯店","cls":"meal","end":"07:40"},{"id":"n076","day":"d0122","time":"08:00","title":"🛍️ 池袋採購・大地遊戲","body":"<p><a href=\"https://www.google.com/maps?cid=2525922220261983772\" target=\"_blank\" rel=\"noopener\">📍 唐吉訶德 池袋東口站前店<\/a><br><span class=\"note\">24 小時・百貨<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=16412844814734261450\" target=\"_blank\" rel=\"noopener\">📍 松本清 池袋東口店<\/a><br><span class=\"note\">09:00~23:00・藥妝<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=8115812595944977215\" target=\"_blank\" rel=\"noopener\">📍 Bic Camera 池袋本店<\/a><br><span class=\"note\">10:00~22:00・電器<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=1713663173228143996\" target=\"_blank\" rel=\"noopener\">📍 gashacoco 池袋<\/a><br><span class=\"note\">11:00~22:00・扭蛋<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=17630143392211855215\" target=\"_blank\" rel=\"noopener\">📍 池袋PARCO 本館<\/a><br><span class=\"note\">11:00~21:00・百貨公司<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=9683968183432611920\" target=\"_blank\" rel=\"noopener\">📍 UNIQLO 東武池袋店<\/a><br><span class=\"note\">10:00~20:00・服飾<\/span><\/p>\n<p><a href=\"https://www.google.com/maps?cid=5902843909250360002\" target=\"_blank\" rel=\"noopener\">📍 太陽城<\/a><br><span class=\"note\">10:00~20:00・複合商場<\/span><\/p>"},{"id":"n077","day":"d0122","time":"12:00","title":"🍜 午餐","cls":"meal","body":"<p><a href=\"https://www.google.com/maps?cid=10387936669752543683\" target=\"_blank\" rel=\"noopener\">📍 東池袋大勝軒 本店<\/a> (<a href=\"%E6%9D%B1%E6%B1%A0%E8%A2%8B%E5%A4%A7%E5%8B%9D%E8%BB%92%20%E6%9C%AC%E5%BA%97%20Menu%20ZH.webp\" target=\"_blank\" rel=\"noopener\">菜單<\/a>)<\/p>\n<p class=\"note\">南池袋 Sunroad 商店街・11:00~22:00・每週三公休・沾麵(つけ麺)的始祖店，每天現做中粗麵<\/p>","end":"13:00","geo":{"at":"35.7261126,139.7186423","r":100,"mode":"stay"}},{"id":"n078","day":"d0122","time":"13:00","body":"<p><a href=\"https://www.google.com/maps?cid=13609408369424050604\" target=\"_blank\" rel=\"noopener\">📍 東池袋四丁目<\/a> → <a href=\"https://www.google.com/maps?cid=11609313286837124148\" target=\"_blank\" rel=\"noopener\">📍 三之輪橋<\/a> <span class=\"note\">(50分鐘)(路面電車，體驗在地風情)<\/span><\/p><p class=\"jr-row\"><span class=\"mt-code sa\">SA<\/span><span class=\"jr-line sa\">都電荒川線<\/span> <span class=\"chip\">普通<\/span>三之輪橋<\/p>","end":"14:00"},{"id":"n079","day":"d0122","time":"14:30","body":"<div class=\"opts\" data-opt=\"d0122-1430\"><button type=\"button\" class=\"opt-tab\" data-opt-i=\"0\">行程一<\/button><button type=\"button\" class=\"opt-tab\" data-opt-i=\"1\">行程二<\/button><\/div>\n<div class=\"opt-pane\" data-opt=\"d0122-1430\" data-opt-i=\"0\"><p><a href=\"https://www.google.com/maps?cid=7785923974874169613\" target=\"_blank\" rel=\"noopener\">📍 淺草寺<\/a><\/p><\/div>\n<div class=\"opt-pane\" data-opt=\"d0122-1430\" data-opt-i=\"1\" hidden><p><a href=\"https://www.google.com/maps?cid=7851600028886154582\" target=\"_blank\" rel=\"noopener\">📍 吉原花街<\/a><\/p><\/div>"},{"id":"n080","day":"d0122","time":"16:30","body":"<p><a href=\"https://www.google.com/maps?cid=17590780981198114800\" target=\"_blank\" rel=\"noopener\">📍 淺草<\/a> → <a href=\"https://www.google.com/maps?cid=6752178208096084204\" target=\"_blank\" rel=\"noopener\">📍 神田<\/a> <span class=\"note\">(10分鐘)<\/span><\/p><p class=\"jr-row\"><span class=\"mt-code gi\">G<\/span><span class=\"jr-line gi\">銀座線<\/span> <span class=\"chip\">各停<\/span>澀谷<\/p>","end":"16:50"},{"id":"n081","day":"d0122","time":"17:00","title":"🎿 御茶之水雪具街","body":"<p><a href=\"https://www.google.com/maps?cid=14260861304891723720\" target=\"_blank\" rel=\"noopener\">📍 FUSO SKI&amp;BOOTS TUNE<\/a><br><span class=\"note\">11:30~20:00<\/span><\/p>"},{"id":"n082","day":"d0122","time":"19:00","title":"🍜 晚餐","cls":"meal","body":"<p><a href=\"https://www.google.com/maps?cid=3519305832366735324\" target=\"_blank\" rel=\"noopener\">📍 拉麵 潮<\/a> (<a href=\"%E6%8B%89%E9%BA%B5%20%E6%BD%AE%20Menu%20ZH.webp\" target=\"_blank\" rel=\"noopener\">菜單<\/a>)<\/p>\n<p class=\"note\">神田淡路町 2-4-4 アール神田淡路町 地下 1 樓・平日 11:00~21:00、週六日到 19:00・鯛魚高湯拉麵<\/p>","end":"20:00","geo":{"at":"35.6963892,139.7677704","r":100,"mode":"stay"}},{"id":"n083","day":"d0122","time":"20:00","body":"<p><a href=\"https://www.google.com/maps?cid=14396907931151304951\" target=\"_blank\" rel=\"noopener\">📍 淡路町<\/a> → <a href=\"https://www.google.com/maps?cid=2393511273337389901\" target=\"_blank\" rel=\"noopener\">📍 池袋<\/a> <span class=\"note\">(15分鐘)<\/span><\/p><p class=\"jr-row\"><span class=\"mt-code ma\">M<\/span><span class=\"jr-line ma\">丸之內線<\/span> <span class=\"chip\">各停<\/span>池袋、2號月台<\/p>","end":"20:25"},{"id":"n084","day":"d0122","time":"23:30","title":"🌙 宵夜","cls":"meal","body":"<p><a href=\"https://www.google.com/maps?cid=9408920881125569229\" target=\"_blank\" rel=\"noopener\">📍 無敵家拉麵<\/a><\/p>\n<p class=\"note\">南池袋 1-17-1 崎本大樓一樓・10:30~凌晨 4:00・厚切叉燒的豚骨拉麵，深夜也要排隊的名店<\/p>","end":"00:00","geo":{"at":"35.7269046,139.7116557","r":100,"mode":"stay"}},{"id":"n051","day":"d0123","time":"07:00","title":"🍳 早餐: 飯店","cls":"meal","end":"07:40"},{"id":"n052","day":"d0123","time":"10:30","body":"<p><a href=\"https://www.google.com/maps?cid=12073308251882461182\" target=\"_blank\" rel=\"noopener\">📍 大都會大飯店<\/a><\/p>","below":"🚌 利木津巴士發車 (<a href=\"https://www.limousinebus.co.jp/zh-tw/timetable/detail/Narita-Ikebukuro/?dir=2\" id=\"limousine-link\" target=\"_blank\" rel=\"noopener\">公車時刻表<\/a>)","end":"10:40"},{"id":"n053","day":"d0123","time":"12:10","body":"<p><a href=\"https://www.google.com/maps?cid=14320255406666017353\" rel=\"noopener\" target=\"_blank\">📍 成田機場第二航廈<\/a><\/p>","end":"12:20","geo":{"at":"35.773213,140.387543","r":200,"mode":"arrive"}},{"id":"n087","day":"d0123","time":"12:30","end":"12:40","title":"💴 退稅流程","body":"<p class=\"jr-row\">🛃 海關檢查(以下方式擇一): <span style=\"white-space:nowrap\">✅ 確認完成•<\/span><wbr><span style=\"white-space:nowrap\">❌ 人工檢查<\/span><\/p><p style=\"margin-left:1.5em\">1. <a href=\"%E6%97%A5%E6%9C%AC%E9%80%80%E7%A8%85%E6%96%B0%E5%88%B6.webp\" target=\"_blank\" rel=\"noopener\">線上步驟<\/a>: <a href=\"https://www.vjw.digital.go.jp/\" target=\"_blank\" rel=\"noopener\">Visit Japan Web<\/a> 線上確認，不用排現場<\/p><p class=\"jr-row\" style=\"margin-left:1.5em\">📶 機場退稅專用 Wi-Fi<\/p><p style=\"margin-left:3em\">SSID: <span style=\"white-space:nowrap\">Customs_WiFi_For_TaxRefund<\/span><\/p><p style=\"margin-left:3em\">密碼: jcustoms<button type=\"button\" class=\"copy-btn\" data-copy=\"jcustoms\">複製<\/button><\/p><p style=\"margin-left:1.5em\">2. 現場櫃台: 自動機台刷護照，3F(安檢前)，<a href=\"https://www.narita-airport.jp/zh-tc/map/?mode=searchResult&amp;bearing=59.5&amp;zoom=18.433242053191073&amp;pitch=0&amp;lat=35.774738638269994&amp;lng=140.38679625001998&amp;building=b32584d9-027d-4863-aa2e-3482e8fc2fb3&amp;floor=3F&amp;clickedPoi=21483798\" target=\"_blank\" rel=\"noopener\">A櫃台附近<\/a><\/p><p class=\"jr-row\" style=\"margin-top:14px\">🏢 常用退稅平台(<a href=\"%E9%80%80%E7%A8%85%E5%B9%B3%E5%8F%B0%E6%AF%94%E8%BC%83.webp\" target=\"_blank\" rel=\"noopener\">比較表<\/a>)<\/p><p style=\"margin-left:1.5em\"><a style=\"white-space:nowrap\" href=\"https://j-taxrefund.com/\" target=\"_blank\" rel=\"noopener\">J-TaxRefund<\/a>•<wbr><a style=\"white-space:nowrap\" href=\"https://jprefund.com/\" target=\"_blank\" rel=\"noopener\">JPrefund<\/a>•<wbr><a style=\"white-space:nowrap\" href=\"https://www.globalblue.com/zh\" target=\"_blank\" rel=\"noopener\">Global Blue<\/a>•<wbr><a style=\"white-space:nowrap\" href=\"https://pievat.com/tourists/japan\" target=\"_blank\" rel=\"noopener\">PIE VAT<\/a><\/p><p class=\"jr-row\" style=\"margin-top:14px\">💳 信用卡退稅: 於對應平台上設定信用卡即可<span style=\"color:var(--muted);font-size:13px\">(回台灣再設定也來得及)<\/span><\/p><p class=\"jr-row\" style=\"margin-top:14px\">💴 現金退稅機位置<\/p><p style=\"margin-left:1.5em\">GLORY Self Tax Refund: 3F(安檢前)，<a href=\"https://www.narita-airport.jp/zh-tc/map/?mode=normal&amp;bearing=59.5&amp;zoom=19.155186601836867&amp;pitch=0&amp;lat=35.77450465194036&amp;lng=140.387602448469&amp;clickedPoi=21483127&amp;building=b32584d9-027d-4863-aa2e-3482e8fc2fb3&amp;floor=3F\" target=\"_blank\" rel=\"noopener\">B、C櫃台中間<\/a><\/p><p style=\"margin-left:1.5em\">Cash Japan: 3F(安檢後)，<a href=\"https://www.narita-airport.jp/zh-tc/map/?bearing=59.5&amp;zoom=18&amp;pitch=0&amp;lat=35.772572405199995&amp;lng=140.38962336863005&amp;mode=searchResult&amp;clickedPoi=21483743&amp;building=b32584d9-027d-4863-aa2e-3482e8fc2fb3&amp;floor=3F\" target=\"_blank\" rel=\"noopener\">61登機門附近<\/a>，<a href=\"https://www.narita-airport.jp/zh-tc/map/?bearing=59.5&amp;zoom=18&amp;pitch=0&amp;lat=35.77457251102&amp;lng=140.38817367173&amp;mode=searchResult&amp;building=b32584d9-027d-4863-aa2e-3482e8fc2fb3&amp;floor=3F&amp;clickedPoi=21483691\" target=\"_blank\" rel=\"noopener\">71登機門附近<\/a><\/p>"},{"id":"n054","day":"d0123","time":"13:00","title":"🍛 午餐: 機場餐廳","cls":"meal","end":"14:00"},{"id":"n055","day":"d0123","time":"15:40","title":"🛫 成田出發 JX803 第二航廈 15:40 起飛","body":"<p class=\"note\" style=\"margin-top:8px\">🕐 <span class=\"fl-updated\">尚未更新<\/span><\/p>\n<table class=\"fl-table\" id=\"fl-ret-nrt\">\n<tr><td>航班狀態<\/td><td data-f=\"st\">—<\/td><\/tr>\n<tr><td>報到櫃台<\/td><td data-f=\"checkin\">—<\/td><\/tr>\n<tr><td>登機門<\/td><td data-f=\"gate\">—<\/td><\/tr>\n<tr><td>表定起飛<\/td><td data-f=\"otime\">—<\/td><\/tr>\n<tr><td>實際起飛<\/td><td data-f=\"rtime\">—<\/td><\/tr>\n<tr><td>安檢等待<\/td><td data-f=\"sec\">—<\/td><\/tr>\n<\/table>\n<p style=\"margin:6px 0\">\n<a href=\"https://www.narita-airport.jp/zh-tc/flight/\" id=\"nrt-dep-link\" rel=\"noopener\" target=\"_blank\">成田機場官網<\/a>\n<\/p>","end":"15:50"},{"id":"n086","day":"d0123","time":"16:30","end":"17:00","title":"🍽️ 晚餐: 飛機餐","cls":"meal"},{"id":"n056","day":"d0123","time":"18:45","title":"🛬 抵達桃園","body":"<p class=\"note\" style=\"margin-top:8px\">🕐 <span class=\"fl-updated\">尚未更新<\/span><\/p>\n<table class=\"fl-table\" id=\"fl-ret\">\n<tr><td>航班狀態<\/td><td data-f=\"st\">—<\/td><\/tr>\n<tr><td>表定抵達<\/td><td data-f=\"otime\">—<\/td><\/tr>\n<tr><td>實際抵達<\/td><td data-f=\"rtime\">—<\/td><\/tr>\n<tr><td>到達門<\/td><td data-f=\"gate\">—<\/td><\/tr>\n<tr><td>行李轉盤<\/td><td data-f=\"belt\">—<\/td><\/tr>\n<\/table>\n<p style=\"margin-top:8px\">\n<a href=\"https://www.taoyuan-airport.com/flight_arrive\" id=\"tpe-arr-link\" rel=\"noopener\" target=\"_blank\">桃園機場官網<\/a>\n<\/p>","end":"19:45"}]}</script>
+  <!-- 桃園機場地圖 POI 對照表: 由 scripts/build_tpe_poi.py 產生，不要手改 -->
   <script id="tpe-poi" type="application/json">{"arr|A1":"off-6813b800-3d8e-ec11-80f5-000c29a1b907","arr|A2":"off-f8705113-3d8e-ec11-80f5-000c29a1b907","arr|A3":"off-a0133c1f-3d8e-ec11-80f5-000c29a1b907","arr|A4":"off-ed006d2b-3d8e-ec11-80f5-000c29a1b907","arr|A5":"off-1482ea3c-3d8e-ec11-80f5-000c29a1b907","arr|A6":"off-c5f13e4c-3d8e-ec11-80f5-000c29a1b907","arr|A7":"off-14480958-3d8e-ec11-80f5-000c29a1b907","arr|A8":"off-13d4cf62-3d8e-ec11-80f5-000c29a1b907","arr|A9":"off-cd20366e-3d8e-ec11-80f5-000c29a1b907","arr|B1":"off-8da918cf-3d8e-ec11-80f5-000c29a1b907","arr|B2":"off-8ecd94df-3d8e-ec11-80f5-000c29a1b907","arr|B3":"off-493945f2-3d8e-ec11-80f5-000c29a1b907","arr|B4":"off-37ebe704-3e8e-ec11-80f5-000c29a1b907","arr|B5":"off-0babdf18-3e8e-ec11-80f5-000c29a1b907","arr|B6":"off-337b3c24-3e8e-ec11-80f5-000c29a1b907","arr|B7":"off-fe2eac2f-3e8e-ec11-80f5-000c29a1b907","arr|B8":"off-74a4403a-3e8e-ec11-80f5-000c29a1b907","arr|B9":"off-11c03a46-3e8e-ec11-80f5-000c29a1b907","arr|C1":"off-4a2decb8-348e-ec11-80f5-000c29a1b907","arr|C10":"off-89ed9741-358e-ec11-80f5-000c29a1b907","arr|C2":"off-b9b8f3c5-348e-ec11-80f5-000c29a1b907","arr|C3":"off-1b70e2d3-348e-ec11-80f5-000c29a1b907","arr|C4":"off-3948d7e5-348e-ec11-80f5-000c29a1b907","arr|C5":"off-33d9cf00-358e-ec11-80f5-000c29a1b907","arr|C6":"off-46671d0d-358e-ec11-80f5-000c29a1b907","arr|C7":"off-5ba87b19-358e-ec11-80f5-000c29a1b907","arr|C8":"off-eb8b9227-358e-ec11-80f5-000c29a1b907","arr|C9":"off-41937834-358e-ec11-80f5-000c29a1b907","arr|D1":"off-2c85667b-338e-ec11-80f5-000c29a1b907","arr|D10":"off-e92cd2bb-338e-ec11-80f5-000c29a1b907","arr|D2":"off-beaf8885-338e-ec11-80f5-000c29a1b907","arr|D3":"off-1cbf8c8b-338e-ec11-80f5-000c29a1b907","arr|D4":"off-d1897e93-338e-ec11-80f5-000c29a1b907","arr|D5":"off-8b2c699b-338e-ec11-80f5-000c29a1b907","arr|D6":"off-2d5bffa3-338e-ec11-80f5-000c29a1b907","arr|D7":"off-2e5bffa3-338e-ec11-80f5-000c29a1b907","arr|D8":"off-75a759af-338e-ec11-80f5-000c29a1b907","arr|D9":"off-76a759af-338e-ec11-80f5-000c29a1b907","belt|T1|1":"e60503c8-e11f-4a20-bcc2-a7d389677d35","belt|T1|2":"f5faa767-a925-4c67-86f9-6253d723df4e","belt|T1|3A":"22b7d5fd-0a28-49a5-8526-7d5c207fef98","belt|T1|3B":"off-cb421137-a0b1-ec11-bbb8-005056bd475f","belt|T1|4A":"5f5aac05-7f53-4700-9885-0bdbe08af0a8","belt|T1|4B":"off-bf1caece-a0b1-ec11-bbb8-005056bd475f","belt|T1|5":"7a35d6e6-502f-4e2a-83b3-73a95d95bdb5","belt|T1|6":"6012930f-8d3f-4fbc-98b7-e749f2977efb","belt|T2|1":"911e00fd-adb5-4022-9f21-dd2a27c54e36","belt|T2|2":"9bed0262-9735-4f82-9e0d-011069551cc4","belt|T2|3":"ec49cee2-ada1-4905-9dfd-901191c45824","belt|T2|4":"fc96c47d-0b76-4d52-917b-56824984636f","belt|T2|5":"ed8b26b7-8acc-4d2f-b668-12d4fba6d00d","belt|T2|6":"506a8550-b0e7-4b55-b0d0-33ac38e9b5dd","belt|T2|7A":"bfacc75b-6b4e-4e1f-9d89-412b3a4ec9e1","belt|T2|7B":"off-d92a29d3-a2b1-ec11-bbb8-005056bd475f","belt|T2|8A":"42020806-400b-468d-b25e-fd5cc9c98b64","belt|T2|8B":"off-a0710b38-a3b1-ec11-bbb8-005056bd475f","ck|T1|1":"29031039-f5dc-4540-9c1d-d306d86ee0e3","ck|T1|10":"6755de4e-fcfe-454d-8023-743bae049414","ck|T1|11":"5fe79b10-8f20-485a-963d-6ac02fdcfd3e","ck|T1|12":"21ee46bc-e2bc-4292-ab0e-f77afd7638d7","ck|T1|2":"6dbd5604-986c-4888-8b3c-f5626409484e","ck|T1|3":"9100b729-1b3e-4c44-8097-fd68dabe3d4f","ck|T1|4":"7f9d79cb-69bd-405b-bb45-502b358275fb","ck|T1|5":"85dfddaa-f4ea-4f0c-ac94-c9aed2d0a2f6","ck|T1|6":"bdb695f0-5f67-4f0d-887a-fe757d24d661","ck|T1|7":"bf55f663-4c0d-459d-a542-9b39e70e6156","ck|T1|8":"8a32844b-0f0a-44c3-ac8d-2d3c39053be0","ck|T1|9":"45fbc99f-611c-49eb-b9ed-d8dabd3e83f2","ck|T2|1":"b397833e-83b5-4b40-b53c-44cee902b7d6","ck|T2|10":"8c03a05d-d698-4e63-9e23-a060565d5fd3","ck|T2|11":"d1b6a8bd-e9c3-496b-9f82-146afbe9c9cf","ck|T2|12":"504a2c73-227f-475d-9e20-29a2a0d7d5b7","ck|T2|13":"6dea63c9-8c75-42be-8cb8-199cfeadc9e6","ck|T2|14":"07d3ff8b-f7ca-4f51-98fb-0c39da9f40be","ck|T2|15":"0792e8f1-8370-46fe-8e6a-b69fd74efb0b","ck|T2|16":"6595e313-a6ce-47c4-ae0b-72c2029d6996","ck|T2|17":"e51194fc-71ff-4f9c-ae66-3751d510a0e6","ck|T2|18":"a5395342-96aa-45f2-ba3b-28797a00cd07","ck|T2|19":"3a84d8b4-e489-4712-a8e1-9ebe7654f9e5","ck|T2|2":"238e0068-aaad-422a-ad09-e8f8a8721203","ck|T2|20":"ab80675d-6b22-4ab9-8bde-2c513e4f247e","ck|T2|21":"3166aab0-0f76-46b6-992f-96bd6d09347a","ck|T2|22":"11a05cb3-de9e-4000-bf68-8210a6cde435","ck|T2|23":"661b741a-c57e-4cc1-9bde-17f74d23a710","ck|T2|24":"3762a7c8-b009-449e-9792-9170f5ab7551","ck|T2|25":"5b7e8c37-f208-4520-8201-1d3c652990b9","ck|T2|26":"45492cd8-687d-4140-bd6a-cfa2e65edcb5","ck|T2|3":"c815e5ba-44f2-4e2d-9a88-42028856147b","ck|T2|4":"7519d4f3-f93b-4231-add6-b33574668a17","ck|T2|5":"edc204a9-182b-412c-8c4e-c8c4fbacf78c","ck|T2|6":"09ff3ac2-67ce-47ef-80b8-1e2ff9bc9028","ck|T2|7":"48b4393d-a2b1-4dbb-8dae-8e16bd0a3c2d","ck|T2|8":"fbd81435-9dfc-4ed6-8329-49565a3dcea2","ck|T2|9":"8b1357ff-145f-41d1-86bd-8f68026659e4","dep|A1":"9f8c3f57-75fe-4255-a287-7ea2a8bafd4a","dep|A2":"3c8cdf5f-1ec3-4253-8838-c2fc2b4b54cd","dep|A3":"f9fe72f5-b48c-4017-9164-90d5e0e366b8","dep|A4":"e3be91ad-7c43-40ea-b385-3203eab2cd2b","dep|A5":"05852309-da83-46c4-8a73-84ded396a18b","dep|A6":"9cb1d391-3c3a-4f56-a658-97374c809a8a","dep|A7":"a621b8f2-6dcb-41fc-8c6d-0b3a9b7d8fc9","dep|A8":"fe0a566e-876b-4dfd-be6e-e9832a051d59","dep|A9":"1bb88631-869c-40d8-bfd8-10dc70cd1ff4","dep|B1":"daa6b0ff-5acd-4221-8e5b-a13715b016a6","dep|B1R":"aea738a1-63ae-434c-8bde-e1ebb53e05b3","dep|B2":"585da8c9-71d3-408e-8733-bd82735c90b1","dep|B3":"f986f8a1-9b87-4046-84a1-b4e87595881b","dep|B4":"6ae86a68-400d-4b8d-92fe-79a1289c97de","dep|B5":"4a2ed722-de9e-4aa4-9a61-89ce4e9555ea","dep|B6":"ca61c3dd-7857-4139-bea6-9d46b0fed60e","dep|B7":"faac6a29-c371-4b22-a2f9-dd625a90dbd4","dep|B8":"41a191cb-a49c-4808-a474-2e0d34483f31","dep|B9":"2ce9b9bc-9707-4575-96ec-6ab6f8959df8","dep|C1":"824973a6-e2ae-4229-af24-430fd0ede0b4","dep|C10":"68226c3e-54a8-493e-a23d-09d81277f46e","dep|C2":"26eccf64-6537-440e-8fd7-f71b42d36bde","dep|C3":"3f53a149-01ec-4db1-9b5d-9c22c4a68909","dep|C4":"2e3aa00c-a85e-4a4e-a3c9-4c9a68ac51ea","dep|C5":"d67e14f9-7ec5-4d59-b63d-29dcfeb60851","dep|C5R":"f7e9c36f-09c3-481c-9f07-5d49e598338c","dep|C6":"6ec6f15b-6a71-48fb-b404-6e0f3273cf03","dep|C7":"55502396-036e-46a5-b2fe-56a1f0615de2","dep|C8":"2a62eb92-240e-4e44-8e0e-310476f8fbc5","dep|C9":"44fe19ef-708c-4c52-b1fd-784d6b0c3b8f","dep|D1":"350cb75b-e8d9-4d38-a74d-14280ae73caf","dep|D10":"ebcd22b4-8799-491a-945d-9800dfe267e3","dep|D11":"1fe06f88-5460-4899-ba68-83b86d151184","dep|D12":"54109fd8-df1f-43a1-82dd-5f167d5bb912","dep|D13":"c8a776c1-0ab4-4b66-a8c4-32492742ac04","dep|D14L":"4daaf1c4-f03f-40e9-8401-be99c153f565","dep|D14R":"097db0ad-655f-4ff9-b2f6-06f16a4733af","dep|D15L":"df678a56-cde6-4d9b-a54b-77198a986ed9","dep|D15R":"9e9353e8-bcc9-4e2a-b247-de997355493a","dep|D16":"a414c4fe-9754-43e2-a28a-04d4a22233b4","dep|D17":"68f33752-2536-440f-a5cc-e77a079ed939","dep|D18":"0383b59b-3e94-4c97-a843-045e5782ae71","dep|D2":"0922d92a-11fc-4691-a38f-0a8df6f4bee2","dep|D3":"fe195c93-124f-415e-a985-2b08a92d7f37","dep|D4":"f54e856a-498a-45b6-b181-05ff72b89be4","dep|D5":"c0aa131e-e4dc-4f15-8d14-ff8781522742","dep|D5R":"3e7f30cc-6171-4507-8f18-2819c981af9d","dep|D6":"35f30e4a-ce32-4591-840d-147a7915aa4b","dep|D7":"023ea132-74ad-47f7-88fd-056b6d9e6f6b","dep|D8":"0419bc5b-14fe-4916-b6d5-dfd4c353fc4f","dep|D9":"04f09290-49c8-40e9-90e7-919d463299e7"}</script>
 
   <!-- ── 行程結束後顯示(按「查看行程」可再看一次，全部回到出發前的樣子) ── -->
@@ -660,7 +660,7 @@ body:not(.editing) .fin-settle, body:not(.editing) .fin-add{display:none}
     <div class="fin-card" id="fin-card"></div>
   </section>
 
-  <button type="button" class="fold-fab" id="fold-fab" title="展開／收合各天">全部<br>展開</button>
+  <button type="button" class="fold-fab" id="fold-fab" title="展開/收合各天">全部<br>展開</button>
   <button type="button" class="now-fab" id="now-fab" title="回到目前行程">目前<br>行程</button>
 
   <!-- 測試用: 把第一天改成別的日期，其餘 7 天依序往後推 -->
@@ -696,11 +696,11 @@ window.__nodeLink=(function(){
   return m?m[1]:null;
 })();
 
-// 時間軸由上方 trip-data 的 JSON 產生；之後若有雲端修改會再套用上去
+// 時間軸由上方 trip-data 的 JSON 產生; 之後若有雲端修改會再套用上去
 (function(){
   // iOS 的「深長按」會對「12:00」「01/16」這種文字跳出「新增至日曆」，
-  // 連 user-select:none 都擋不掉。在冒號／斜線兩側插一個零寬字元(畫面看不出來)，
-  // 偵測器就認不出那是時間或日期了。真正的時刻一律讀 data-t／data-e，不受影響。
+  // 連 user-select:none 都擋不掉。在冒號/斜線兩側插一個零寬字元(畫面看不出來)，
+  // 偵測器就認不出那是時間或日期了。真正的時刻一律讀 data-t/data-e，不受影響。
   var ZW='\u200b';
   function noDetect(t){ return String(t).replace(/([:\/])/g, ZW+'$1'+ZW); }
   // 把一個元素底下的文字全部處理過(只動文字節點，不碰標籤與屬性)
@@ -721,7 +721,7 @@ window.__nodeLink=(function(){
   function fill(ev, it){
     var h='';
     if(it.time){
-      // 實際時間(it.act={t,e}，按「現在開始」「現在結束」寫入)蓋過表定；表定留在 data-t0／data-e0
+      // 實際時間(it.act={t,e}，按「現在開始」「現在結束」寫入)蓋過表定; 表定留在 data-t0/data-e0
       var act=it.act||{}, t=act.t||it.time, e=act.e||it.end||'';
       var keep=(act.t||act.e) ? ' data-t0="'+it.time+'"'+(it.end?' data-e0="'+it.end+'"':'')
         +(act.t?' data-at="'+act.t+'"':'')+(act.e?' data-ae="'+act.e+'"':'') : '';
@@ -756,7 +756,7 @@ window.__nodeLink=(function(){
   }
   window.__tripFill=fill;
 
-  // 讀節點的開始／結束時刻: {t:'10:10', e:'11:30'|null}，沒有時刻回 null
+  // 讀節點的開始/結束時刻: {t:'10:10', e:'11:30'|null}，沒有時刻回 null
   window.__tripTimeOf=function(el){
     var w=el.querySelector && el.querySelector('.when');
     if(!w) return null;
@@ -770,7 +770,7 @@ window.__nodeLink=(function(){
 
   // 班機誤點時把節點的時刻往後挪: 開始與結束一起挪，長度不變
   // (例如抵達桃園後留給出關的那一小時，挪完還是一小時)。
-  // 表定時刻留在 data-t0／data-e0，每次都從它重算，所以反覆呼叫不會越挪越遠；
+  // 表定時刻留在 data-t0/data-e0，每次都從它重算，所以反覆呼叫不會越挪越遠;
   // min 傳 0 就是還原成表定。節點被重畫過要再呼叫一次(重畫會還原成表定時刻)。
   // 註: 誤點超過午夜(例如 23:30 挪到隔天 00:40)時刻會繞回來，但節點還是掛在原本那一天，
   //     scan() 會把它算成當天的凌晨。要誤點五小時以上才會遇到，先不處理。
@@ -894,7 +894,7 @@ window.__nodeLink=(function(){
     });
     if(out){
       out.textContent='('+n+' / '+total+')';
-      // 每一項不是打勾就是刪除檢核＝都處理完了，標題與計數變綠
+      // 每一項不是打勾就是刪除檢核=都處理完了，標題與計數變綠
       var sum=out.closest('summary');
       if(sum) sum.classList.toggle('done', n===total);
     }
@@ -926,7 +926,7 @@ window.__nodeLink=(function(){
     a.addEventListener('click', function(e){ e.stopPropagation(); });
   });
 
-  // ── 長按＝這趟不用準備 ──
+  // ── 長按=這趟不用準備 ──
   // 長按切換成「－」(刪除線、不計入總數)，已經是「－」時再點一下就恢復成未勾選
   var timer=null, sx=0, sy=0, longed=false;
   function boxOf(e){
@@ -975,11 +975,11 @@ window.__nodeLink=(function(){
     var d=window.__flightNow||new Date();   // __flightNow 供測試模擬日期用
     return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
   }
-  // 成田代理(Cloudflare Worker)網址，部署後填入；留空則成田區塊顯示「未設定」
+  // 成田代理(Cloudflare Worker)網址，部署後填入; 留空則成田區塊顯示「未設定」
   var NARITA_PROXY='https://narita-proxy.4511760.workers.dev/';
 
   // ── 最後一筆資料存在本機 ──
-  // 剛開頁、還沒抓到新資料之前先顯示上次的內容；行程結束後也固定顯示這一份
+  // 剛開頁、還沒抓到新資料之前先顯示上次的內容; 行程結束後也固定顯示這一份
   var CKEY='japan2027-flights';
   var CUR={}, CUR_AT='';
   try{
@@ -1036,7 +1036,7 @@ window.__nodeLink=(function(){
   }
 
   // 桃園的報到櫃台、登機門、到達門、行李轉盤做成地圖連結(map.taoyuan-airport.com/?poi=ID)
-  // ID 查 <script id="tpe-poi"> 對照表(scripts/build_tpe_poi.py 產生)；查不到就維持純文字
+  // ID 查 <script id="tpe-poi"> 對照表(scripts/build_tpe_poi.py 產生); 查不到就維持純文字
   var TPE_POI=null;
   function tpePoi(k){
     if(!TPE_POI){
@@ -1069,7 +1069,7 @@ window.__nodeLink=(function(){
   }
 
   // 出境登機門後面補吸菸區位置(灰小字)，「吸菸區」三個字連到機場官網地圖
-  // 桃園看字母＋號碼: A、D1、D2 → A9 附近；B、C1、C2 → B8 附近；C3 以上、D3 以上 → 第二航廈安檢站附近
+  // 桃園看字母+號碼: A、D1、D2 → A9 附近; B、C1、C2 → B8 附近; C3 以上、D3 以上 → 第二航廈安檢站附近
   var TPE_MAP='https://map.taoyuan-airport.com/?';
   var SMOKE_TPE={
     A9:{u:TPE_MAP+'level=8939e441-e4a3-45ac-9cc3-a1bb5640c369&terminal=T1&poi=b4400996-63ab-4864-a86c-fcaed88482ad', t:'A9附近'},
@@ -1147,7 +1147,7 @@ window.__nodeLink=(function(){
     });
   }
 
-  // 成田的門／櫃台欄位: 取出名稱與 POI，有 POI 就做成官網地圖連結
+  // 成田的門/櫃台欄位: 取出名稱與 POI，有 POI 就做成官網地圖連結
   function setCellPoi(tbl, key, arr, hot){
     var td=document.querySelector('#'+tbl+' td[data-f="'+key+'"]');
     if(!td) return;
@@ -1177,7 +1177,7 @@ window.__nodeLink=(function(){
     remember(td, tbl, key);
   }
 
-  // quiet 同 fetchFlight；回傳值是誤點分鐘數(異動後 - 表定)，沒異動就是 0
+  // quiet 同 fetchFlight; 回傳值是誤點分鐘數(異動後 - 表定)，沒異動就是 0
   function fetchNarita(type, id, tbl, isArr, quiet){
     var put=quiet ? function(){} : setCell;
     var putPoi=quiet ? function(){} : setCellPoi;
@@ -1189,7 +1189,7 @@ window.__nodeLink=(function(){
         if(!f){ put(tbl,'st','尚無資料(接近當天才會公布)'); return null; }
         put(tbl,'st', f.status && f.status.status, true);
         put(tbl,'otime', f.scheduledTime, false);
-        // 成田有異動時會給 changeScheduledTime(官網上表定時間會被劃掉，顯示這個)；
+        // 成田有異動時會給 changeScheduledTime(官網上表定時間會被劃掉，顯示這個);
         // 沒有異動就照表定時間顯示，一律用橘色(跟桃園的實際時間一致)
         put(tbl,'rtime', f.changeScheduledTime || f.scheduledTime, true);
         putPoi(tbl,'gate', f.gates, true);
@@ -1238,9 +1238,9 @@ window.__nodeLink=(function(){
   // JX802(早上桃園→成田)跟 JX803(傍晚成田→桃園)是同一架飛機，飛來再飛回去，
   // 早上晚到，晚上通常就跟著晚飛。所以整趟都照常查 JX802(1/16 過後只是不畫到畫面上)，
   // 把誤點接在回程成田「實際起飛」那一格後面，先有個心理準備。
-  var MORNING=null;        // {min:33, kind:'出發'} 或 null(沒誤點／不到門檻)
+  var MORNING=null;        // {min:33, kind:'出發'} 或 null(沒誤點/不到門檻)
   var MORNING_MIN=10;      // 差這麼多分鐘以內不用提
-  // 「HH:MM」或「HH:MM:SS」差幾分鐘；跨午夜(表定 23:50 實際 00:10)折回來算
+  // 「HH:MM」或「HH:MM:SS」差幾分鐘; 跨午夜(表定 23:50 實際 00:10)折回來算
   function late(sched, real){
     var a=mins(sched), b=mins(real);
     if(a===null || b===null) return null;
@@ -1435,7 +1435,7 @@ window.__nodeLink=(function(){
   if(!document.getElementById('snow-now')) return;
   paint(LAST, '更新於 {t}');     // 還沒抓到新的之前，先顯示上次的
   refresh();
-  // 官網那塊一天也才更新幾次，5 分鐘問一次就夠；頁面在背景時不打
+  // 官網那塊一天也才更新幾次，5 分鐘問一次就夠; 頁面在背景時不打
   setInterval(function(){ if(!document.hidden) refresh(); }, 300000);
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) refresh(); });
   // 節點被重畫後表格會變空，把上次的內容補回去(接著 refresh 會再更新)
@@ -1480,7 +1480,7 @@ window.__nodeLink=(function(){
 
   apply(LAST);          // 上次查到的先套上(比網頁裡寫死的新)
   refresh();
-  // 直播 ID 幾天才換一次，半小時問一次夠了；頁面在背景時不打
+  // 直播 ID 幾天才換一次，半小時問一次夠了; 頁面在背景時不打
   setInterval(function(){ if(!document.hidden) refresh(); }, 1800000);
   // 節點被重畫(雲端修改、解鎖私人行程)後 src 會還原成寫死的，補套一次
   var lvTl=document.querySelector('.tl');
@@ -1494,37 +1494,37 @@ window.__nodeLink=(function(){
 // 兩種模式:
 //   · 搭車那天、發車前 40 分到發車後 90 分(台灣時間): 只追要搭的那班(data-dep)
 //   · 其他任何時候: 顯示下一班會到上車站的車(每天都看得到，可以平常就確認功能正常)
-//   data-key  公路客運動態頁 _ROUTES 裡的值(路線＋方向，6 位數字)
+//   data-key  公路客運動態頁 _ROUTES 裡的值(路線+方向，6 位數字)
 //   data-dep  要搭的那班從起站發車的時刻(台灣時間)
 //   data-stop 上車站名，要跟官網站名一字不差
-//   data-name (選填)第一行的標題，例如路線號；沒填顯示「下一班」
+//   data-name (選填)第一行的標題，例如路線號; 沒填顯示「下一班」
 //   data-url  (選填)官網動態頁網址，會接在第一行後面「(動態資訊)」
 // 到上車站的時間顯示在這則的時刻後面(灰小字)，例如「預計 06:12 到站(距 2 站)」、「表定 10:34 到站」
 // 預計到達時間: 在下車那則的內容裡放
 //   <span class="bus-arrive" data-key="196801" data-stop="下車站名"></span>
 // 就會在那則的時間後面補上灰小字「預計 HH:MM 到達」(追的車跟同 key 的 .bus-live 同一台)。
-//   · 下車站那列正是這台車 → 官網資料時間＋還要幾分
-//   · 不是(前一班還沒到下車站，那列顯示的是前一班)→ 這台車最遠一站的分鐘數＋表定兩站之間的分鐘數
-//   · 還沒發車 → 起站發車時刻＋表定起站到下車站的分鐘數
+//   · 下車站那列正是這台車 → 官網資料時間+還要幾分
+//   · 不是(前一班還沒到下車站，那列顯示的是前一班)→ 這台車最遠一站的分鐘數+表定兩站之間的分鐘數
+//   · 還沒發車 → 起站發車時刻+表定起站到下車站的分鐘數
 //   表定分鐘數從官網沒車那幾列的「HH:MM」學來，記在 localStorage(每台裝置第一次看到就記住)。
 // 表定發車時間: 在上車那則的內容裡放
 //   <span class="bus-dep" data-key="196802" data-stop="上車站名"></span>
-// 就會在那則的時間後面補上灰小字「表定 HH:MM 發車」(上車站是起站時；不是起站則顯示到站時間)。
+// 就會在那則的時間後面補上灰小字「表定 HH:MM 發車」(上車站是起站時; 不是起站則顯示到站時間)。
 //   那則的當天、時間前 40 分到後 120 分內，看到起站的「下一班」換了，就認定剛開走的那台是要搭的
-//   (路上最靠近起站的那台)，記住車牌；同 key 的 .bus-arrive 之後就追這台，發車字樣也停在那班。
+//   (路上最靠近起站的那台)，記住車牌; 同 key 的 .bus-arrive 之後就追這台，發車字樣也停在那班。
 // 路線、班次、站名都寫在節點內容裡(私人行程是加密的)，程式這裡只有通用邏輯。
 // 資料經 Worker 的 /bus 代抓(官網不開放跨域)。
 //
-// 官網資料沒有「這是哪一班」的欄位，只有各站「正開往這站的車牌＋還要幾分」，所以這樣認車:
+// 官網資料沒有「這是哪一班」的欄位，只有各站「正開往這站的車牌+還要幾分」，所以這樣認車:
 //   · 起站顯示「05:40發車」→ 還沒開
 //   · 開了以後，正開往上車站的那台就是這班(前一班早就過站了)，認到就把車牌記住，之後只追這個車牌
-// 畫面開著才抓(每 20 秒；官網動態頁自己是 16 秒刷新一次，Worker 再快取 15 秒)，背景不打。
+// 畫面開著才抓(每 20 秒; 官網動態頁自己是 16 秒刷新一次，Worker 再快取 15 秒)，背景不打。
 //
-// GPS 輔助鎖班次: 上車那則的 .bus-live／.bus-dep 加 data-geo="緯度,經度"(上車點座標)就會啟用。
-//   只有解鎖的手機、在搭車時間窗內才要求定位，1 分鐘讀一次，背景不讀；位置只留在記憶體，不存不傳。
+// GPS 輔助鎖班次: 上車那則的 .bus-live/.bus-dep 加 data-geo="緯度,經度"(上車點座標)就會啟用。
+//   只有解鎖的手機、在搭車時間窗內才要求定位，1 分鐘讀一次，背景不讀; 位置只留在記憶體，不存不傳。
 //   · .bus-live(上車點在中途): 鎖定的車過站 1 分鐘後，讀到人還在上車點 → 沒搭上，改追下一班
-//   · .bus-dep(上車點是起站): 起站換班時先不鎖，等開車 1 分鐘後的位置: 已離開才鎖剛開走那台；
-//     還在起站就等下一班；讀不到 GPS 或 5 分鐘內判斷不出來 → 照原規則鎖
+//   · .bus-dep(上車點是起站): 起站換班時先不鎖，等開車 1 分鐘後的位置: 已離開才鎖剛開走那台;
+//     還在起站就等下一班; 讀不到 GPS 或 5 分鐘內判斷不出來 → 照原規則鎖
 //   測試: console 設 __tripGeoFake={lat:緯度, lng:經度, acc:誤差公尺}，不必真的定位
 (function(){
   var API='https://narita-proxy.4511760.workers.dev/bus?key=';
@@ -1557,7 +1557,7 @@ window.__nodeLink=(function(){
   }
 
   // ── GPS ──
-  var GEO_R=150;                    // 上車點半徑(公尺)；離開要到 1.5 倍外才算，中間地帶不判斷
+  var GEO_R=150;                    // 上車點半徑(公尺); 離開要到 1.5 倍外才算，中間地帶不判斷
   var FIX=null, geoDenied=false, geoBusy=false, geoAt=0;
   var PASS={};                      // 鎖定的車第一次看到過站的時間
   function geoOf(el){
@@ -1583,7 +1583,7 @@ window.__nodeLink=(function(){
     if(d-f.acc>=R*1.5) return 'out';
     return null;
   }
-  window.__tripGeoState=geoState;   // 測試用；行程節點的到達／停留判斷也用它
+  window.__tripGeoState=geoState;   // 測試用; 行程節點的到達/停留判斷也用它
   window.__tripGeoFix=curFix;
 
   function plateKey(el){
@@ -1623,11 +1623,11 @@ window.__nodeLink=(function(){
     var s=stops[ni];
     var pos = s.ptime==='進站中' ? '在 '+s.na : '即將到 '+s.na;
     if(ni===0) pos='在起站 '+s.na;
-    // 距幾站: 車子正要到(或停在)第 ni 站，到上車站還要再過幾站；下一站就是上車站時是 0
+    // 距幾站: 車子正要到(或停在)第 ni 站，到上車站還要再過幾站; 下一站就是上車站時是 0
     var away = ni<=ti ? ti-ni : null;
     return {pos:pos+'('+plate+')', eta: ni>ti ? '已過站' : eta(stops[ti].ptime), plate:plate, away:away};
   }
-  // 平常模式: 下一班會到上車站的車。上車站那列有車牌就是它；沒有就是還沒車開出來，看起站下一班幾點發車。
+  // 平常模式: 下一班會到上車站的車。上車站那列有車牌就是它; 沒有就是還沒車開出來，看起站下一班幾點發車。
   function analyzeNext(stops, stopName){
     var ti=-1;
     stops.forEach(function(s, i){ if(ti<0 && s.na===stopName) ti=i; });
@@ -1648,7 +1648,7 @@ window.__nodeLink=(function(){
 
   function paint(el){
     var stopName=el.getAttribute('data-stop')||'上車站';
-    var trip=inWindow(el);            // true: 只追要搭的那班；false: 看下一班
+    var trip=inWindow(el);            // true: 只追要搭的那班; false: 看下一班
     var d=LAST[el.getAttribute('data-key')];
     var pos='讀取中…', when='', skip=[];
     if(d && d.err){ pos='動態暫時讀不到'; }
@@ -1705,7 +1705,7 @@ window.__nodeLink=(function(){
     try{ localStorage.setItem(schedKey(k), JSON.stringify(off)); }catch(e){}
   }
   function getSched(k){ try{ return JSON.parse(localStorage.getItem(schedKey(k))||'{}')||{}; }catch(e){ return {}; } }
-  // 「8分」「1時6分」「進站中」「即將進站」→ 分鐘數；看不懂回 null
+  // 「8分」「1時6分」「進站中」「即將進站」→ 分鐘數; 看不懂回 null
   function ptMin(pt){
     var m;
     if((m=/^(\d+)分$/.exec(pt))) return +m[1];
@@ -1780,7 +1780,7 @@ window.__nodeLink=(function(){
         if(last && last!==next){
           var car=''; stops.forEach(function(s){ if(!car && s.car) car=s.car; });
           if(car){
-            // 有 GPS 就先記著，等開車 1 分鐘後的位置再決定；沒有就照原規則直接鎖
+            // 有 GPS 就先記著，等開車 1 分鐘後的位置再決定; 沒有就照原規則直接鎖
             if(geoOf(mk) && curFix()) lsSet(pk, {dep:last, plate:car, at:Date.now()});
             else { lock={dep:last, plate:car}; lsSet(lk, lock); }
           }
@@ -1982,7 +1982,7 @@ window.__nodeLink=(function(){
 // 體驗優化: 過去的行程灰階顯示、雪場資訊卡依日期移動
 (function(){
   // 各日期標題對應的日期
-  // 正式日期；要測試請用頁面最底部(編輯模式)的「測試日期」面板改，不必動程式
+  // 正式日期; 要測試請用頁面最底部(編輯模式)的「測試日期」面板改，不必動程式
   var DAY_DATES={d0116:'2027-01-16',d0117:'2027-01-17',d0118:'2027-01-18',d0119:'2027-01-19',
                  d0120:'2027-01-20',d0121:'2027-01-21',d0122:'2027-01-22',d0123:'2027-01-23'};
   var DAY_IDS=['d0116','d0117','d0118','d0119','d0120','d0121','d0122','d0123'];
@@ -2005,11 +2005,11 @@ window.__nodeLink=(function(){
   // 飛機上收不到訊號，手機時區會停在出發地，落地連上當地網路才跳過去:
   // · 去程(台灣→日本): 手機停在台灣 UTC+8，比日本慢 1 小時，寫日本時間的「抵達成田」會晚 1 小時才開始
   // · 回程(日本→台灣): 手機停在日本 UTC+9，比台灣快 1 小時，寫台灣時間的「抵達桃園」會提早 1 小時開始、落地時已灰掉
-  // 所以 NODE_TZ 裡的節點指定自己用哪個時區(相對 UTC 的分鐘數)，手機時區跟它差 1 小時以內就換算回真正的時刻；
+  // 所以 NODE_TZ 裡的節點指定自己用哪個時區(相對 UTC 的分鐘數)，手機時區跟它差 1 小時以內就換算回真正的時刻;
   // 差更多表示人根本不在這趟行程的路線上，照手機當地時間就好。其餘節點一律照手機當地時間，不受影響。
   var NODE_TZ={n003:540, n056:480};   // 1/16 抵達成田(日本時間)、1/23 抵達桃園(台灣時間)
   window.__tripTzOffset=null;   // 測試用: 假裝手機在這個時區(相對 UTC 的分鐘數，台北 480、東京 540)
-  // 節點時區 − 手機時區(分): 成田在台灣手機上 +60，桃園在日本手機上 −60；不需補正回 0
+  // 節點時區 − 手機時區(分): 成田在台灣手機上 +60，桃園在日本手機上 −60; 不需補正回 0
   function tzGap(id, now){
     var tz=NODE_TZ[id];
     if(tz==null) return 0;
@@ -2017,7 +2017,7 @@ window.__nodeLink=(function(){
     var gap=tz-off;
     return (gap!==0 && Math.abs(gap)<=60) ? gap : 0;
   }
-  // 「現在開始／現在結束」要寫的時刻: 照這個節點用的時鐘(例如手機還停在日本時間時，抵達桃園寫台灣時間)
+  // 「現在開始/現在結束」要寫的時刻: 照這個節點用的時鐘(例如手機還停在日本時間時，抵達桃園寫台灣時間)
   window.__tripClockFor=function(id){
     var n=new Date(), gap=tzGap(id, n);
     n=new Date(n.getTime()+gap*60000);
@@ -2053,7 +2053,7 @@ window.__nodeLink=(function(){
       if(x.end!=='24:00' && x.end<x.t) x.stop.setDate(x.stop.getDate()+1);     // 結束時間跨過午夜
       var gap=tzGap(x.el.getAttribute('data-id'), now);
       if(gap){                                                                  // 手機還停在出發地時區
-        // 節點時刻被當成手機時區解讀，要換算回節點時區的真正時刻(日本 14:20 在台灣手機上要往前扣 60 分；台灣 18:45 在日本手機上往後加 60 分)
+        // 節點時刻被當成手機時區解讀，要換算回節點時區的真正時刻(日本 14:20 在台灣手機上要往前扣 60 分; 台灣 18:45 在日本手機上往後加 60 分)
         x.start=new Date(x.start.getTime()-gap*60000);
         x.stop =new Date(x.stop.getTime() -gap*60000);
       }
@@ -2063,8 +2063,8 @@ window.__nodeLink=(function(){
     return {items:items, cur:cur, next:next};
   }
 
-  // 把目前行程捲到畫面中間；空檔時改成捲到接下來的那一個
-  // reveal=true 才會把收合起來的那天展開(手動按「目前行程」或用節點連結進來時)；
+  // 把目前行程捲到畫面中間; 空檔時改成捲到接下來的那一個
+  // reveal=true 才會把收合起來的那天展開(手動按「目前行程」或用節點連結進來時);
   // 自動置中不展開，否則使用者刻意收起來的天會被打開
   function centerCurrent(now, reveal){
     // 編輯模式下、以及剛切換完的幾秒內，一律不自動捲: 人正在改東西，畫面自己跑掉最惱人。
@@ -2091,7 +2091,7 @@ window.__nodeLink=(function(){
     return target;
   }
 
-  // 已結束的行程灰階；過去的日期標題與無時刻節點也灰階
+  // 已結束的行程灰階; 過去的日期標題與無時刻節點也灰階
   function grayPast(now){
     var today=dateStr(now);
     // 上方日期選項: 已過的日子也灰掉
@@ -2124,7 +2124,7 @@ window.__nodeLink=(function(){
   // (ld 是日本當地時間、ssst 是 UTC，JST = UTC + 9 小時)
   function nextWed(now){
     var d=new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    d.setDate(d.getDate() + ((3 - d.getDay() + 7) % 7 || 7));   // 週三＝3
+    d.setDate(d.getDate() + ((3 - d.getDay() + 7) % 7 || 7));   // 週三=3
     return dateStr(d);
   }
   function fixReserveLinks(now){
@@ -2146,9 +2146,9 @@ window.__nodeLink=(function(){
     new MutationObserver(function(){ fixReserveLinks(new Date()); }).observe(tlEl, {childList:true});
   }
 
-  // 行程結束就改顯示結束畫面；按「查看行程」進入回顧模式，一切回到出發前的樣子
+  // 行程結束就改顯示結束畫面; 按「查看行程」進入回顧模式，一切回到出發前的樣子
   var REVIEW=false;
-  // 結束的時刻＝最後一個行程的結束時間(不是最後一天的午夜)，落地回到家就不用再看了。
+  // 結束的時刻=最後一個行程的結束時間(不是最後一天的午夜)，落地回到家就不用再看了。
   // 時間從 scan() 來，所以解鎖後才插進來的私人節點也算在內(那些通常排在班機之後)，
   // 未解鎖的人看不到那些節點，也就照公開行程的最後一筆結束，兩邊各自正確。
   // 萬一一個節點都掃不到(例如還沒 render 完)，就退回「最後一天過完」的舊規則。
@@ -2211,7 +2211,7 @@ window.__nodeLink=(function(){
   window.__tripResting=function(){ return REVIEW || isEnded(new Date()); };  // 結束畫面或回顧模式: 不要自動捲動
   window.__tripCenter=centerCurrent;
   // 定時重算: 手機把背景分頁的計時器凍結是常態，所以除了 30 秒一次，
-  // 回到前景(visibilitychange／pageshow／focus)也補一次；
+  // 回到前景(visibilitychange/pageshow/focus)也補一次;
   // 再加一道保險: 畫面只要在繪製，距上次重算超過 20 秒就立刻補算(rAF 在背景不會跑)
   var lastAt=0;
   function wake(){
@@ -2221,7 +2221,7 @@ window.__nodeLink=(function(){
   }
 
   // ── 測試日期面板(編輯模式才看得到)──
-  // 設定第一天，其餘 7 天依序往後推；只存在這台手機，不影響別人看到的內容
+  // 設定第一天，其餘 7 天依序往後推; 只存在這台手機，不影響別人看到的內容
   var TEST_KEY='japan2027-testday';
   function shiftDays(first){
     var base=new Date(first+'T00:00:00');
@@ -2285,7 +2285,7 @@ window.__nodeLink=(function(){
 // 私人行程 + 雲端修改
 // · 私人行程以 AES-GCM 加密存在 private.enc，輸入密碼才解得開
 // · 解鎖後才會拿到寫入權杖(權杖就鎖在加密檔裡)，因此只有解鎖的裝置能改行程
-// · 解鎖: 網址加 #k=你的密碼(解開後存在這台裝置，並把密碼從網址移除)；鎖回: 網址加 #lock
+// · 解鎖: 網址加 #k=你的密碼(解開後存在這台裝置，並把密碼從網址移除); 鎖回: 網址加 #lock
 (function(){
   var PW_KEY='japan2027-pw';
   var PENDING='japan2027-pending';          // 離線時暫存待上傳的修改
@@ -2368,7 +2368,7 @@ window.__nodeLink=(function(){
   }
   window.__tripRepaint=repaint;
 
-  // 讀取雲端上的修改(任何人都讀得到；私人部分仍是密文)
+  // 讀取雲端上的修改(任何人都讀得到; 私人部分仍是密文)
   // 跨網域的東西 Service Worker 不會攔，離線時這支一定失敗，所以每次成功就在本機留一份。
   // 沒有這份備份的話，到日本沒訊號時行程會退回 index.html 內嵌的版本，財務紀錄也會變空的。
   async function loadCloud(){
@@ -2397,7 +2397,7 @@ window.__nodeLink=(function(){
       if(booted) location.reload();
       return;
     }
-    // 先套用雲端上的公開修改(朋友也看得到)；連不上就用上次存下來的那份
+    // 先套用雲端上的公開修改(朋友也看得到); 連不上就用上次存下來的那份
     var cloud=null;
     try{ cloud=await loadCloud(); }catch(e){ cloud=cachedCloud(); }
     if(cloud && cloud.pub) S.pub=cloud.pub;
@@ -2435,7 +2435,7 @@ window.__nodeLink=(function(){
     if(S.unlocked && S.token) flushPending();
   }
 
-  // 儲存: 先更新畫面與本機，再送雲端；沒網路就留著下次補送
+  // 儲存: 先更新畫面與本機，再送雲端; 沒網路就留著下次補送
   async function save(){
     repaint();
     var payload={pub:S.pub, priv:null};
@@ -2477,7 +2477,7 @@ window.__nodeLink=(function(){
   async function sync(){
     if(!booted) return;
     if(document.body.classList.contains('editing')) return;       // 自己正在改，別來攪局
-    // 自己還有沒上傳的修改時先別同步，免得被雲端蓋掉；沒權限的裝置不會有合法的待上傳內容，不受此限。
+    // 自己還有沒上傳的修改時先別同步，免得被雲端蓋掉; 沒權限的裝置不會有合法的待上傳內容，不受此限。
     // 但光是等著不行: 手機訊號差時存檔會失敗、修改就留在本機，而補送只在開啟網頁和重新連上網時才跑，
     // 於是這台從此不再自動更新。所以每一輪都先試著把自己的補送上去，送掉了就能照常同步。
     try{
@@ -2489,7 +2489,7 @@ window.__nodeLink=(function(){
     var cloud=null;
     try{ cloud=await loadCloud(); }catch(e){ return; }             // 沒網路就算了，下次再說
     var raw=JSON.stringify((cloud&&cloud.pub)||null);
-    // 私人節點的修改只會動到密文，pub 原封不動；只比 pub 的話，
+    // 私人節點的修改只會動到密文，pub 原封不動; 只比 pub 的話，
     // 另一台改的私人行程(例如把結束時間改掉)這台永遠等不到。沒密碼的裝置看不到私人節點，不必理會。
     var rawPriv=(S.pw&&cloud&&cloud.priv&&cloud.priv.ct)||null;
     if(raw===lastPub && rawPriv===lastPriv) return;
@@ -2569,10 +2569,10 @@ window.__nodeLink=(function(){
       '<div class="ed-box">'+
       '<h3>'+(isNew?(priv?'新增私人節點':'新增節點'):'編輯節點')+'</h3>'+
       '<label>時間 <input id="ed-time" placeholder="HH:MM" value="'+(it.time||'')+'"></label>'+
-      '<label>結束時間(可留空；留空＝做到下一個行程開始為止)'+
+      '<label>結束時間(可留空; 留空=做到下一個行程開始為止)'+
         '<input id="ed-end" placeholder="HH:MM" value="'+(it.end||'')+'"></label>'+
-      '<label>實際開始(留空＝照表定) <input id="ed-at" placeholder="HH:MM" value="'+((it.act&&it.act.t)||'')+'"></label>'+
-      '<label>實際結束(留空＝照表定) <input id="ed-ae" placeholder="HH:MM" value="'+((it.act&&it.act.e)||'')+'"></label>'+
+      '<label>實際開始(留空=照表定) <input id="ed-at" placeholder="HH:MM" value="'+((it.act&&it.act.t)||'')+'"></label>'+
+      '<label>實際結束(留空=照表定) <input id="ed-ae" placeholder="HH:MM" value="'+((it.act&&it.act.e)||'')+'"></label>'+
       '<label>標題 <input id="ed-title" value="'+(it.title||'').replace(/"/g,'&quot;')+'"></label>'+
       '<label>樣式 <select id="ed-cls">'+
         ['','meal','alert'].map(function(v){
@@ -2631,7 +2631,7 @@ window.__nodeLink=(function(){
     // 財務紀錄不是行程節點(沒有 .ev)，但人可能正在看它，所以一起列入定位的候選，
     // 否則在那裡按編輯會找不到基準點，畫面整個彈回最上面
     // 畫面可能正在被某支程式平滑捲動(例如自動置中排在按下按鈕前一瞬間)。
-    // 平滑捲動不會因為我們改 scroll-behavior 就停下來，得再下一次捲動指令才取代得掉；
+    // 平滑捲動不會因為我們改 scroll-behavior 就停下來，得再下一次捲動指令才取代得掉;
     // 不先停住它，等一下量到的位置就是「正在移動中」的位置，定位當然不準。
     var html=document.documentElement, saved0=html.style.scrollBehavior;
     html.style.scrollBehavior='auto';
@@ -2650,7 +2650,7 @@ window.__nodeLink=(function(){
     if(!key){ html.style.scrollBehavior=saved0; return; }
     // 一次就定位不一定夠: Safari 在手機上常常是版面還沒重算完就先捲，捲完才發現高度變了，
     // 畫面因此彈到別的地方(最常見是整個跳回最上面)。所以改成算絕對位置，
-    // 並在之後幾個時間點各校一次；期間把整頁的平滑捲動關掉，不然幾次校正會互相打架。
+    // 並在之後幾個時間點各校一次; 期間把整頁的平滑捲動關掉，不然幾次校正會互相打架。
     var saved=saved0;
     function fix(){
       var back=document.querySelector('.tl [data-id="'+key+'"]');
@@ -2697,7 +2697,7 @@ window.__nodeLink=(function(){
   }
 
   async function removeNode(id){
-    if(!confirm('確定刪除這個節點？')) return;
+    if(!confirm('確定刪除這個節點?')) return;
     var d=dataOf(id);
     if(d && d.where==='priv'){
       S.priv=S.priv.filter(function(x){ return x.id!==id; });
@@ -2711,7 +2711,7 @@ window.__nodeLink=(function(){
   }
 
   // ── 實際時間 ──
-  // 表定(time／end)不動，實際發生的時間另存在 act={t:'HH:MM', e:'HH:MM'}，畫面改依實際時間跑；
+  // 表定(time/end)不動，實際發生的時間另存在 act={t:'HH:MM', e:'HH:MM'}，畫面改依實際時間跑;
   // 存雲端，其他人同步看到。「還原表定」把 act 拿掉。
   function hhmmNow(id){
     if(id && window.__tripClockFor) return window.__tripClockFor(id);
@@ -2754,12 +2754,12 @@ window.__nodeLink=(function(){
     var start=(d.it.act&&d.it.act.t)||d.it.time||'';
     // 跨午夜的節點(23:50 開始、00:10 結束)本來就合法，只擋同一天往回填的情形
     if(start && hhmm<start && start<'12:00'){ toast('現在時間比開始時間還早'); return; }
-    if(!confirm('把「'+plainTitle(d.it)+'」的實際結束改成 '+hhmm+'？')) return;
+    if(!confirm('把「'+plainTitle(d.it)+'」的實際結束改成 '+hhmm+'?')) return;
     setAct(d, id, Object.assign({}, d.it.act||{}, {e:hhmm}));
     await flush();
   }
 
-  // 「現在開始」: 實際開始 = 現在。15 分鐘以內的短節點(發車、抵達這種時間點)整段一起挪，長度不變；
+  // 「現在開始」: 實際開始 = 現在。15 分鐘以內的短節點(發車、抵達這種時間點)整段一起挪，長度不變;
   // 正在進行的上一則若有寫死的結束時間、而且比現在晚，一起結束在現在。
   async function startNow(id){
     var d=dataOf(id);
@@ -2772,7 +2772,7 @@ window.__nodeLink=(function(){
     act.t=hhmm;
     if(dur!==null && dur<=15){ act.e=addMin(hhmm, dur); msg+='，結束 '+act.e+'(整段挪)'; }
     else if(act.e && toMin(act.e)<=toMin(hhmm)) delete act.e;        // 舊的實際結束比新開始早，作廢
-    if(!confirm(msg+'？')) return;
+    if(!confirm(msg+'?')) return;
     setAct(d, id, act);
     endPrev(id, hhmm);
     await flush();
@@ -2789,12 +2789,12 @@ window.__nodeLink=(function(){
   }
 
   // ── GPS 示範點(行程節點加 geo 設定才有) ──
-  // · 到達(arrive): 表定開始前 60 分內，讀到一次人在範圍內 → 實際開始＝現在，結束跟著挪(長度不變)
-  // · 停留(stay):   同上提早開始，但結束不動；進行中看過人在範圍內、之後讀到已離開 → 實際結束＝現在
-  // 晚到不處理；手動改過實際時間的不碰；每個節點只自動觸發一次(還原表定後不會又被改回去)。
+  // · 到達(arrive): 表定開始前 60 分內，讀到一次人在範圍內 → 實際開始=現在，結束跟著挪(長度不變)
+  // · 停留(stay):   同上提早開始，但結束不動; 進行中看過人在範圍內、之後讀到已離開 → 實際結束=現在
+  // 晚到不處理; 手動改過實際時間的不碰; 每個節點只自動觸發一次(還原表定後不會又被改回去)。
   // 只有解鎖(有寫入權)的手機會判斷、寫雲端，其他人同步看到。觸發紀錄存本機 localStorage。
   var geoRunning=false;
-  // 提示用的地名: 標題去掉開頭 emoji；沒標題(純到達節點)就用卡片裡第一個 📍 地點
+  // 提示用的地名: 標題去掉開頭 emoji; 沒標題(純到達節點)就用卡片裡第一個 📍 地點
   function geoName(it){
     var t=(it.title||'').replace(/<[^>]*>/g,'').replace(/^[^\p{L}\p{N}]+/u,'').trim();
     if(t) return t;
@@ -2805,7 +2805,7 @@ window.__nodeLink=(function(){
   function geoKey(it){ return 'japan2027-geo-'+((window.__tripDays||{})[it.day]||'')+'-'+it.id; }
   function geoGet(it){ try{ return JSON.parse(localStorage.getItem(geoKey(it))||'{}')||{}; }catch(e){ return {}; } }
   function geoPut(it, v){ try{ localStorage.setItem(geoKey(it), JSON.stringify(v)); }catch(e){} }
-  // 沒填結束時間的節點，做到同一天下一則開始為止(跟時間軸的規則一樣)；當天最後一則回 null(算到午夜)
+  // 沒填結束時間的節點，做到同一天下一則開始為止(跟時間軸的規則一樣); 當天最後一則回 null(算到午夜)
   function nextStartOf(ev){
     for(var n=ev.nextElementSibling; n && !n.classList.contains('day-head'); n=n.nextElementSibling){
       var tm=n.classList.contains('ev') && window.__tripTimeOf(n);
@@ -2865,7 +2865,7 @@ window.__nodeLink=(function(){
   async function resetAct(id){
     var d=dataOf(id);
     if(!d){ toast('找不到這個節點'); return; }
-    if(!confirm('「'+plainTitle(d.it)+'」還原成表定時間？')) return;
+    if(!confirm('「'+plainTitle(d.it)+'」還原成表定時間?')) return;
     setAct(d, id, null);
     await flush();
   }
@@ -2881,7 +2881,7 @@ window.__nodeLink=(function(){
       var dd=dataOf(id), hasT=!!(dd && dd.it.time), hasAct=!!(dd && dd.it.act);
       var tools=el('div','ed-tools',
         '<button data-act="edit" title="編輯">✏️</button><button data-act="del" title="刪除">🗑</button>');
-      // 現在開始／現在結束／還原表定另外一組，放節點右上角(順序不變)
+      // 現在開始/現在結束/還原表定另外一組，放節點右上角(順序不變)
       var acts=el('div','ed-tools ed-act',
         (hasT ? '<button data-act="start">現在開始</button><button data-act="end">現在結束</button>' : '')
         +(hasAct ? '<button data-act="reset">還原表定</button>' : ''));
@@ -2912,7 +2912,7 @@ window.__nodeLink=(function(){
     });
     document.querySelectorAll('.tl .day-head').forEach(function(h){
       var add=el('div','ed-add',
-        '<button data-p="0">＋ 新增節點</button><button data-p="1">＋ 新增私人節點</button>');
+        '<button data-p="0">+ 新增節點</button><button data-p="1">+ 新增私人節點</button>');
       add.onclick=function(e){
         var b=e.target.closest('button'); if(!b) return;
         openForm(null, h.id, b.dataset.p==='1');
@@ -2973,7 +2973,7 @@ window.__nodeLink=(function(){
   };
 })();
 
-// 節點連結: 長按節點 0.6 秒，iPhone 跳出「分享／複製連結」小選單，電腦直接複製連結；
+// 節點連結: 長按節點 0.6 秒，iPhone 跳出「分享/複製連結」小選單，電腦直接複製連結;
 // 用這個連結打開會自動捲過去並閃三下
 (function(){
   function fallback(text){
@@ -3057,7 +3057,7 @@ window.__nodeLink=(function(){
   window.addEventListener('scroll', function(){ if(pop && Date.now()-popAt>500) closePop(); }, true);
 
   // ── 長按 0.6 秒 ──
-  // iPhone(而且支援分享): 跳出「分享／複製連結」小選單；電腦或不支援分享: 直接複製連結
+  // iPhone(而且支援分享): 跳出「分享/複製連結」小選單; 電腦或不支援分享: 直接複製連結
   var timer=null, sx=0, sy=0;
   function clear(){ if(timer){ clearTimeout(timer); timer=null; } }
   document.addEventListener('pointerdown', function(e){
@@ -3122,7 +3122,7 @@ if('serviceWorker' in navigator){
   });
 })();
 
-// 點每日標題可以收合／展開那一天(只留標題與副標)；選擇存在這台裝置
+// 點每日標題可以收合/展開那一天(只留標題與副標); 選擇存在這台裝置
 (function(){
   var KEY='japan2027-collapsed';
   var state={};
@@ -3153,7 +3153,7 @@ if('serviceWorker' in navigator){
     if(on) st[id]=true; else delete st[id];
     if(st===state){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
     apply();
-    syncBtn();                       // 手動收合／展開後，按鈕字樣要跟著對
+    syncBtn();                       // 手動收合/展開後，按鈕字樣要跟著對
   }
   document.addEventListener('click', function(e){
     var h=e.target.closest && e.target.closest('.tl .day-head');
@@ -3165,7 +3165,7 @@ if('serviceWorker' in navigator){
   if(tl && window.MutationObserver) new MutationObserver(apply).observe(tl, {childList:true});
   apply();
 
-  // ── 一鍵展開／收合 ──
+  // ── 一鍵展開/收合 ──
   // 按鈕上的字就是「按下去會做的事」，做完跳到下一個: 全部展開 → 收合過去 → 收合未來 → …
   //   全部展開: 八天全開
   //   收合過去: 今天以前收起來，今天與之後維持展開
@@ -3173,7 +3173,7 @@ if('serviceWorker' in navigator){
   // 跨過午夜時(下面的 rollover)只動「昨天」與「今天」兩天，
   // 其他天不管是手動收還是手動開都保持原樣。
   var MODE_KEY='japan2027-foldmode';
-  var ORDER_OFF =['all','none'];            // 還沒出發／已結束: 全開 ↔ 全收
+  var ORDER_OFF =['all','none'];            // 還沒出發/已結束: 全開 ↔ 全收
   var LABEL={all:'全部<br>展開', past:'收合<br>過去', future:'收合<br>未來', none:'全部<br>收合'};
   var mode='all', seenDay=null;      // 一開始畫面就是全開，所以按鈕直接顯示下一步
   try{
@@ -3219,7 +3219,7 @@ if('serviceWorker' in navigator){
   function paintBtn(){
     if(!btn) return;
     btn.innerHTML=LABEL[nextMode()];
-    // 目前模式在循環裡的位置就是「收合程度」，用它決定深淺；
+    // 目前模式在循環裡的位置就是「收合程度」，用它決定深淺;
     // 循環只有兩格時(非旅途、第一天、最後一天)直接用最深的那一階。
     var o=order(), i=o.indexOf(curMode());
     if(i<0) i=0;
@@ -3234,7 +3234,7 @@ if('serviceWorker' in navigator){
          :              d.date !== t;     // future: 只留今天
   }
 
-  // 手動一天一天收合／展開，剛好湊成某個模式的樣子時，按鈕就對齊到那個模式，
+  // 手動一天一天收合/展開，剛好湊成某個模式的樣子時，按鈕就對齊到那個模式，
   // 下一按才會接著往下走: 例如第二天手動把第一天收起來，畫面就等於「收合過去」，
   // 按鈕要跟著變成「收合未來」，而不是停在「收合過去」讓人再按一次沒反應。
   // 湊不出任何一個模式的混合狀態就不動按鈕，使用者按下去還是照原本的循環走。
@@ -3271,7 +3271,7 @@ if('serviceWorker' in navigator){
   function rollover(){
     if(document.body.classList.contains('review')) return;   // 回顧行程時不調整
     var t=dstr(new Date());
-    // 全開不用調整；全部收合在旅程外也維持全收(旅程期間則跟其他模式一樣每天展開當日)。
+    // 全開不用調整; 全部收合在旅程外也維持全收(旅程期間則跟其他模式一樣每天展開當日)。
     // 這兩條不動畫面，但跨進旅程時循環會從兩種變三種，按鈕還是要重畫。
     if(mode==='all' || (mode==='none' && !onTrip())){ seenDay=t; saveMode(); refreshBtn(); return; }
     if(seenDay===t){ refreshBtn(); return; }
@@ -3300,7 +3300,7 @@ if('serviceWorker' in navigator){
     run(curMode());
     seenDay=dstr(new Date()); saveMode(); refreshBtn();
   };
-  window.__tripFoldApply=apply;       // 切進／切出回顧模式時要重套一次
+  window.__tripFoldApply=apply;       // 切進/切出回顧模式時要重套一次
 
   // 要捲到某個節點之前先把它那天展開，否則元素是隱藏的、捲不過去
   window.__tripRevealDay=function(el){
@@ -3364,9 +3364,9 @@ if('serviceWorker' in navigator){
 
 // ── 財務紀錄 ──
 // 出門在外常常是「你先付(刷卡、一起付)，我等一下給你現金」。這裡只記最後結果:
-// 誰還欠誰多少，不記過程；按下結算就歸零，之前的來往也不留。
+// 誰還欠誰多少，不記過程; 按下結算就歸零，之前的來往也不留。
 // 兩種幣別分開算、不換匯，忠實呈現。
-// 資料掛在雲端修改的 pub.fin 底下(明文，所有人都看得到)，所以後端 Worker 不用改；
+// 資料掛在雲端修改的 pub.fin 底下(明文，所有人都看得到)，所以後端 Worker 不用改;
 // 「結算」與「新增」只有解鎖後進編輯模式才看得到(CSS 控制)，其他人只能看。
 (function(){
   var PEOPLE=['大哥','Skywalker','Youjin','章魚哥'];   // 一律用互相叫的稱呼，本名不放上公開的網頁
@@ -3383,11 +3383,11 @@ if('serviceWorker' in navigator){
   var SEC=document.getElementById('fin-sec');
   function data(){
     if(!S.pub) S.pub={edits:{}, added:[], removed:[]};
-    if(!S.pub.fin) S.pub.fin={};      // 還沒有任何紀錄＝大家都沒有往來
+    if(!S.pub.fin) S.pub.fin={};      // 還沒有任何紀錄=大家都沒有往來
     return S.pub.fin;
   }
 
-  // 畫面一律顯示平常互相叫的稱呼；資料仍以本名當鍵，不受影響
+  // 畫面一律顯示平常互相叫的稱呼; 資料仍以本名當鍵，不受影響
   function nm(p){ return ALIAS[p]||p; }
 
   // ── 這一段要不要公開: 勾了大家才看得到，自己解鎖的裝置一定看得到 ──
@@ -3411,7 +3411,7 @@ if('serviceWorker' in navigator){
   function keyOf(a, b){
     return PEOPLE.indexOf(a)<PEOPLE.indexOf(b) ? a+'|'+b : b+'|'+a;
   }
-  // 從 p 的角度看跟 q 的往來: 正＝q 還要給 p，負＝p 還要給 q；null＝從來沒有往來
+  // 從 p 的角度看跟 q 的往來: 正=q 還要給 p，負=p 還要給 q; null=從來沒有往來
   function net(p, q){
     var v=data()[keyOf(p,q)];
     if(!v) return null;
@@ -3420,7 +3420,7 @@ if('serviceWorker' in navigator){
   }
   function money(sym, n){ return sym+Math.abs(n).toLocaleString('en-US'); }
 
-  // 一列就是一句話: 「還 Skywalker ¥3,000，Skywalker 欠 NT$500」／「目前與 Youjin 無財務往來」／「章魚哥 ✓ 兩清」
+  // 一列就是一句話: 「還 Skywalker ¥3,000，Skywalker 欠 NT$500」/「目前與 Youjin 無財務往來」/「章魚哥 ✓ 兩清」
   function desc(p, q){
     var n=net(p,q), Q=nm(q);
     if(!n) return '<span class="fin-none">目前與'+Q+'無財務往來</span>';
@@ -3448,7 +3448,7 @@ if('serviceWorker' in navigator){
         return '<button type="button" class="opt-tab" data-opt-i="'+i+'">'+nm(p)+'</button>';
       }).join('')+'</div>'
       +PEOPLE.map(pane).join('')
-      +'<div class="fin-add"><button type="button" id="fin-new">＋ 新增</button></div>'
+      +'<div class="fin-add"><button type="button" id="fin-new">+ 新增</button></div>'
       +'<ul class="fin-rules">'+RULES.map(function(x){ return '<li>'+x+'</li>'; }).join('')+'</ul>';
     if(window.__tripOptsApply) window.__tripOptsApply();     // 把上次選到的人套回去
     applyShow();
@@ -3468,7 +3468,7 @@ if('serviceWorker' in navigator){
   }
 
   function settle(p, q){
-    if(!confirm('確定結算？')) return;
+    if(!confirm('確定結算?')) return;
     data()[keyOf(p,q)]={jpy:0, twd:0};      // 鍵留著: 留著才知道是「兩清」而不是「沒往來」
     flush();
   }
@@ -3538,7 +3538,7 @@ if('serviceWorker' in navigator){
     box.className='ed-mask';
     box.innerHTML='<div class="ed-box"><h3>新增財務紀錄</h3>'
       +'<div id="fin-rows">'+rowHtml(firstPair(), false)+'</div>'
-      +'<div class="fin-add"><button type="button" id="fin-more">＋ 再新增一筆</button></div>'
+      +'<div class="fin-add"><button type="button" id="fin-more">+ 再新增一筆</button></div>'
       +'<div class="ed-btns" style="margin-top:14px">'
       +'<button type="button" id="fin-cancel">取消</button>'
       +'<button type="button" id="fin-ok" class="pri">新增</button></div></div>';
